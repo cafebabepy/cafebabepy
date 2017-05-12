@@ -1,0 +1,77 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'org.cafebabepy'
+version = '3.3'
+project.ext {
+    artifactId = 'cafebabepy'
+    defaultEncoding = 'UTF-8'
+}
+
+ext.versions = [
+        gradle: '3.5'
+]
+
+ext.antlr = [
+        grammarpackage: 'org.cafebabepy.parser',
+        antlrSource   : 'src/main/antlr',
+        destinationDir: "${buildDir}/generated-sources/java"
+]
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    antlr4 {
+        description = "ANTLR4"
+    }
+}
+
+dependencies {
+    compile group: "org.antlr", name: "antlr4-runtime", version: '4.7'
+    antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = defaultEncoding
+}
+
+tasks.withType(Test) {
+    systemProperties = System.getProperties()
+    testLogging.showStandardStreams = true
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = versions.gradle
+}
+
+task antlrOutputDir << {
+    mkdir(antlr.destinationDir)
+}
+
+task generateGrammarSource(dependsOn: antlrOutputDir, type: JavaExec) {
+    description = 'Generates Java sources from ANTLR4 grammars.'
+
+    inputs.dir file(antlr.antlrSource)
+    outputs.dir file(antlr.destinationDir)
+
+    def grammars = fileTree(antlr.antlrSource).include('**/*.g4')
+
+    main = 'org.antlr.v4.Tool'
+    classpath = configurations.antlr4
+    def pkg = antlr.grammarpackage.replaceAll("\\.", "/")
+    args = ["-o", "${antlr.destinationDir}/${pkg}"/*, "-atn"*/, "-visitor", "-package", antlr.grammarpackage, grammars.files].flatten()
+
+}
+
+compileJava {
+    dependsOn generateGrammarSource
+    source antlr.destinationDir, sourceSets.main.java
+}
+
+clean {
+    delete antlr.destinationDir
+}
