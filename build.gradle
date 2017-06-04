@@ -30,6 +30,8 @@ configurations {
     }
 }
 
+sourceSets.main.java.srcDirs = [antlr.destinationDir] + sourceSets.main.java.srcDirs
+
 dependencies {
     compile group: "org.antlr", name: "antlr4-runtime", version: '4.7'
     antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7'
