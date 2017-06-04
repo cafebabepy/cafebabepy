@@ -5,14 +5,11 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 import org.cafebabepy.runtime.object.java.JavaPyFunctionObject;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -22,6 +19,8 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
     protected final Python runtime;
 
     protected final PyObjectScope scope;
+
+    private Map<String, Object> javaObjectMap;
 
     public AbstractAbstractCafeBabePyAny(Python runtime) {
         this.runtime = runtime;
@@ -75,26 +74,13 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
     }
 
     @Override
-    public boolean isRuntimeObject() {
-        return false;
-    }
-
-    @Override
     public final boolean isNone() {
         return false;
     }
 
     @Override
-    public final PyRuntimeObject getStr() {
+    public final PyObject getStr() {
         return this.runtime.str(asJavaString());
-    }
-
-    @Override
-    public String asJavaString() {
-        int hashCode = System.identityHashCode(this);
-        String hexHashCode = "0x" + Integer.toHexString(hashCode);
-
-        return "<" + "_ast.AST" + " object at " + hexHashCode + ">";
     }
 
     @Override
@@ -110,5 +96,27 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
     @Override
     public PyObjectScope getScope() {
         return this.scope;
+    }
+
+    @Override
+    public void putJavaObject(String name, Object object) {
+        if (this.javaObjectMap == null) {
+            synchronized (this) {
+                if (this.javaObjectMap == null) {
+                    this.javaObjectMap = new ConcurrentHashMap<>();
+                }
+            }
+        }
+
+        this.javaObjectMap.put(name, object);
+    }
+
+    @Override
+    public Optional<Object> getJavaObject(String name) {
+        if (this.javaObjectMap == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(this.javaObjectMap.get(name));
     }
 }

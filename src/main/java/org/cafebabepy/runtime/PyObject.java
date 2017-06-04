@@ -1,7 +1,5 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.runtime.object.PyRuntimeObject;
-
 import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
@@ -19,6 +17,10 @@ public interface PyObject {
 
     Optional<String> getModuleName();
 
+    void putJavaObject(String name, Object object);
+
+    Optional<Object> getJavaObject(String name);
+
     default String getName() {
         return getType().getName();
     }
@@ -26,8 +28,6 @@ public interface PyObject {
     default String getFullName() {
         return getModuleName() + getName();
     }
-
-    boolean isRuntimeObject();
 
     boolean isType();
 
@@ -39,7 +39,7 @@ public interface PyObject {
 
     boolean isNone();
 
-    PyRuntimeObject getStr();
+    PyObject getStr();
 
     String asJavaString();
 

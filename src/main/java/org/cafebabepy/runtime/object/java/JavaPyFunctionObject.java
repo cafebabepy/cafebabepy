@@ -3,7 +3,6 @@ package org.cafebabepy.runtime.object.java;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,7 +11,7 @@ import java.lang.reflect.Modifier;
 /**
  * Created by yotchang4s on 2017/05/31.
  */
-public class JavaPyFunctionObject extends AbstractJavaPyObject implements PyRuntimeObject {
+public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
     private Object target;
 

@@ -4,7 +4,6 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -18,25 +17,17 @@ public class PyIntType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    public static PyRuntimeObject newInt(Python runtime, int value) {
-        PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("str");
-        if (type instanceof PyStrType) {
+    public static PyObject newInt(Python runtime, int value) {
+        PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("int");
+        if (type instanceof PyIntType) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
-                    "builtins.TypeError", "'" + type.getName() + "' is not str");
+                    "builtins.TypeError", "'" + type.getName() + "' is not int");
         }
 
         PyObject object = type.call();
+        object.putJavaObject(JAVA_INT_NAME, value);
 
-        if (object instanceof PyRuntimeObject) {
-            PyRuntimeObject runtimeObject = (PyRuntimeObject) object;
-            runtimeObject.putJavaObject(JAVA_INT_NAME, value);
-
-            return runtimeObject;
-
-        } else {
-            throw runtime.newRaiseException("builtins.TypeError",
-                    "object '" + object.getType().getName() + "'");
-        }
+        return object;
     }
 }

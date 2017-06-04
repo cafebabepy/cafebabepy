@@ -1,12 +1,9 @@
 package org.cafebabepy.runtime.object.java;
 
-import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module.builtins.PyStrType;
 import org.cafebabepy.runtime.module.types.PyNoneTypeType;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yotchang4s on 2017/06/03.
  */
-abstract class AbstractJavaPyObject implements PyRuntimeObject {
+abstract class AbstractJavaPyObject implements PyObject {
 
     protected final Python runtime;
 
@@ -58,8 +55,25 @@ abstract class AbstractJavaPyObject implements PyRuntimeObject {
     }
 
     @Override
-    public boolean isRuntimeObject() {
-        return true;
+    public void putJavaObject(String name, Object object) {
+        if (this.javaObjectMap == null) {
+            synchronized (this) {
+                if (this.javaObjectMap == null) {
+                    this.javaObjectMap = new ConcurrentHashMap<>();
+                }
+            }
+        }
+
+        this.javaObjectMap.put(name, object);
+    }
+
+    @Override
+    public Optional<Object> getJavaObject(String name) {
+        if (this.javaObjectMap == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(this.javaObjectMap.get(name));
     }
 
     @Override
@@ -83,47 +97,20 @@ abstract class AbstractJavaPyObject implements PyRuntimeObject {
     }
 
     @Override
-    public final PyRuntimeObject getStr() {
+    public final PyObject getStr() {
         return this.runtime.str(asJavaString());
     }
 
     @Override
     public String asJavaString() {
-        if (type instanceof PyStrType) {
-            return getJavaObject(PyStrType.JAVA_STRING_NAME).orElseThrow(() ->
-                    new CafeBabePyException(
-                            "str java object '" + PyStrType.JAVA_STRING_NAME + "' is not found")
-            ).toString();
-        }
+        int hashCode = System.identityHashCode(this);
 
-        return getType().getFullName();
+        return "0x" + Integer.toHexString(hashCode);
     }
 
     @Override
     public boolean isException() {
         // FIXME 親がBaseExceptionかどうかを判定する
         return false;
-    }
-
-    @Override
-    public void putJavaObject(String name, Object object) {
-        if (this.javaObjectMap == null) {
-            synchronized (this) {
-                if (this.javaObjectMap == null) {
-                    this.javaObjectMap = new ConcurrentHashMap<>();
-                }
-            }
-        }
-
-        this.javaObjectMap.put(name, object);
-    }
-
-    @Override
-    public Optional<Object> getJavaObject(String name) {
-        if (this.javaObjectMap == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(this.javaObjectMap.get(name));
     }
 }

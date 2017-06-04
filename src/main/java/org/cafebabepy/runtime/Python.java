@@ -3,7 +3,6 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.runtime.module.builtins.PyIntType;
 import org.cafebabepy.runtime.module.builtins.PyStrType;
 import org.cafebabepy.runtime.module.builtins.PyTupleType;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
 
@@ -30,9 +29,9 @@ public final class Python {
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
 
-    private PyRuntimeObject none;
+    private PyObject none;
 
-    private PyRuntimeObject notImplementedType;
+    private PyObject notImplementedType;
 
     private Python() {
         this.moduleMap = new ConcurrentHashMap<>();
@@ -122,31 +121,29 @@ public final class Python {
         PyObject builtinsModule = module(BUILTINS_MODULE_NAME).orElseThrow(() ->
                 new CafeBabePyException("module '" + BUILTINS_MODULE_NAME + "' is not defined"));
 
-        this.none = (PyRuntimeObject) builtinsModule.getScope().get("NoneType", false)
+        this.none = builtinsModule.getScope().get("NoneType", false)
                 .map(PyObject::call)
-                .filter(o -> o instanceof PyRuntimeObject)
                 .orElseThrow(() -> new CafeBabePyException("'NoneType' is not found"));
 
-        this.notImplementedType = (PyRuntimeObject) builtinsModule.getScope().get("NotImplementedType")
+        this.notImplementedType = builtinsModule.getScope().get("NotImplementedType")
                 .map(PyObject::call)
-                .filter(o -> o instanceof PyRuntimeObject)
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
 
     }
 
-    public PyRuntimeObject str(String str) {
+    public PyObject str(String str) {
         return PyStrType.newStr(this, str);
     }
 
-    public PyRuntimeObject number(int value) {
+    public PyObject number(int value) {
         return PyIntType.newInt(this, value);
     }
 
-    public PyRuntimeObject tuple(PyObject... args) {
+    public PyObject tuple(PyObject... args) {
         return PyTupleType.newTuple(this, args);
     }
 
-    public PyRuntimeObject none() {
+    public PyObject none() {
         return this.none;
     }
 

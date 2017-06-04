@@ -4,7 +4,6 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyRuntimeObject;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -18,25 +17,17 @@ public class PyTupleType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    public static PyRuntimeObject newTuple(Python runtime, PyObject... vars) {
-        PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("str");
-        if (type instanceof PyStrType) {
+    public static PyObject newTuple(Python runtime, PyObject... vars) {
+        PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("tuple");
+        if (type instanceof PyTupleType) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
                     "builtins.TypeError", "'" + type.getName() + "' is not str");
         }
 
         PyObject object = type.call();
+        object.putJavaObject(JAVA_TUPLE_NAME, vars);
 
-        if (object instanceof PyRuntimeObject) {
-            PyRuntimeObject runtimeObject = (PyRuntimeObject) object;
-            runtimeObject.putJavaObject(JAVA_TUPLE_NAME, vars);
-
-            return runtimeObject;
-
-        } else {
-            throw runtime.newRaiseException("builtins.TypeError",
-                    "object '" + object.getType().getName() + "'");
-        }
+        return object;
     }
 }

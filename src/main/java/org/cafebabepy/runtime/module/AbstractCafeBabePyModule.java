@@ -55,6 +55,11 @@ public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
     }
 
     @Override
+    public String asJavaString() {
+        return "<module '" + getFullName() + "' (built-in)>";
+    }
+
+    @Override
     public PyObject getType() {
         return this.runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("module");
     }
