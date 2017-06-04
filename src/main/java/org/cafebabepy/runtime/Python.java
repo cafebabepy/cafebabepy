@@ -160,6 +160,27 @@ public final class Python {
         return Optional.ofNullable(this.moduleMap.get(name));
     }
 
+    public PyObject typeOrThrow(String name) {
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
+        if (!splitter.getModuleName().isPresent()) {
+            return moduleOrThrow(splitter.getSimpleName());
+
+        } else {
+            return moduleOrThrow(splitter.getSimpleName()).getObjectOrThrow(splitter.getSimpleName());
+        }
+    }
+
+    public Optional<PyObject> type(String name) {
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
+        if (!splitter.getModuleName().isPresent()) {
+            return module(splitter.getSimpleName());
+
+        } else {
+            return module(splitter.getModuleName().get())
+                    .flatMap(n -> n.getScope().get(splitter.getSimpleName()));
+        }
+    }
+
     public RaiseException newRaiseException(String exceptionType, String message) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
