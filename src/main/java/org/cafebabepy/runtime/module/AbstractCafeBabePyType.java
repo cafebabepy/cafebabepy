@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/30.
  */
-public class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyAny {
+public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyAny {
 
     private String moduleName;
 

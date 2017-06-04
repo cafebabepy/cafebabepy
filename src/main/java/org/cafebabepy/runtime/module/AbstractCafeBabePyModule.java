@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/30.
  */
-public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
+public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
 
     private String moduleName;
 
