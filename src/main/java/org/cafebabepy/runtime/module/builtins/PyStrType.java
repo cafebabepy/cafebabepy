@@ -19,7 +19,7 @@ public class PyStrType extends AbstractCafeBabePyType {
 
     public static PyObject newStr(Python runtime, String value) {
         PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("str");
-        if (type instanceof PyStrType) {
+        if (!(type instanceof PyStrType)) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
                     "builtins.TypeError", "'" + type.getName() + "' is not str");

@@ -19,7 +19,7 @@ public class PyIntType extends AbstractCafeBabePyType {
 
     public static PyObject newInt(Python runtime, int value) {
         PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("int");
-        if (type instanceof PyIntType) {
+        if (!(type instanceof PyIntType)) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
                     "builtins.TypeError", "'" + type.getName() + "' is not int");

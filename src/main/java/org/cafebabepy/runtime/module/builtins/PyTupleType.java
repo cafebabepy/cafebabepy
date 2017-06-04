@@ -19,7 +19,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
 
     public static PyObject newTuple(Python runtime, PyObject... vars) {
         PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("tuple");
-        if (type instanceof PyTupleType) {
+        if (!(type instanceof PyTupleType)) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
                     "builtins.TypeError", "'" + type.getName() + "' is not str");
