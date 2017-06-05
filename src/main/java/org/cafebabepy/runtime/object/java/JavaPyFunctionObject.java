@@ -13,13 +13,13 @@ import java.lang.reflect.Modifier;
  */
 public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
-    private Object target;
+    private PyObject target;
 
     private Method method;
 
     private String name;
 
-    public JavaPyFunctionObject(Python runtime, Object target, String name, Method method) {
+    public JavaPyFunctionObject(Python runtime, PyObject target, String name, Method method) {
         super(runtime, runtime.moduleOrThrow(Python.TYPES_MODULE_NAME).getObjectOrThrow("FunctionType"));
 
         if (!Modifier.isPublic(method.getModifiers())) {
@@ -34,7 +34,40 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
     @Override
     public PyObject call(PyObject... args) {
         try {
-            Object result = this.method.invoke(this.target, (Object[]) args);
+            Object[] compArgs;
+            Class<?>[] paramClasses = this.method.getParameterTypes();
+            if (args.length == 0) {
+                if (paramClasses.length == 1 && paramClasses[0].isArray()) {
+                    compArgs = new Object[]{args};
+
+                } else {
+                    throw this.runtime.newRaiseException("builtins.TypError",
+                            target.getName() + "() takes at most "
+                                    + paramClasses.length + " arguments (" + args.length + " given)");
+                }
+
+            } else {
+                if (paramClasses.length == args.length + 1) {
+                    compArgs = new Object[args.length + 1];
+                    if (paramClasses[paramClasses.length - 1].isArray()) {
+                        compArgs[compArgs.length - 1] = new PyObject[0];
+                    }
+
+                } else {
+                    compArgs = new Object[args.length];
+                }
+                for (int i = 0; i < args.length; i++) {
+                    Class<?> paramClass = paramClasses[i];
+                    if (paramClass.isArray()) {
+                        compArgs[i] = new PyObject[]{args[i]};
+
+                    } else {
+                        compArgs[i] = args[i];
+                    }
+                }
+            }
+
+            Object result = this.method.invoke(target, compArgs);
             if (result == null) {
                 return this.runtime.none();
 
@@ -47,26 +80,16 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
                         "FIXME Java object to Python object !!!!!!!!");
             }
 
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | InvocationTargetException |
+                IllegalArgumentException e) {
             throw new CafeBabePyException("Not accessible method "
                     + this.method.getDeclaringClass().getName()
                     + "#" + method.getName(), e);
-
-        } catch (InvocationTargetException e) {
-            // TODO Pythonの例外を参考にする
-            StringBuilder argNamesBuilder = new StringBuilder();
-            throw new CafeBabePyException("Not invoke method "
-                    + this.method.getDeclaringClass().getName()
-                    + "#" + method.getName(), e);
         }
+
     }
 
     public String getName() {
         return this.name;
-    }
-
-    @Override
-    public PyObject getType() {
-        return this.runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("");
     }
 }

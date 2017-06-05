@@ -28,10 +28,15 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         if (defineCafeBabePyModule != null) {
             ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyModule.name());
 
-            this.moduleName = splitter.getModuleName().orElse(null);
+            if (!splitter.getModuleName().isPresent()) {
+                this.moduleName = splitter.getSimpleName();
+
+            } else {
+                this.moduleName = splitter.getModuleName().get();
+            }
             this.name = splitter.getSimpleName();
-            this.runtime.defineModule(this);
             this.appear = true;
+            this.runtime.defineModule(this);
 
         } else {
             throw new CafeBabePyException(
@@ -57,6 +62,12 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     @Override
     public String asJavaString() {
         return "<module '" + getFullName() + "' (built-in)>";
+    }
+
+    @Override
+    public PyObject call(PyObject... args) {
+        throw getRuntime().newRaiseException("builtins.TypeError",
+                "'" + getName() + "' object is not callable");
     }
 
     @Override

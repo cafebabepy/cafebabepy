@@ -1,5 +1,7 @@
 package org.cafebabepy.runtime;
 
+import org.cafebabepy.annotation.DefineCafeBabePyModule;
+import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.module.builtins.PyIntType;
 import org.cafebabepy.runtime.module.builtins.PyStrType;
 import org.cafebabepy.runtime.module.builtins.PyTupleType;
@@ -58,36 +60,45 @@ public final class Python {
         try {
             builtinsClasses = ReflectionUtils.getClasses(packageName);
 
-            Set<PyObject> objects = new HashSet<>();
-
-            for (Class<?> clazz : builtinsClasses) {
-                Constructor c = clazz.getConstructor(Python.class);
-
-                PyObject type = (PyObject) c.newInstance(this);
-                objects.add(type);
-            }
-
-            // Check duplicate module
             PyObject module = null;
-            for (PyObject object : objects) {
+            for (Class<?> clazz : builtinsClasses) {
+                DefineCafeBabePyModule defineCafeBabePyModule = clazz.getAnnotation(DefineCafeBabePyModule.class);
+                if (defineCafeBabePyModule == null) {
+                    continue;
+                }
+
+                // Check duplicate module
                 if (module != null) {
                     throw new CafeBabePyException(
                             "Duplicate module '"
-                                    + object.getClass().getName()
+                                    + clazz.getName()
                                     + "' and '"
                                     + module.getClass().getName()
                                     + "'");
 
                 }
 
-                module = object;
+                Constructor c = clazz.getConstructor(Python.class);
+                module = (PyObject) c.newInstance(this);
             }
 
             if (module == null) {
-                throw new CafeBabePyException("module is not found");
+                throw new CafeBabePyException("'" + packageName + "' module not found");
             }
 
             defineModule(module);
+
+            Set<PyObject> objects = new HashSet<>();
+            for (Class<?> clazz : builtinsClasses) {
+                DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
+                if (defineCafeBabePyType == null) {
+                    continue;
+                }
+
+                Constructor c = clazz.getConstructor(Python.class);
+                PyObject object = (PyObject) c.newInstance(this);
+                objects.add(object);
+            }
 
             for (PyObject object : objects) {
                 if (!object.isType()) {
@@ -96,13 +107,21 @@ public final class Python {
                                     + object.getClass().getName()
                                     + "' is not type");
 
-                } else if (!module.getName().equals(object.getModuleName())) {
-                    throw new CafeBabePyException(
-                            "object '" + "' is not '" + module.getName() + "' module");
-                }
+                } else {
+                    Optional moduleNameOpt = object.getModuleName();
+                    if (moduleNameOpt.isPresent() && module.getName().equals(moduleNameOpt.get())) {
+                        // lazy reference
+                        module.getScope().put(object.getName(), () -> object);
 
-                // lazy reference
-                module.getScope().put(object.getName(), () -> object);
+                    } else {
+                        throw new CafeBabePyException(
+                                "object '"
+                                        + object.getModuleName()
+                                        + "' is not '"
+                                        + module.getName()
+                                        + "' module");
+                    }
+                }
             }
 
         } catch (
@@ -118,17 +137,13 @@ public final class Python {
     }
 
     private void initializeObjects() {
-        PyObject builtinsModule = module(BUILTINS_MODULE_NAME).orElseThrow(() ->
-                new CafeBabePyException("module '" + BUILTINS_MODULE_NAME + "' is not defined"));
-
-        this.none = builtinsModule.getScope().get("NoneType", false)
-                .map(PyObject::call)
+        this.none = type("types.NoneType", false)
+                .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NoneType' is not found"));
 
-        this.notImplementedType = builtinsModule.getScope().get("NotImplementedType")
-                .map(PyObject::call)
+        this.notImplementedType = type("builtins.NotImplementedType", false)
+                .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
-
     }
 
     public PyObject str(String str) {
@@ -161,23 +176,31 @@ public final class Python {
     }
 
     public PyObject typeOrThrow(String name) {
+        return typeOrThrow(name, true);
+    }
+
+    public PyObject typeOrThrow(String name, boolean appear) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
         if (!splitter.getModuleName().isPresent()) {
             return moduleOrThrow(splitter.getSimpleName());
 
         } else {
-            return moduleOrThrow(splitter.getSimpleName()).getObjectOrThrow(splitter.getSimpleName());
+            return moduleOrThrow(splitter.getSimpleName()).getObjectOrThrow(splitter.getSimpleName(), appear);
         }
     }
 
     public Optional<PyObject> type(String name) {
+        return type(name, true);
+    }
+
+    public Optional<PyObject> type(String name, boolean appear) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
         if (!splitter.getModuleName().isPresent()) {
             return module(splitter.getSimpleName());
 
         } else {
             return module(splitter.getModuleName().get())
-                    .flatMap(n -> n.getScope().get(splitter.getSimpleName()));
+                    .flatMap(n -> n.getScope().get(splitter.getSimpleName(), appear));
         }
     }
 
@@ -201,6 +224,7 @@ public final class Python {
         String[] moduleNames = module.getName().split("\\.");
         if (moduleNames.length == 1) {
             this.moduleMap.put(moduleNames[0], module);
+            return;
         }
 
         StringBuilder moduleBuilder = new StringBuilder();

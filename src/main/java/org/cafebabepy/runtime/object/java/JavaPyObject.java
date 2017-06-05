@@ -9,11 +9,19 @@ import org.cafebabepy.runtime.Python;
  */
 public class JavaPyObject extends AbstractJavaPyObject {
 
-    protected JavaPyObject(Python runtime, PyObject type) {
+    public JavaPyObject(Python runtime, PyObject type) {
         super(runtime, type);
     }
 
-    protected JavaPyObject(Python runtime, PyObject type, PyObjectScope parentScope) {
+    public JavaPyObject(Python runtime, PyObject type, PyObjectScope parentScope) {
         super(runtime, type, parentScope);
+    }
+
+    @Override
+    public PyObject call(PyObject... args) {
+        return getObject("__call__").orElseThrow(
+                () -> this.runtime.newRaiseException("builtins.TypeError",
+                        "'" + getType().getName() + "' object is not callabl"))
+                .call(args);
     }
 }

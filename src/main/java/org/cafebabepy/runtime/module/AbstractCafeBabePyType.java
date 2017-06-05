@@ -1,13 +1,17 @@
 package org.cafebabepy.runtime.module;
 
+import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.object.java.JavaPyObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 
 import java.util.Optional;
+
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -39,11 +43,10 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
             this.appear = defineCafeBabePyType.appear();
 
             PyObject module = this.runtime.module(this.moduleName).orElseThrow(() ->
-                    new CafeBabePyException("module is not found " + clazz.getName()));
+                    new CafeBabePyException(
+                            "module '" + this.moduleName + "' is not found " + clazz.getName()));
 
-            if (defineCafeBabePyType.appear()) {
-                module.getScope().put(this.name, this, this.appear);
-            }
+            module.getScope().put(this.name, this, this.appear);
 
         } else {
             throw new CafeBabePyException(
@@ -93,5 +96,28 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public PyObject call(PyObject... args) {
+        return getObjectOrThrow(__call__).call(args);
+    }
+
+    @DefineCafeBabePyFunction(name = __call__)
+    public PyObject __call__(PyObject... args) {
+        PyObject object = getObjectOrThrow(__new__).call(this);
+
+        getObjectOrThrow(__init__).call(object, args);
+
+        return object;
+    }
+
+    @DefineCafeBabePyFunction(name = __new__)
+    public PyObject __new__(PyObject cls) {
+        return new JavaPyObject(this.runtime, cls);
+    }
+
+    @DefineCafeBabePyFunction(name = __init__)
+    public void __init__(PyObject self, PyObject... args) {
     }
 }
