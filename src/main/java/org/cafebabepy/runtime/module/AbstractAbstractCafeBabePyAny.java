@@ -37,8 +37,12 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
         // Check duplicate
         Map<Class<?>, Set<String>> defineNamesMemberNamesMap = new HashMap<>();
 
-        for (Class<?> c = clazz.getClass(); c != Object.class; c = c.getSuperclass()) {
+        for (Class<?> c = clazz; c != Object.class; c = c.getSuperclass()) {
             for (Method method : c.getMethods()) {
+                // Same class only
+                if(c != method.getDeclaringClass()){
+                    continue;
+                }
                 String name;
 
                 DefineCafeBabePyFunction defineCafeBabePyFunction = method.getAnnotation(DefineCafeBabePyFunction.class);
