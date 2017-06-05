@@ -92,7 +92,9 @@ public class PyObjectScope {
             objectReadAccessor = this.notAppearObjectMap.get(name);
         }
         if (objectReadAccessor == null) {
-            return this.parent.getRawAppearOnly(name);
+            if(this.parent != null) {
+                return this.parent.getRawAppearOnly(name);
+            }
         }
 
         return Optional.ofNullable(objectReadAccessor);
