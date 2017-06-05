@@ -19,11 +19,11 @@ public class ModuleOrClassSplitter {
         int index = this.name.lastIndexOf('.');
         if (index == -1) {
             this.moduleName = null;
-            this.name = name;
+            this.simpleName = name;
 
         } else {
             this.moduleName = this.name.substring(0, index);
-            this.name = this.name.substring(index + 1, this.name.length());
+            this.simpleName = this.name.substring(index + 1, this.name.length());
         }
     }
 
