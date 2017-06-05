@@ -35,27 +35,27 @@ abstract class AbstractJavaPyObject implements PyObject {
     }
 
     @Override
-    public PyObject getType() {
+    public final PyObject getType() {
         return this.type;
     }
 
     @Override
-    public Python getRuntime() {
+    public final Python getRuntime() {
         return this.runtime;
     }
 
     @Override
-    public PyObjectScope getScope() {
+    public final PyObjectScope getScope() {
         return this.scope;
     }
 
     @Override
-    public Optional<String> getModuleName() {
+    public final Optional<String> getModuleName() {
         return Optional.empty();
     }
 
     @Override
-    public void putJavaObject(String name, Object object) {
+    public final void putJavaObject(String name, Object object) {
         if (this.javaObjectMap == null) {
             synchronized (this) {
                 if (this.javaObjectMap == null) {
@@ -68,7 +68,7 @@ abstract class AbstractJavaPyObject implements PyObject {
     }
 
     @Override
-    public Optional<Object> getJavaObject(String name) {
+    public final Optional<Object> getJavaObject(String name) {
         if (this.javaObjectMap == null) {
             return Optional.empty();
         }
