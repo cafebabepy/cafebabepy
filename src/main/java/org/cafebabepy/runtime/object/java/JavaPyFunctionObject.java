@@ -36,38 +36,54 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
         try {
             Object[] compArgs;
             Class<?>[] paramClasses = this.method.getParameterTypes();
-            if (args.length == 0) {
+
+            if (paramClasses.length == 0) {
+                compArgs = new Object[0];
+
+            } else {
                 if (paramClasses.length == 1 && paramClasses[0].isArray()) {
                     compArgs = new Object[]{args};
 
-                } else {
-                    throw this.runtime.newRaiseException("builtins.TypError",
-                            target.getName() + "() takes at most "
-                                    + paramClasses.length + " arguments (" + args.length + " given)");
-                }
+                } else if (paramClasses[paramClasses.length - 1].isArray()) {
+                    // Last argument is variable argument
+                    compArgs = new Object[paramClasses.length];
 
-            } else {
-                if (paramClasses.length == args.length + 1) {
-                    compArgs = new Object[args.length + 1];
-                    if (paramClasses[paramClasses.length - 1].isArray()) {
-                        compArgs[compArgs.length - 1] = new PyObject[0];
+                    // Split argument and variable argument from args array
+                    if (args.length > 0) {
+                        PyObject[] lastArrayArg = new PyObject[args.length - compArgs.length + 1];
+
+                        if (lastArrayArg.length > 0) {
+                            System.arraycopy(args, 0, compArgs, 0, compArgs.length - 1);
+
+                            for (int i = 0; i < lastArrayArg.length; i++) {
+                                lastArrayArg[i] = args[i + compArgs.length - 1];
+                            }
+
+                            compArgs[compArgs.length - 1] = lastArrayArg;
+                        }
+
                     }
 
-                } else {
-                    compArgs = new Object[args.length];
-                }
-                for (int i = 0; i < args.length; i++) {
-                    Class<?> paramClass = paramClasses[i];
-                    if (paramClass.isArray()) {
-                        compArgs[i] = new PyObject[]{args[i]};
+                } else if (paramClasses.length != args.length) {
+                    throw this.runtime.newRaiseException("builtins.TypeError",
+                            target.getName() + "() takes at most "
+                                    + paramClasses.length + " arguments (" + args.length + " given)");
 
-                    } else {
-                        compArgs[i] = args[i];
+                } else {
+                    compArgs = new Object[paramClasses.length];
+                    for (int i = 0; i < paramClasses.length; i++) {
+                        Class<?> paramClass = paramClasses[i];
+                        if (paramClass.isArray()) {
+                            compArgs[i] = new PyObject[]{args[i]};
+
+                        } else {
+                            compArgs[i] = args[i];
+                        }
                     }
                 }
             }
 
-            Object result = this.method.invoke(target, compArgs);
+            Object result = this.method.invoke(this.target, compArgs);
             if (result == null) {
                 return this.runtime.none();
 
@@ -82,6 +98,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
         } catch (IllegalAccessException | InvocationTargetException |
                 IllegalArgumentException e) {
+            // FIXME CPython message???
             throw new CafeBabePyException("Not accessible method "
                     + this.method.getDeclaringClass().getName()
                     + "#" + method.getName(), e);
