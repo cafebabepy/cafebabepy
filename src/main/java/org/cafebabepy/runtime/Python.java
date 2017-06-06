@@ -50,6 +50,7 @@ public final class Python {
         initializeBuiltins("org.cafebabepy.runtime.module");
         initializeBuiltins("org.cafebabepy.runtime.module.types");
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
+        initializeBuiltins("org.cafebabepy.runtime.module._ast");
         initializeObjects();
     }
 
@@ -86,9 +87,6 @@ public final class Python {
                 throw new CafeBabePyException("'" + packageName + "' module not found");
             }
 
-            defineModule(module);
-
-            Set<PyObject> objects = new HashSet<>();
             for (Class<?> clazz : builtinsClasses) {
                 DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
                 if (defineCafeBabePyType == null) {
@@ -96,32 +94,7 @@ public final class Python {
                 }
 
                 Constructor c = clazz.getConstructor(Python.class);
-                PyObject object = (PyObject) c.newInstance(this);
-                objects.add(object);
-            }
-
-            for (PyObject object : objects) {
-                if (!object.isType()) {
-                    throw new CafeBabePyException(
-                            "object '"
-                                    + object.getClass().getName()
-                                    + "' is not type");
-
-                } else {
-                    Optional moduleNameOpt = object.getModuleName();
-                    if (moduleNameOpt.isPresent() && module.getName().equals(moduleNameOpt.get())) {
-                        // lazy reference
-                        module.getScope().put(object.getName(), () -> object);
-
-                    } else {
-                        throw new CafeBabePyException(
-                                "object '"
-                                        + object.getModuleName()
-                                        + "' is not '"
-                                        + module.getName()
-                                        + "' module");
-                    }
-                }
+                c.newInstance(this);
             }
 
         } catch (
@@ -185,7 +158,10 @@ public final class Python {
             return moduleOrThrow(splitter.getSimpleName());
 
         } else {
-            return moduleOrThrow(splitter.getSimpleName()).getObjectOrThrow(splitter.getSimpleName(), appear);
+            // FIXME get()
+            return moduleOrThrow(splitter.getModuleName().orElseThrow(
+                    () -> newRaiseException("builtins.NameError", "name '" + name + "' is not defined")))
+                    .getObjectOrThrow(splitter.getSimpleName(), appear);
         }
     }
 
