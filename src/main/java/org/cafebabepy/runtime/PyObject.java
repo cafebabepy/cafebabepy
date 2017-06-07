@@ -47,6 +47,18 @@ public interface PyObject {
 
     String asJavaString();
 
+    default boolean isTrue() {
+        return getRuntime()
+                .getBuiltinsModule()
+                .getObjectOrThrow("bool").call(this) == getRuntime().True();
+    }
+
+    default boolean isFalse() {
+        return getRuntime()
+                .getBuiltinsModule()
+                .getObjectOrThrow("bool").call(this) == getRuntime().False();
+    }
+
     default Map<String, PyObject> getObjects() {
         return getObjects(true);
     }

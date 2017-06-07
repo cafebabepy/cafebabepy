@@ -85,7 +85,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
             Object result = this.method.invoke(this.target, compArgs);
             if (result == null) {
-                return this.runtime.none();
+                return this.runtime.None();
 
             } else if (result instanceof PyObject) {
                 return (PyObject) result;

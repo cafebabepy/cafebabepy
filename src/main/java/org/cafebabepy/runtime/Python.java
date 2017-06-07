@@ -2,10 +2,7 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
-import org.cafebabepy.runtime.module.builtins.PyIntType;
-import org.cafebabepy.runtime.module.builtins.PyListType;
-import org.cafebabepy.runtime.module.builtins.PyStrType;
-import org.cafebabepy.runtime.module.builtins.PyTupleType;
+import org.cafebabepy.runtime.module.builtins.*;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
 
@@ -32,11 +29,15 @@ public final class Python {
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
 
-    private PyObject object;
+    private PyObject objectObject;
 
-    private PyObject none;
+    private PyObject noneObject;
 
-    private PyObject notImplementedType;
+    private PyObject trueObject;
+
+    private PyObject falseObject;
+
+    private PyObject notImplementedTypeObject;
 
     private Python() {
         this.moduleMap = new ConcurrentHashMap<>();
@@ -113,15 +114,18 @@ public final class Python {
     }
 
     private void initializeObjects() {
-        this.object = type("builtins.object")
+        this.objectObject = type("builtins.object")
                 .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
-        this.none = type("types.NoneType", false)
+        this.noneObject = type("types.NoneType", false)
                 .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NoneType' is not found"));
 
-        this.notImplementedType = type("builtins.NotImplementedType", false)
+        this.trueObject = bool(true);
+        this.falseObject = bool(false);
+
+        this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
                 .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
@@ -151,15 +155,31 @@ public final class Python {
     }
 
     public PyObject object() {
-        return this.object;
+        return this.objectObject;
     }
 
-    public PyObject none() {
-        return this.none;
+    public PyObject None() {
+        return this.noneObject;
     }
 
-    public PyObject notImplementedType() {
-        return this.notImplementedType;
+    public PyObject True() {
+        return this.trueObject;
+    }
+
+    public PyObject False() {
+        return this.falseObject;
+    }
+
+    public PyObject bool(boolean bool) {
+        return PyBoolType.newBool(this, bool);
+    }
+
+    public PyObject NotImplementedType() {
+        return this.notImplementedTypeObject;
+    }
+
+    public PyObject getBuiltinsModule() {
+        return moduleOrThrow(Python.BUILTINS_MODULE_NAME);
     }
 
     public PyObject moduleOrThrow(String name) {
