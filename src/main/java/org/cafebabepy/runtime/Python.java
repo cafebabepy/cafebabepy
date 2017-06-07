@@ -11,7 +11,6 @@ import org.cafebabepy.util.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -158,7 +157,6 @@ public final class Python {
             return moduleOrThrow(splitter.getSimpleName());
 
         } else {
-            // FIXME get()
             return moduleOrThrow(splitter.getModuleName().orElseThrow(
                     () -> newRaiseException("builtins.NameError", "name '" + name + "' is not defined")))
                     .getObjectOrThrow(splitter.getSimpleName(), appear);
