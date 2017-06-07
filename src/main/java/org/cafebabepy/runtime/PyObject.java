@@ -42,7 +42,7 @@ public interface PyObject {
 
     String asJavaString();
 
-    default Map<String, PyObject> getObjects(){
+    default Map<String, PyObject> getObjects() {
         return getObjects(true);
     }
 
@@ -71,7 +71,7 @@ public interface PyObject {
                                 + name
                                 + "' is not defined");
 
-            }  else if (isType()) {
+            } else if (isType()) {
                 throw getRuntime().newRaiseException("builtins.AttributeError",
                         "type object '"
                                 + getFullName()
