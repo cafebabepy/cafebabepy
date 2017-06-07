@@ -32,6 +32,8 @@ public final class Python {
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
 
+    private PyObject object;
+
     private PyObject none;
 
     private PyObject notImplementedType;
@@ -111,6 +113,10 @@ public final class Python {
     }
 
     private void initializeObjects() {
+        this.object = type("builtins.object")
+                .map(o -> o.call())
+                .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
+
         this.none = type("types.NoneType", false)
                 .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NoneType' is not found"));
@@ -142,6 +148,10 @@ public final class Python {
 
     public PyObject list(Collection<PyObject> args) {
         return PyListType.newList(this, args);
+    }
+
+    public PyObject object() {
+        return this.object;
     }
 
     public PyObject none() {
