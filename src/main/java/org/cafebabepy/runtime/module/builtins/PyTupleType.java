@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -36,7 +37,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         }
 
         PyObject object = type.call();
-        object.putJavaObject(JAVA_TUPLE_NAME, Arrays.asList(value));
+        object.putJavaObject(JAVA_TUPLE_NAME, Collections.unmodifiableList(Arrays.asList(value)));
 
         return object;
     }
