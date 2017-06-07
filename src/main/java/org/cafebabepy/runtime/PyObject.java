@@ -177,6 +177,81 @@ public interface PyObject {
         return call(objects);
     }
 
+    default PyObject callThis() {
+        PyObject[] objects = new PyObject[0];
+        objects[0] = this;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject arg1) {
+        PyObject[] objects = new PyObject[2];
+        objects[0] = this;
+        objects[1] = arg1;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject arg1,
+                              PyObject arg2) {
+        PyObject[] objects = new PyObject[3];
+        objects[0] = this;
+        objects[1] = arg1;
+        objects[2] = arg2;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject arg1,
+                              PyObject arg2,
+                              PyObject arg3) {
+        PyObject[] objects = new PyObject[4];
+        objects[0] = this;
+        objects[1] = arg1;
+        objects[2] = arg2;
+        objects[3] = arg3;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject arg1,
+                              PyObject arg2,
+                              PyObject arg3,
+                              PyObject arg4) {
+        PyObject[] objects = new PyObject[5];
+        objects[0] = this;
+        objects[1] = arg1;
+        objects[2] = arg2;
+        objects[3] = arg3;
+        objects[4] = arg4;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject arg1,
+                              PyObject arg2,
+                              PyObject arg3,
+                              PyObject arg4,
+                              PyObject arg5) {
+        PyObject[] objects = new PyObject[6];
+        objects[0] = this;
+        objects[1] = arg1;
+        objects[2] = arg2;
+        objects[3] = arg3;
+        objects[4] = arg4;
+        objects[5] = arg5;
+
+        return call(objects);
+    }
+
+    default PyObject callThis(PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 1];
+        System.arraycopy(args, 0, objects, 1, args.length);
+        objects[0] = this;
+
+        return call(objects);
+    }
+
     PyObject call(PyObject... args);
 
     static PyObject callStatic(PyObject self, PyObject... args) {
