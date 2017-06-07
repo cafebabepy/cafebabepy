@@ -6,6 +6,9 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -19,29 +22,48 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private boolean appear;
 
+    private List<PyObject> superTypes;
+
     public AbstractCafeBabePyModule(Python runtime) {
         super(runtime);
     }
 
     void defineClass(Class<?> clazz) {
         DefineCafeBabePyModule defineCafeBabePyModule = clazz.getAnnotation(DefineCafeBabePyModule.class);
-        if (defineCafeBabePyModule != null) {
-            ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyModule.name());
-
-            if (!splitter.getModuleName().isPresent()) {
-                this.moduleName = splitter.getSimpleName();
-
-            } else {
-                this.moduleName = splitter.getModuleName().get();
-            }
-            this.name = splitter.getSimpleName();
-            this.appear = true;
-            this.runtime.defineModule(this);
-
-        } else {
+        if (defineCafeBabePyModule == null) {
             throw new CafeBabePyException(
                     "DefineCafeBabePyModule or DefineCafeBabePyModule annotation is not defined " + clazz.getName());
         }
+
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyModule.name());
+        if (!splitter.getModuleName().isPresent()) {
+            this.moduleName = splitter.getSimpleName();
+
+        } else {
+            this.moduleName = splitter.getModuleName().get();
+        }
+        this.name = splitter.getSimpleName();
+        this.appear = true;
+        this.runtime.defineModule(this);
+    }
+
+    @Override
+    public List<PyObject> getSuperTypes() {
+        if (this.superTypes == null) {
+            synchronized (this) {
+                if (this.superTypes == null) {
+                    this.superTypes = new ArrayList<>(1);
+                    PyObject type = this.runtime.type("object").orElseThrow(() ->
+                            new CafeBabePyException(
+                                    "type '" + this.name + "' parent 'object' is not found")
+                    );
+
+                    this.superTypes.add(type);
+                }
+            }
+        }
+
+        return Collections.unmodifiableList(this.superTypes);
     }
 
     @Override

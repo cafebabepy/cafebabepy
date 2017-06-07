@@ -9,6 +9,9 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.java.JavaPyObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.*;
@@ -24,34 +27,59 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     private boolean appear;
 
+    private String[] superTypeNames;
+
+    private List<PyObject> superTypes;
+
     public AbstractCafeBabePyType(Python runtime) {
         super(runtime);
     }
 
     void defineClass(Class<?> clazz) {
         DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
-        if (defineCafeBabePyType != null) {
-            ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyType.name());
-
-            this.moduleName = splitter.getModuleName().orElseThrow(() ->
-                    new CafeBabePyException("name '"
-                            + defineCafeBabePyType.name()
-                            + "' is not found module")
-            );
-
-            this.name = splitter.getSimpleName();
-            this.appear = defineCafeBabePyType.appear();
-
-            PyObject module = this.runtime.module(this.moduleName).orElseThrow(() ->
-                    new CafeBabePyException(
-                            "module '" + this.moduleName + "' is not found " + clazz.getName()));
-
-            module.getScope().put(this.name, this, this.appear);
-
-        } else {
+        if (defineCafeBabePyType == null) {
             throw new CafeBabePyException(
                     "DefineCafeBabePyModule annotation is not defined " + clazz.getName());
         }
+
+        this.superTypeNames = defineCafeBabePyType.parent();
+
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyType.name());
+        this.moduleName = splitter.getModuleName().orElseThrow(() ->
+                new CafeBabePyException("name '"
+                        + defineCafeBabePyType.name()
+                        + "' is not found module")
+        );
+
+        this.name = splitter.getSimpleName();
+        this.appear = defineCafeBabePyType.appear();
+
+        PyObject module = this.runtime.module(this.moduleName).orElseThrow(() ->
+                new CafeBabePyException(
+                        "module '" + this.moduleName + "' is not found " + clazz.getName()));
+
+        module.getScope().put(this.name, this, this.appear);
+    }
+
+    @Override
+    public List<PyObject> getSuperTypes() {
+        if (this.superTypes == null) {
+            synchronized (this) {
+                if (this.superTypes == null) {
+                    this.superTypes = new ArrayList<>(this.superTypeNames.length);
+                    for (String superTypeName : this.superTypeNames) {
+                        PyObject type = this.runtime.type(superTypeName).orElseThrow(() ->
+                                new CafeBabePyException(
+                                        "type '" + this.name + "' parent '" + superTypeName + "' is not found")
+                        );
+
+                        this.superTypes.add(type);
+                    }
+                }
+            }
+        }
+
+        return Collections.unmodifiableList(this.superTypes);
     }
 
     @Override

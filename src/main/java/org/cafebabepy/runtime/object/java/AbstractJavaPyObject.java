@@ -5,6 +5,7 @@ import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.types.PyNoneTypeType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,11 @@ abstract class AbstractJavaPyObject implements PyObject {
     @Override
     public final PyObject getType() {
         return this.type;
+    }
+
+    @Override
+    public List<PyObject> getSuperTypes() {
+        return this.type.getSuperTypes();
     }
 
     @Override

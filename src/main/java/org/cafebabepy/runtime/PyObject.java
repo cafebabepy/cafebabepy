@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -10,14 +11,18 @@ public interface PyObject {
 
     PyObject getType();
 
+    List<PyObject> getSuperTypes();
+
     Python getRuntime();
 
     PyObjectScope getScope();
 
     Optional<String> getModuleName();
 
+    // FIXME Remove
     void putJavaObject(String name, Object object);
 
+    // FIXME Remove
     Optional<Object> getJavaObject(String name);
 
     default String getName() {
