@@ -6,7 +6,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -20,20 +20,23 @@ public class PyTupleType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    public static PyObject newTuple(Python runtime, PyObject... value) {
-        return newTuple(runtime, Arrays.asList(value));
+    public static PyObject newTuple(Python runtime, Collection value) {
+        PyObject[] array = new PyObject[value.size()];
+        value.toArray(array);
+
+        return newTuple(runtime, array);
     }
 
-    public static PyObject newTuple(Python runtime, List<PyObject> value) {
+    public static PyObject newTuple(Python runtime, PyObject... value) {
         PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("tuple");
         if (!(type instanceof PyTupleType)) {
             // FIXME To CPython message
             throw runtime.newRaiseException(
-                    "builtins.TypeError", "'" + type.getName() + "' is not str");
+                    "builtins.TypeError", "'" + type.getName() + "' is not tuple");
         }
 
         PyObject object = type.call();
-        object.putJavaObject(JAVA_TUPLE_NAME, value);
+        object.putJavaObject(JAVA_TUPLE_NAME, Arrays.asList(value));
 
         return object;
     }

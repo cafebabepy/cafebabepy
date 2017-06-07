@@ -3,6 +3,7 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.module.builtins.PyIntType;
+import org.cafebabepy.runtime.module.builtins.PyListType;
 import org.cafebabepy.runtime.module.builtins.PyStrType;
 import org.cafebabepy.runtime.module.builtins.PyTupleType;
 import org.cafebabepy.util.ModuleOrClassSplitter;
@@ -11,6 +12,7 @@ import org.cafebabepy.util.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -128,6 +130,18 @@ public final class Python {
 
     public PyObject tuple(PyObject... args) {
         return PyTupleType.newTuple(this, args);
+    }
+
+    public PyObject tuple(Collection<PyObject> args) {
+        return PyTupleType.newTuple(this, args);
+    }
+
+    public PyObject list(PyObject... args) {
+        return PyListType.newList(this, args);
+    }
+
+    public PyObject list(Collection<PyObject> args) {
+        return PyListType.newList(this, args);
     }
 
     public PyObject none() {
