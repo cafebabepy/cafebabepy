@@ -15,7 +15,7 @@ import java.util.Collections;
 @DefineCafeBabePyType(name = "builtins.tuple")
 public class PyTupleType extends AbstractCafeBabePyType {
 
-    public static final String JAVA_TUPLE_NAME = "tuple";
+    public static final String JAVA_LIST_NAME = "tuple";
 
     public PyTupleType(Python runtime) {
         super(runtime);
@@ -37,7 +37,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         }
 
         PyObject object = type.call();
-        object.putJavaObject(JAVA_TUPLE_NAME, Collections.unmodifiableList(Arrays.asList(value)));
+        object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
 
         return object;
     }
