@@ -3,6 +3,7 @@ package org.cafebabepy.runtime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by yotchang4s on 2017/05/24.
@@ -21,7 +22,7 @@ public class PyObjectScope {
 
     public PyObjectScope(PyObjectScope parent) {
         this.parent = parent;
-        this.objectMap = new HashMap<>();
+        this.objectMap = new ConcurrentHashMap<>();
     }
 
     public void put(String name, PyObject object) {
@@ -55,6 +56,31 @@ public class PyObjectScope {
 
     public PyObjectScope getParentScope() {
         return this.parent;
+    }
+
+    public Map<String, PyObject> gets(boolean appear) {
+        Map<String, PyObject> map;
+        if (appear) {
+            synchronized (this) {
+                map = new HashMap<>(this.objectMap.size());
+                for (Map.Entry<String, PyObjectReadAccessor> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().getObject());
+                }
+            }
+
+        } else {
+            synchronized (this) {
+                map = new HashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
+                for (Map.Entry<String, PyObjectReadAccessor> e : this.notAppearObjectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().getObject());
+                }
+                for (Map.Entry<String, PyObjectReadAccessor> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().getObject());
+                }
+            }
+        }
+
+        return map;
     }
 
     public Optional<PyObject> get(String name) {
@@ -92,7 +118,7 @@ public class PyObjectScope {
             objectReadAccessor = this.notAppearObjectMap.get(name);
         }
         if (objectReadAccessor == null) {
-            if(this.parent != null) {
+            if (this.parent != null) {
                 return this.parent.getRawAppearOnly(name);
             }
         }

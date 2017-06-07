@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -41,17 +42,20 @@ public interface PyObject {
 
     String asJavaString();
 
+    default Map<String, PyObject> getObjects(){
+        return getObjects(true);
+    }
+
+    default Map<String, PyObject> getObjects(boolean appear) {
+        return getScope().gets(appear);
+    }
+
     default Optional<PyObject> getObject(String name) {
         return getObject(name, true);
     }
 
     default Optional<PyObject> getObject(String name, boolean appear) {
-        try {
-            return Optional.of(getObjectOrThrow(name));
-
-        } catch (RaiseException ignore) {
-            return Optional.empty();
-        }
+        return getScope().get(name, appear);
     }
 
     default PyObject getObjectOrThrow(String name) {
@@ -59,29 +63,18 @@ public interface PyObject {
     }
 
     default PyObject getObjectOrThrow(String name, boolean appear) {
-        PyObject parentObject = null;
-        PyObject currentObject = this;
-
-        Optional<PyObject> currentObjectOpt = currentObject.getScope().get(name, appear);
-        if (!currentObjectOpt.isPresent()) {
-            if (parentObject == null || parentObject.isModule()) {
+        Optional<PyObject> objectOpt = getObject(name, appear);
+        if (!objectOpt.isPresent()) {
+            if (isModule()) {
                 throw getRuntime().newRaiseException("builtins.NameError",
                         "name '"
                                 + name
                                 + "' is not defined");
 
-            } else if (parentObject.isModule()) {
-                throw getRuntime().newRaiseException("builtins.AttributeError",
-                        "module '"
-                                + parentObject.getName()
-                                + "' has no attribute '"
-                                + name
-                                + "'");
-
-            } else if (parentObject.isType()) {
+            }  else if (isType()) {
                 throw getRuntime().newRaiseException("builtins.AttributeError",
                         "type object '"
-                                + parentObject.getFullName()
+                                + getFullName()
                                 + "' has no attribute '"
                                 + name
                                 + "'");
@@ -89,14 +82,14 @@ public interface PyObject {
             } else {
                 throw getRuntime().newRaiseException("builtins.AttributeError",
                         "'"
-                                + parentObject.getFullName()
+                                + getFullName()
                                 + "' object has no attribute '"
                                 + name
                                 + "'");
             }
         }
 
-        return currentObjectOpt.get();
+        return objectOpt.get();
     }
 
     default PyObject call(PyObject self) {
