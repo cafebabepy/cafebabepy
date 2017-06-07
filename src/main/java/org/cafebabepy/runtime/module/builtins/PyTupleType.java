@@ -5,6 +5,9 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by yotchang4s on 2017/05/13.
  */
@@ -17,7 +20,11 @@ public class PyTupleType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    public static PyObject newTuple(Python runtime, PyObject... vars) {
+    public static PyObject newTuple(Python runtime, PyObject... value) {
+        return newTuple(runtime, Arrays.asList(value));
+    }
+
+    public static PyObject newTuple(Python runtime, List<PyObject> value) {
         PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("tuple");
         if (!(type instanceof PyTupleType)) {
             // FIXME To CPython message
@@ -26,7 +33,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         }
 
         PyObject object = type.call();
-        object.putJavaObject(JAVA_TUPLE_NAME, vars);
+        object.putJavaObject(JAVA_TUPLE_NAME, value);
 
         return object;
     }
