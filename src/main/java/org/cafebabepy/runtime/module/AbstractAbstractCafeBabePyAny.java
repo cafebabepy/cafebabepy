@@ -40,7 +40,7 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
         for (Class<?> c = clazz; c != Object.class; c = c.getSuperclass()) {
             for (Method method : c.getMethods()) {
                 // Same class only
-                if(c != method.getDeclaringClass()){
+                if (c != method.getDeclaringClass()) {
                     continue;
                 }
                 String name;
@@ -57,20 +57,18 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
                 Set<String> defineMemberNames = defineNamesMemberNamesMap.computeIfAbsent(
                         c, k -> new HashSet<>());
 
-                if (defineCafeBabePyFunction != null) {
-                    if (defineMemberNames.contains(defineCafeBabePyFunction.name())) {
-                        throw new CafeBabePyException(
-                                "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
-                    }
-
-                    JavaPyFunctionObject f = new JavaPyFunctionObject(
-                            getRuntime(),
-                            this,
-                            name,
-                            method);
-
-                    getScope().put(f.getName(), f);
+                if (defineMemberNames.contains(defineCafeBabePyFunction.name())) {
+                    throw new CafeBabePyException(
+                            "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
                 }
+
+                JavaPyFunctionObject f = new JavaPyFunctionObject(
+                        getRuntime(),
+                        this,
+                        name,
+                        method);
+
+                getScope().put(f.getName(), f);
 
                 defineMemberNames.add(name);
             }
