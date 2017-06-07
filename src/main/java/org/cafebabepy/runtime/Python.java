@@ -14,6 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
+import static org.cafebabepy.util.ProtocolNames.__iter__;
+import static org.cafebabepy.util.ProtocolNames.__next__;
 
 /**
  * Created by yotchang4s on 2017/05/12.
@@ -219,6 +223,29 @@ public final class Python {
         } else {
             return module(splitter.getModuleName().get())
                     .flatMap(n -> n.getScope().get(splitter.getSimpleName(), appear));
+        }
+    }
+
+    public void iter(PyObject object, Consumer<PyObject> action) {
+        PyObject iter = object.getObject(__iter__).orElseThrow(() ->
+                newRaiseException("builtins.TypeError",
+                        "'" + object.getName() + "' object is not iterable"));
+
+        PyObject next = object.getObject(__next__).orElseThrow(() ->
+                newRaiseException("builtins.TypeError",
+                        "iter() returned non-iterator of type '" + object.getType().getName() + "'"));
+
+        try {
+            // TODO yieldは？
+            while (true) {
+                PyObject value = next.call(next);
+                action.accept(value);
+            }
+
+        } catch (RaiseException e) {
+            if (e.getException().getType() != typeOrThrow("builtins.StopIteration")) {
+                throw e;
+            }
         }
     }
 

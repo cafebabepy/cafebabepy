@@ -7,7 +7,15 @@ import org.cafebabepy.runtime.PyObject;
  */
 // TODO
 public class RaiseException extends RuntimeException{
-    public RaiseException(PyObject exception, String msg) {
-        super(msg);
+    private PyObject exception;
+
+    public RaiseException(PyObject exception, String message) {
+        super(message);
+
+        this.exception = exception;
+    }
+
+    public PyObject getException() {
+        return this.exception;
     }
 }
