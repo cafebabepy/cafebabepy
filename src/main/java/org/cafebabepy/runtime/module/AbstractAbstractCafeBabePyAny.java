@@ -1,10 +1,7 @@
 package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.runtime.CafeBabePyException;
-import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
-import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.*;
 import org.cafebabepy.runtime.object.java.JavaPyFunctionObject;
 
 import java.lang.reflect.Method;
@@ -14,17 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yotchang4s on 2017/05/30.
  */
-abstract class AbstractAbstractCafeBabePyAny implements PyObject {
+abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
-    protected final Python runtime;
-
-    protected final PyObjectScope scope;
-
-    private Map<String, Object> javaObjectMap;
-
-    public AbstractAbstractCafeBabePyAny(Python runtime) {
-        this.runtime = runtime;
-        this.scope = new PyObjectScope();
+    AbstractAbstractCafeBabePyAny(Python runtime) {
+        super(runtime, new PyObjectScope());
 
         Class<?> clazz = getClass();
         defineClass(clazz);
@@ -76,49 +66,7 @@ abstract class AbstractAbstractCafeBabePyAny implements PyObject {
     }
 
     @Override
-    public final boolean isNone() {
-        return false;
-    }
-
-    @Override
     public final PyObject getStr() {
         return this.runtime.str(asJavaString());
-    }
-
-    @Override
-    public final boolean isException() {
-        return false;
-    }
-
-    @Override
-    public Python getRuntime() {
-        return this.runtime;
-    }
-
-    @Override
-    public PyObjectScope getScope() {
-        return this.scope;
-    }
-
-    @Override
-    public void putJavaObject(String name, Object object) {
-        if (this.javaObjectMap == null) {
-            synchronized (this) {
-                if (this.javaObjectMap == null) {
-                    this.javaObjectMap = new ConcurrentHashMap<>();
-                }
-            }
-        }
-
-        this.javaObjectMap.put(name, object);
-    }
-
-    @Override
-    public Optional<Object> getJavaObject(String name) {
-        if (this.javaObjectMap == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(this.javaObjectMap.get(name));
     }
 }

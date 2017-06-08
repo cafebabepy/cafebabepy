@@ -25,13 +25,9 @@ public interface PyObject {
     // FIXME Remove
     Optional<Object> getJavaObject(String name);
 
-    default String getName() {
-        return getType().getName();
-    }
+    String getName();
 
-    default String getFullName() {
-        return getModuleName() + getName();
-    }
+    String getFullName();
 
     boolean isType();
 
@@ -39,234 +35,127 @@ public interface PyObject {
 
     boolean isAppear();
 
-    boolean isException();
-
     boolean isNone();
 
     PyObject getStr();
 
     String asJavaString();
 
-    default boolean isTrue() {
-        return getRuntime()
-                .getBuiltinsModule()
-                .getObjectOrThrow("bool").call(this) == getRuntime().True();
-    }
+    boolean isException();
 
-    default boolean isFalse() {
-        return getRuntime()
-                .getBuiltinsModule()
-                .getObjectOrThrow("bool").call(this) == getRuntime().False();
-    }
+    boolean isTrue();
 
-    default Map<String, PyObject> getObjects() {
-        return getObjects(true);
-    }
+    boolean isFalse();
 
-    default Map<String, PyObject> getObjects(boolean appear) {
-        return getScope().gets(appear);
-    }
+    Map<String, PyObject> getObjects();
 
-    default Optional<PyObject> getObject(String name) {
-        return getObject(name, true);
-    }
+    Map<String, PyObject> getObjects(boolean appear);
 
-    default Optional<PyObject> getObject(String name, boolean appear) {
-        return getScope().get(name, appear);
-    }
+    Optional<PyObject> getObject(String name);
 
-    default PyObject getObjectOrThrow(String name) {
-        return getObjectOrThrow(name, true);
-    }
+    Optional<PyObject> getObject(String name, boolean appear);
 
-    default PyObject getObjectOrThrow(String name, boolean appear) {
-        Optional<PyObject> objectOpt = getObject(name, appear);
-        if (!objectOpt.isPresent()) {
-            if (isModule()) {
-                throw getRuntime().newRaiseException("builtins.NameError",
-                        "name '"
-                                + name
-                                + "' is not defined");
+    PyObject getObjectOrThrow(String name);
 
-            } else if (isType()) {
-                throw getRuntime().newRaiseException("builtins.AttributeError",
-                        "type object '"
-                                + getFullName()
-                                + "' has no attribute '"
-                                + name
-                                + "'");
+    PyObject getObjectOrThrow(String name, boolean appear);
 
-            } else {
-                throw getRuntime().newRaiseException("builtins.AttributeError",
-                        "'"
-                                + getFullName()
-                                + "' object has no attribute '"
-                                + name
-                                + "'");
-            }
-        }
+    PyObject call(PyObject self);
 
-        return objectOpt.get();
-    }
+    PyObject call(PyObject self,
+                  PyObject arg1);
 
-    default PyObject call(PyObject self) {
-        PyObject[] objects = new PyObject[1];
-        objects[0] = self;
+    PyObject call(PyObject self,
+                  PyObject arg1,
+                  PyObject arg2);
 
-        return call(objects);
-    }
+    PyObject call(PyObject self,
+                  PyObject arg1,
+                  PyObject arg2,
+                  PyObject arg3);
 
-    default PyObject call(PyObject self,
-                          PyObject arg1) {
-        PyObject[] objects = new PyObject[2];
-        objects[0] = self;
-        objects[1] = arg1;
+    PyObject call(PyObject self,
+                  PyObject arg1,
+                  PyObject arg2,
+                  PyObject arg3,
+                  PyObject arg4);
 
-        return call(objects);
-    }
+    PyObject call(PyObject self,
+                  PyObject arg1,
+                  PyObject arg2,
+                  PyObject arg3,
+                  PyObject arg4,
+                  PyObject arg5);
 
-    default PyObject call(PyObject self,
-                          PyObject arg1,
-                          PyObject arg2) {
-        PyObject[] objects = new PyObject[3];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
+    PyObject call(PyObject self,
+                  PyObject... args);
 
-        return call(objects);
-    }
+    PyObject callThis();
 
-    default PyObject call(PyObject self,
-                          PyObject arg1,
-                          PyObject arg2,
-                          PyObject arg3) {
-        PyObject[] objects = new PyObject[4];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
+    PyObject callThis(PyObject arg1);
 
-        return call(objects);
-    }
+    PyObject callThis(PyObject arg1,
+                      PyObject arg2);
 
-    default PyObject call(PyObject self,
-                          PyObject arg1,
-                          PyObject arg2,
-                          PyObject arg3,
-                          PyObject arg4) {
-        PyObject[] objects = new PyObject[5];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
+    PyObject callThis(PyObject arg1,
+                      PyObject arg2,
+                      PyObject arg3);
 
-        return call(objects);
-    }
+    PyObject callThis(PyObject arg1,
+                      PyObject arg2,
+                      PyObject arg3,
+                      PyObject arg4);
 
-    default PyObject call(PyObject self,
-                          PyObject arg1,
-                          PyObject arg2,
-                          PyObject arg3,
-                          PyObject arg4,
-                          PyObject arg5) {
-        PyObject[] objects = new PyObject[6];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-        objects[5] = arg5;
+    PyObject callThis(PyObject arg1,
+                      PyObject arg2,
+                      PyObject arg3,
+                      PyObject arg4,
+                      PyObject arg5);
 
-        return call(objects);
-    }
-
-    default PyObject call(PyObject self, PyObject... args) {
-        PyObject[] objects = new PyObject[args.length + 1];
-        System.arraycopy(args, 0, objects, 1, args.length);
-        objects[0] = self;
-
-        return call(objects);
-    }
-
-    default PyObject callThis() {
-        PyObject[] objects = new PyObject[0];
-        objects[0] = this;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject arg1) {
-        PyObject[] objects = new PyObject[2];
-        objects[0] = this;
-        objects[1] = arg1;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject arg1,
-                              PyObject arg2) {
-        PyObject[] objects = new PyObject[3];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject arg1,
-                              PyObject arg2,
-                              PyObject arg3) {
-        PyObject[] objects = new PyObject[4];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject arg1,
-                              PyObject arg2,
-                              PyObject arg3,
-                              PyObject arg4) {
-        PyObject[] objects = new PyObject[5];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject arg1,
-                              PyObject arg2,
-                              PyObject arg3,
-                              PyObject arg4,
-                              PyObject arg5) {
-        PyObject[] objects = new PyObject[6];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-        objects[5] = arg5;
-
-        return call(objects);
-    }
-
-    default PyObject callThis(PyObject... args) {
-        PyObject[] objects = new PyObject[args.length + 1];
-        System.arraycopy(args, 0, objects, 1, args.length);
-        objects[0] = this;
-
-        return call(objects);
-    }
+    PyObject callThis(PyObject... args);
 
     PyObject call(PyObject... args);
 
     static PyObject callStatic(PyObject self, PyObject... args) {
         return self.call(args);
+    }
+
+    static PyObject callStatic(PyObject self) {
+        return self.callThis(self);
+    }
+
+    static PyObject callStatic(PyObject self,
+                               PyObject arg1) {
+        return self.callThis(arg1);
+    }
+
+    static PyObject callStatic(PyObject self,
+                               PyObject arg1,
+                               PyObject arg2) {
+        return self.callThis(arg1, arg2);
+    }
+
+
+    static PyObject callStatic(PyObject self,
+                               PyObject arg1,
+                               PyObject arg2,
+                               PyObject arg3) {
+        return self.callThis(arg1, arg2, arg3);
+    }
+
+    static PyObject callStatic(PyObject self,
+                               PyObject arg1,
+                               PyObject arg2,
+                               PyObject arg3,
+                               PyObject arg4) {
+        return self.callThis(arg1, arg2, arg3, arg4);
+    }
+
+    static PyObject callStatic(PyObject self,
+                               PyObject arg1,
+                               PyObject arg2,
+                               PyObject arg3,
+                               PyObject arg4,
+                               PyObject arg5) {
+        return self.callThis(arg1, arg2, arg3, arg4, arg5);
     }
 }

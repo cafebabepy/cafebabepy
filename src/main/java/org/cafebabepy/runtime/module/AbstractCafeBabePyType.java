@@ -83,21 +83,6 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public final boolean isType() {
-        return true;
-    }
-
-    @Override
-    public boolean isModule() {
-        return false;
-    }
-
-    @Override
-    public boolean isAppear() {
-        return this.appear;
-    }
-
-    @Override
     public String asJavaString() {
         return "<class '" + getFullName() + "'>";
     }
@@ -105,16 +90,6 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     @Override
     public PyObject getType() {
         return this.runtime.moduleOrThrow("builtins").getObjectOrThrow("type");
-    }
-
-    @Override
-    public Python getRuntime() {
-        return this.runtime;
-    }
-
-    @Override
-    public PyObjectScope getScope() {
-        return this.scope;
     }
 
     public Optional<String> getModuleName() {
