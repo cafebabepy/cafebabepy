@@ -18,33 +18,40 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = "issubclass")
-    public PyObject isSubClass(PyObject clazz, PyObject classInfo) {
-        if (clazz == null || !clazz.isType()) {
+    @DefineCafeBabePyFunction(name = "isinstance")
+    public PyObject isInstance(PyObject object, PyObject classInfo) {
+        if (classInfo == null || (!classInfo.isType() && classInfo instanceof PyTupleType)) {
             throw this.runtime.newRaiseTypeError(
-                    "issubclass() arg 1 must be a class");
+                    "isinstance() arg 2 must be a type or tuple of types");
         }
 
-        Set<PyObject> classInfoSet = new HashSet<>();
-        appendIntoClassInfoSet(classInfoSet, classInfo);
+        Set<PyObject> objectTypeSet = new HashSet<>();
+        appendIntoObjectTypeSet(objectTypeSet, object);
 
-        if (classInfoSet.contains(classInfo)) {
+        if (objectTypeSet.contains(object)) {
             return this.runtime.True();
-        } else {
-            return this.runtime.False();
         }
+
+        return this.runtime.False();
     }
 
-    private void appendIntoClassInfoSet(Set<PyObject> classInfoSet, PyObject classinfo) {
-        if (classinfo == null || !classinfo.isType()) {
-            throw this.runtime.newRaiseTypeError(
-                    "issubclass() arg 2 must be a class or tuple of classes");
+    private void appendIntoObjectTypeSet(Set<PyObject> objectTypeSet, PyObject type) {
+        objectTypeSet.add(type);
 
-        } else if (classinfo.getType() instanceof PyTupleType) {
-            this.runtime.iter(classinfo, c -> appendIntoClassInfoSet(classInfoSet, c));
+        if (type instanceof PyTypeType) {
+            if (objectTypeSet.contains(type)) {
+                return;
+            }
 
-        } else {
-            classInfoSet.add(classinfo);
+        } else if (type instanceof PyObjectType) {
+            if (objectTypeSet.contains(type)) {
+                return;
+            }
+
+        } else if (type instanceof PyTupleType) {
+            this.runtime.iter(type, t -> appendIntoObjectTypeSet(objectTypeSet, t));
         }
+
+        type.getSuperTypes().forEach(t -> appendIntoObjectTypeSet(objectTypeSet, t));
     }
 }
