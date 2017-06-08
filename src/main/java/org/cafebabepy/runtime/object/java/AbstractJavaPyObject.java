@@ -1,6 +1,7 @@
 package org.cafebabepy.runtime.object.java;
 
 import org.cafebabepy.runtime.*;
+import org.cafebabepy.runtime.module.builtins.PyNoneTypeType;
 
 import java.util.List;
 import java.util.Optional;

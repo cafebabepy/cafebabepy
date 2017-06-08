@@ -1,12 +1,12 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.runtime.module.builtins.PyTypeType;
-import org.cafebabepy.runtime.module.builtins.PyModuleType;
-import org.cafebabepy.runtime.module.types.PyNoneTypeType;
+import org.cafebabepy.runtime.module.builtins.PyNoneTypeType;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
  * Created by yotchang4s on 2017/06/08.
@@ -85,11 +85,6 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public boolean isAppear() {
         return this.appear;
-    }
-
-    @Override
-    public final boolean isNone() {
-        return getType() instanceof PyNoneTypeType;
     }
 
     @Override
@@ -174,6 +169,13 @@ public abstract class AbstractPyObject implements PyObject {
         }
 
         return objectOpt.get();
+    }
+
+    @Override
+    public final PyObject getCallable() {
+        return getObject(__call__).orElseThrow(
+                () -> this.runtime.newRaiseException("builtins.TypeError",
+                        "'" + getType().getName() + "' object is not callable"));
     }
 
     @Override

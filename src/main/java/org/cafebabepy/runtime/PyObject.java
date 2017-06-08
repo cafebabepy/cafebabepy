@@ -59,6 +59,8 @@ public interface PyObject {
 
     PyObject getObjectOrThrow(String name, boolean appear);
 
+    PyObject getCallable();
+
     PyObject call(PyObject self);
 
     PyObject call(PyObject self,

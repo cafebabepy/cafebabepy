@@ -3,6 +3,7 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.module.builtins.*;
+import org.cafebabepy.runtime.object.PyNoneObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
 
@@ -134,9 +135,7 @@ public final class Python {
                 .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
-        this.noneObject = type("types.NoneType", false)
-                .map(o -> o.call())
-                .orElseThrow(() -> new CafeBabePyException("'NoneType' is not found"));
+        this.noneObject = new PyNoneObject(this);
 
         this.trueObject = bool(true);
         this.falseObject = bool(false);

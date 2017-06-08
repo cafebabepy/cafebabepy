@@ -21,9 +21,11 @@ public class JavaPyObject extends AbstractJavaPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        return getObject("__call__").orElseThrow(
-                () -> this.runtime.newRaiseException("builtins.TypeError",
-                        "'" + getType().getName() + "' object is not callabl"))
-                .call(args);
+        return getCallable().call(args);
+    }
+
+    @Override
+    public boolean isNone() {
+        return false;
     }
 }

@@ -64,4 +64,9 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
             }
         }
     }
+
+    @Override
+    public boolean isNone() {
+        return false;
+    }
 }

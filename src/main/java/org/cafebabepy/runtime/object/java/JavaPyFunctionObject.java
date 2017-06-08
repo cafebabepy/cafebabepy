@@ -8,6 +8,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import static org.cafebabepy.util.ProtocolNames.__call__;
+
 /**
  * Created by yotchang4s on 2017/05/31.
  */
@@ -29,6 +31,8 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
         this.target = target;
         this.name = name;
         this.method = method;
+
+        getScope().put(__call__, this);
     }
 
     @Override
@@ -122,5 +126,10 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public boolean isNone() {
+        return false;
     }
 }
