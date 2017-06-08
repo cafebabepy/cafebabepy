@@ -35,13 +35,8 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
                     "DefineCafeBabePyModule or DefineCafeBabePyModule annotation is not defined " + clazz.getName());
         }
 
+        this.moduleName = defineCafeBabePyModule.name();
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyModule.name());
-        if (!splitter.getModuleName().isPresent()) {
-            this.moduleName = splitter.getSimpleName();
-
-        } else {
-            this.moduleName = splitter.getModuleName().get();
-        }
         this.name = splitter.getSimpleName();
         this.appear = true;
         this.runtime.defineModule(this);
