@@ -249,6 +249,18 @@ public final class Python {
         }
     }
 
+    public RaiseException newRaiseException(String exceptionType) {
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
+
+        PyObject exception = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
+                newRaiseException("builtins.NameError",
+                        "'" + splitter.getName() + "' module is not found")
+
+        )).getObjectOrThrow(splitter.getSimpleName()).call();
+
+        return new RaiseException(exception);
+    }
+
     public RaiseException newRaiseException(String exceptionType, String message) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
@@ -256,7 +268,7 @@ public final class Python {
                 newRaiseException("builtins.NameError",
                         "'" + splitter.getName() + "' module is not found")
 
-        )).getObjectOrThrow(splitter.getSimpleName()).call(str(message));
+        )).getObjectOrThrow(splitter.getSimpleName()).call();
 
         return new RaiseException(exception, message);
     }
