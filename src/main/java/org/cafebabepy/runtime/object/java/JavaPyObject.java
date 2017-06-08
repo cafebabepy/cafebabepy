@@ -4,17 +4,19 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
+import java.util.Optional;
+
 /**
  * Created by yotchang4s on 2017/06/04.
  */
 public class JavaPyObject extends AbstractJavaPyObject {
 
     public JavaPyObject(Python runtime, PyObject type) {
-        super(runtime, type);
+        super(runtime, () -> Optional.ofNullable(type));
     }
 
     public JavaPyObject(Python runtime, PyObject type, PyObjectScope parentScope) {
-        super(runtime, type, parentScope);
+        super(runtime, () -> Optional.ofNullable(type), parentScope);
     }
 
     @Override

@@ -55,10 +55,12 @@ public final class Python {
     }
 
     private void initialize() {
-        initializeBuiltins("org.cafebabepy.runtime.module");
-        initializeBuiltins("org.cafebabepy.runtime.module.types");
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
+        initializeBuiltins("org.cafebabepy.runtime.module.types");
         initializeBuiltins("org.cafebabepy.runtime.module._ast");
+
+        initializeBuiltins("org.cafebabepy.runtime.module");
+
         initializeObjects();
     }
 
@@ -87,8 +89,14 @@ public final class Python {
 
                 }
 
-                Constructor c = clazz.getConstructor(Python.class);
-                module = (PyObject) c.newInstance(this);
+                try {
+                    Constructor c = clazz.getConstructor(Python.class);
+                    module = (PyObject)c.newInstance(this);
+
+                } catch (InvocationTargetException | NoSuchMethodException e) {
+                    throw new CafeBabePyException(
+                            "Fail '" + defineCafeBabePyModule.name() + "' initialize '" + clazz.getName() + "'", e);
+                }
             }
 
             if (module == null) {
@@ -101,16 +109,20 @@ public final class Python {
                     continue;
                 }
 
-                Constructor c = clazz.getConstructor(Python.class);
-                c.newInstance(this);
+                try {
+                    Constructor c = clazz.getConstructor(Python.class);
+                    c.newInstance(this);
+
+                } catch (InvocationTargetException | NoSuchMethodException e) {
+                    throw new CafeBabePyException(
+                            "Fail '" + defineCafeBabePyType.name() + "' initialize '" + clazz.getName() + "'", e);
+                }
             }
 
         } catch (
                 IOException |
-                        NoSuchMethodException |
                         InstantiationException |
                         IllegalAccessException |
-                        InvocationTargetException |
                         ClassCastException e) {
 
             throw new CafeBabePyException("Fail initialize", e);
@@ -275,8 +287,7 @@ public final class Python {
 
     public void defineModule(PyObject module) {
         if (!module.isModule()) {
-            throw newRaiseException("builtins.ModuleNotFoundError",
-                    "No module named '" + module.getFullName() + "'");
+            throw new CafeBabePyException("No module named '" + module.getFullName() + "'");
         }
         String[] moduleNames = module.getName().split("\\.");
         if (moduleNames.length == 1) {

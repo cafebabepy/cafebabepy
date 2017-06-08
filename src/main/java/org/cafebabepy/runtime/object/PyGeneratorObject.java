@@ -47,6 +47,16 @@ public final class PyGeneratorObject extends AbstractPyObject implements PyObjec
     }
 
     @Override
+    public boolean isType() {
+        return false;
+    }
+
+    @Override
+    public boolean isModule() {
+        return false;
+    }
+
+    @Override
     public List<PyObject> getSuperTypes() {
         return null;
     }

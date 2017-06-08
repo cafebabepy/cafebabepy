@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime;
 
 import org.cafebabepy.runtime.module.builtins.PyTypeType;
-import org.cafebabepy.runtime.module.types.PyModuleType;
+import org.cafebabepy.runtime.module.builtins.PyModuleType;
 import org.cafebabepy.runtime.module.types.PyNoneTypeType;
 
 import java.util.Map;
@@ -80,16 +80,6 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public final String getFullName() {
         return getModuleName() + getName();
-    }
-
-    @Override
-    public final boolean isType() {
-        return getType() instanceof PyTypeType;
-    }
-
-    @Override
-    public final boolean isModule() {
-        return getType() instanceof PyModuleType;
     }
 
     @Override

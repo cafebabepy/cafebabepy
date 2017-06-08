@@ -4,7 +4,6 @@ import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.java.JavaPyObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
@@ -89,7 +88,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @Override
     public PyObject getType() {
-        return this.runtime.moduleOrThrow("builtins").getObjectOrThrow("type");
+        return this.runtime.getBuiltinsModule().getObjectOrThrow("type");
     }
 
     public Optional<String> getModuleName() {
@@ -99,6 +98,16 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public boolean isType() {
+        return true;
+    }
+
+    @Override
+    public boolean isModule() {
+        return false;
     }
 
     @Override

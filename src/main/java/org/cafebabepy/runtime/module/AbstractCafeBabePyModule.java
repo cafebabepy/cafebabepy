@@ -95,4 +95,14 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     public String getName() {
         return this.name;
     }
+
+    @Override
+    public boolean isType() {
+        return false;
+    }
+
+    @Override
+    public boolean isModule() {
+        return true;
+    }
 }
