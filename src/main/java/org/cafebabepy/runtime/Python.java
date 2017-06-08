@@ -92,7 +92,7 @@ public final class Python {
 
                 try {
                     Constructor c = clazz.getConstructor(Python.class);
-                    module = (PyObject)c.newInstance(this);
+                    module = (PyObject) c.newInstance(this);
 
                 } catch (InvocationTargetException | NoSuchMethodException e) {
                     throw new CafeBabePyException(
@@ -270,6 +270,11 @@ public final class Python {
         )).getObjectOrThrow(splitter.getSimpleName()).call();
 
         return new RaiseException(exception);
+    }
+
+    public RaiseException newRaiseTypeError(String message) {
+        PyObject typeErrorType = typeOrThrow("builtins.TypeError");
+        return new RaiseException(typeErrorType, message);
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
