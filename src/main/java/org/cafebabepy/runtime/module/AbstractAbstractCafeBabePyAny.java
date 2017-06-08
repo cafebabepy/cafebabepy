@@ -64,9 +64,4 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
             }
         }
     }
-
-    @Override
-    public final PyObject getStr() {
-        return this.runtime.str(asJavaString());
-    }
 }
