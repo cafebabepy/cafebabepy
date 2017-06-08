@@ -4,6 +4,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.module.builtins.*;
 import org.cafebabepy.runtime.object.PyNoneObject;
+import org.cafebabepy.util.BinaryConsumer;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
 
@@ -58,14 +59,13 @@ public final class Python {
     private void initialize() {
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
         initializeBuiltins("org.cafebabepy.runtime.module.types");
-        initializeBuiltins("org.cafebabepy.runtime.module._ast");
 
         initializeBuiltins("org.cafebabepy.runtime.module");
 
         initializeObjects();
     }
 
-    private void initializeBuiltins(String packageName) {
+    public void initializeBuiltins(String packageName) {
         Set<Class<?>> builtinsClasses;
 
         // FIXME 本当は form builtins import * の形にしたい
@@ -237,19 +237,32 @@ public final class Python {
         }
     }
 
-    public void iter(PyObject object, Consumer<PyObject> action) {
-        PyObject iter = object.getObject(__iter__).orElseThrow(() ->
-                newRaiseException("builtins.TypeError",
-                        "'" + object.getName() + "' object is not iterable"));
+    public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
 
-        PyObject next = object.getObject(__next__).orElseThrow(() ->
-                newRaiseException("builtins.TypeError",
-                        "iter() returned non-iterator of type '" + object.getType().getName() + "'"));
+        PyObject next = getNext(object);
 
         try {
-            // TODO yieldは？
+            int i = 0;
             while (true) {
-                PyObject value = next.call(next);
+                PyObject value = next.callThis();
+                action.accept(value, i);
+                i++;
+            }
+
+        } catch (RaiseException e) {
+            if (e.getException().getType() != typeOrThrow("builtins.StopIteration")) {
+                throw e;
+            }
+        }
+    }
+
+    public void iter(PyObject object, Consumer<PyObject> action) {
+
+        PyObject next = getNext(object);
+
+        try {
+            while (true) {
+                PyObject value = next.callThis();
                 action.accept(value);
             }
 
@@ -258,6 +271,18 @@ public final class Python {
                 throw e;
             }
         }
+    }
+
+    private PyObject getNext(PyObject object) {
+        PyObject iter = object.getObject(__iter__).orElseThrow(() ->
+                newRaiseException("builtins.TypeError",
+                        "'" + object.getName() + "' object is not iterable"));
+
+        return iter.getObject(__next__).orElseThrow(() ->
+                newRaiseException("builtins.TypeError",
+                        "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
+
+
     }
 
     public RaiseException newRaiseException(String exceptionType) {
@@ -293,7 +318,10 @@ public final class Python {
         if (!module.isModule()) {
             throw new CafeBabePyException("No module named '" + module.getFullName() + "'");
         }
-        String[] moduleNames = module.getName().split("\\.");
+        String[] moduleNames = module.getModuleName().orElseThrow(() ->
+                new CafeBabePyException("moduleName is not found")
+        ).split("\\.");
+
         if (moduleNames.length == 1) {
             this.moduleMap.put(moduleNames[0], module);
             return;
@@ -302,16 +330,16 @@ public final class Python {
         StringBuilder moduleBuilder = new StringBuilder();
         moduleBuilder.append(moduleNames[0]);
 
-        for (int i = 0; i < moduleNames.length; i++) {
-            moduleBuilder.append('.').append(moduleNames[i]);
-
+        for (int i = 1; i < moduleNames.length; i++) {
             String moduleName = moduleBuilder.toString();
             if (!this.moduleMap.containsKey(moduleName)) {
                 throw new CafeBabePyException("module '" + moduleName + "' is not found");
             }
 
+            moduleBuilder.append('.').append(moduleNames[i]);
+
             if (i == moduleNames.length - 1) {
-                this.moduleMap.put(moduleName, module);
+                this.moduleMap.put(moduleBuilder.toString(), module);
             }
         }
     }
