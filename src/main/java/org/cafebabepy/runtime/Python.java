@@ -289,11 +289,22 @@ public final class Python {
     }
 
     private PyObject getNext(PyObject object) {
-        PyObject iter = object.getObject(__iter__).orElseThrow(() ->
+        PyObject obj;
+        if (object.isType()) {
+            obj = object;
+        } else {
+            obj = object.getType();
+        }
+        Optional<PyObject> next = obj.getObject(__next__);
+        if (next.isPresent()) {
+            return next.get();
+        }
+
+        PyObject iter = obj.getObject(__iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "'" + object.getName() + "' object is not iterable"));
 
-        return iter.getObject(__next__).orElseThrow(() ->
+        return iter.getType().getObject(__next__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
 
