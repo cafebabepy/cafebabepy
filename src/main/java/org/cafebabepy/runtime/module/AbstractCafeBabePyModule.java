@@ -87,6 +87,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         return Optional.ofNullable(this.moduleName);
     }
 
+    @Override
     public String getName() {
         return this.name;
     }

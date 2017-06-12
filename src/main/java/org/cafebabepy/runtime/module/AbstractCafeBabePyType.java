@@ -96,6 +96,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         return Optional.of(this.moduleName);
     }
 
+    @Override
     public String getName() {
         return this.name;
     }

@@ -44,6 +44,11 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
     }
 
     @Override
+    public String getName() {
+        return getType().getName();
+    }
+
+    @Override
     public boolean isType() {
         return false;
     }

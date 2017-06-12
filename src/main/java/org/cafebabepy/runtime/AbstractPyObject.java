@@ -76,13 +76,11 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public String getName() {
-        return getType().getName();
+    public final String getFullName() {
+        return getModuleName().map(n -> n + ".").orElse("") + getName();
     }
 
     @Override
-    public final String getFullName() {
-        return getModuleName() + getName();
     }
 
     @Override
