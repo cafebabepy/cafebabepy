@@ -7,7 +7,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefineCafeBabePyType(name = "builtins.object", parent = {})
+@DefineCafeBabePyType(name = "builtins.object")
 public class PyObjectType extends AbstractCafeBabePyType {
 
     public PyObjectType(Python runtime) {
