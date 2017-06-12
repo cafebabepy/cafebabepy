@@ -1,10 +1,12 @@
 package org.cafebabepy.runtime;
 
 import org.cafebabepy.runtime.module.builtins.PyNoneTypeType;
+import org.cafebabepy.util.LazyHashMap;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
@@ -12,6 +14,7 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
  * Created by yotchang4s on 2017/06/08.
  */
 public abstract class AbstractPyObject implements PyObject {
+
     protected final Python runtime;
 
     protected final PyObjectScope scope;
@@ -115,6 +118,33 @@ public abstract class AbstractPyObject implements PyObject {
                 .getObjectOrThrow("bool").call(this) == getRuntime().False();
     }
 
+    public final Optional<PyObject> type(String name) {
+        return this.runtime.type(name);
+    }
+
+    public final Optional<PyObject> type(String name, boolean appear) {
+        return this.runtime.type(name, appear);
+    }
+
+    public final PyObject typeOrThrow(String name) {
+        return getRuntime().typeOrThrow(name);
+    }
+
+    public final PyObject typeOrThrow(String name, boolean appear) {
+        return getRuntime().typeOrThrow(name, appear);
+    }
+
+    @Override
+    public final LazyHashMap<String, Supplier<PyObject>> getLazyObjects() {
+        return getLazyObjects(true);
+    }
+
+    @Override
+    public final LazyHashMap<String, Supplier<PyObject>> getLazyObjects(boolean appear) {
+        return getScope().getsLazy(appear);
+    }
+
+
     @Override
     public final Map<String, PyObject> getObjects() {
         return getObjects(true);
@@ -126,6 +156,16 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
+    public final Supplier<Optional<PyObject>> getLazyObject(String name) {
+        return getLazyObject(name, true);
+    }
+
+    @Override
+    public final Supplier<Optional<PyObject>> getLazyObject(String name, boolean appear) {
+        return getScope().getLazy(name, appear);
+    }
+
+    @Override
     public final Optional<PyObject> getObject(String name) {
         return getObject(name, true);
     }
@@ -133,6 +173,16 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public final Optional<PyObject> getObject(String name, boolean appear) {
         return getScope().get(name, appear);
+    }
+
+    @Override
+    public Supplier<PyObject> getLazyObjectOrThrow(String name) {
+        return () -> getObjectOrThrow(name);
+    }
+
+    @Override
+    public Supplier<PyObject> getLazyObjectOrThrow(String name, boolean appear) {
+        return () -> getObjectOrThrow(name, appear);
     }
 
     @Override

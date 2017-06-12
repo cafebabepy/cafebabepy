@@ -1,5 +1,7 @@
 package org.cafebabepy.runtime;
 
+import org.cafebabepy.util.LazyHashMap;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -15,9 +17,9 @@ public class PyObjectScope {
 
     private PyObjectScope parent;
 
-    private Map<String, Supplier<Optional<PyObject>>> objectMap;
+    private LazyHashMap<String, Supplier<PyObject>> objectMap;
 
-    private volatile Map<String, Supplier<Optional<PyObject>>> notAppearObjectMap;
+    private volatile LazyHashMap<String, Supplier<PyObject>> notAppearObjectMap;
 
     public PyObjectScope() {
         this(null);
@@ -25,7 +27,7 @@ public class PyObjectScope {
 
     public PyObjectScope(PyObjectScope parent) {
         this.parent = parent;
-        this.objectMap = new ConcurrentHashMap<>();
+        this.objectMap = new LazyHashMap(new ConcurrentHashMap<>());
     }
 
     public void put(String name, PyObject object) {
@@ -33,14 +35,14 @@ public class PyObjectScope {
     }
 
     public void put(String name, PyObject object, boolean appear) {
-        put(name, () -> Optional.ofNullable(object), appear);
+        put(name, () -> object, appear);
     }
 
-    public void put(String name, Supplier<Optional<PyObject>> objectReadAccessor) {
+    public void put(String name, Supplier<PyObject> objectReadAccessor) {
         put(name, objectReadAccessor, true);
     }
 
-    public void put(String name, Supplier<Optional<PyObject>> objectReadAccessor, boolean appear) {
+    public void put(String name, Supplier<PyObject> objectReadAccessor, boolean appear) {
         if (appear) {
             this.objectMap.put(name, objectReadAccessor);
 
@@ -48,7 +50,7 @@ public class PyObjectScope {
             if (this.notAppearObjectMap == null) {
                 synchronized (this) {
                     if (this.notAppearObjectMap == null) {
-                        this.notAppearObjectMap = new HashMap<>();
+                        this.notAppearObjectMap = new LazyHashMap<>();
                     }
                 }
             }
@@ -61,38 +63,76 @@ public class PyObjectScope {
         return this.parent;
     }
 
+    public Map<String, Supplier<PyObject>> getsLazy() {
+        return getsLazy(true);
+    }
+
+    public LazyHashMap<String, Supplier<PyObject>> getsLazy(boolean appear) {
+        LazyHashMap<String, Supplier<PyObject>> map;
+        if (appear) {
+            synchronized (this) {
+                map = new LazyHashMap<>(this.objectMap.size());
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue());
+                }
+            }
+
+        } else {
+            synchronized (this) {
+                map = new LazyHashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.notAppearObjectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue());
+                }
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue());
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public Map<String, PyObject> gets() {
+        return gets(true);
+    }
+
     public Map<String, PyObject> gets(boolean appear) {
         Map<String, PyObject> map;
         if (appear) {
             synchronized (this) {
                 map = new HashMap<>(this.objectMap.size());
-                for (Map.Entry<String, Supplier<Optional<PyObject>>> e : this.objectMap.entrySet()) {
-                    Optional<PyObject> value = e.getValue().get();
-                    if (value.isPresent()) {
-                        map.put(e.getKey(), value.get());
-                    }
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().get());
                 }
             }
 
         } else {
             synchronized (this) {
                 map = new HashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
-                for (Map.Entry<String, Supplier<Optional<PyObject>>> e : this.notAppearObjectMap.entrySet()) {
-                    Optional<PyObject> value = e.getValue().get();
-                    if (value.isPresent()) {
-                        map.put(e.getKey(), value.get());
-                    }
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.notAppearObjectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().get());
                 }
-                for (Map.Entry<String, Supplier<Optional<PyObject>>> e : this.objectMap.entrySet()) {
-                    Optional<PyObject> value = e.getValue().get();
-                    if (value.isPresent()) {
-                        map.put(e.getKey(), value.get());
-                    }
+
+                for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
+                    map.put(e.getKey(), e.getValue().get());
                 }
             }
         }
 
         return map;
+    }
+
+    public Supplier<Optional<PyObject>> getLazy(String name) {
+        return getLazy(name, true);
+    }
+
+    public Supplier<Optional<PyObject>> getLazy(String name, boolean appear) {
+        return getRaw(name, appear);
     }
 
     public Optional<PyObject> get(String name) {
@@ -108,14 +148,14 @@ public class PyObjectScope {
     }
 
     public Supplier<Optional<PyObject>> getRaw(String name, boolean appear) {
-        Supplier<Optional<PyObject>> objectReadAccessor = this.objectMap.get(name);
-        if (objectReadAccessor == null) {
+        Supplier<PyObject> getter = this.objectMap.get(name);
+        if (getter == null) {
             if (!appear) {
                 return getRawAppearOnly(name);
             }
         }
 
-        if (objectReadAccessor == null) {
+        if (getter == null) {
             if (this.parent != null) {
                 return this.parent.getRaw(name, appear);
             }
@@ -123,7 +163,7 @@ public class PyObjectScope {
             return this.emptyObjectReadAccessor;
         }
 
-        return objectReadAccessor;
+        return () -> Optional.of(getter.get());
     }
 
     public Optional<PyObject> getAppearOnly(String name) {
@@ -131,11 +171,11 @@ public class PyObjectScope {
     }
 
     public Supplier<Optional<PyObject>> getRawAppearOnly(String name) {
-        Supplier<Optional<PyObject>> objectReadAccessor = null;
+        Supplier<PyObject> getter = null;
         if (this.notAppearObjectMap != null) {
-            objectReadAccessor = this.notAppearObjectMap.get(name);
+            getter = this.notAppearObjectMap.get(name);
         }
-        if (objectReadAccessor == null) {
+        if (getter == null) {
             if (this.parent != null) {
                 return this.parent.getRawAppearOnly(name);
             }
@@ -143,6 +183,22 @@ public class PyObjectScope {
             return this.emptyObjectReadAccessor;
         }
 
-        return objectReadAccessor;
+        final Supplier<PyObject> g = getter;
+
+        return () -> Optional.of(g.get());
+    }
+
+    public boolean containsKey(String name) {
+        return containsKey(name, true);
+    }
+
+    public boolean containsKey(String name, boolean appear) {
+        if (appear) {
+            if (this.notAppearObjectMap == null || !this.notAppearObjectMap.containsKey(name)) {
+                return false;
+            }
+        }
+
+        return this.objectMap.containsKey(name);
     }
 }
