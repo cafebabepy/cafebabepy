@@ -20,12 +20,12 @@ public class JavaPyObject extends AbstractJavaPyObject {
     }
 
     @Override
-    public PyObject call(PyObject... args) {
-        return getCallable().call(args);
+    public boolean isNone() {
+        return false;
     }
 
     @Override
-    public boolean isNone() {
-        return false;
+    public PyObject call(PyObject... args) {
+        return getCallable().call(args);
     }
 }
