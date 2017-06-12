@@ -15,22 +15,22 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
  */
 public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
-    private PyObject target;
+    private final PyObject target;
 
-    private Method method;
+    private final String name;
 
-    private String name;
+    private final Method method;
 
     public JavaPyFunctionObject(Python runtime, PyObject target, String name, Method method) {
         super(runtime, runtime.getBuiltinsModule().getScope().getRaw("FunctionType"));
 
-        if (!Modifier.isPublic(method.getModifiers())) {
-            this.method.setAccessible(true);
-        }
-
         this.target = target;
         this.name = name;
         this.method = method;
+
+        if (!Modifier.isPublic(method.getModifiers())) {
+            this.method.setAccessible(true);
+        }
 
         getScope().put(__call__, this);
     }
@@ -78,19 +78,20 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
                             compArgs[compArgs.length - 1] = new PyObject[0];
                         }
+
                     } else {
-                        compArgs = new PyObject[0];
+                        compArgs = new Object[]{new PyObject[0]};
                     }
 
                 } else if (paramClasses.length != args.length) {
                     throw this.runtime.newRaiseException("builtins.TypeError",
-                            target.getName() + "() takes at most "
+                            this.target.getName() + "() takes at most "
                                     + paramClasses.length + " arguments (" + args.length + " given)");
 
                 } else {
-                    compArgs = new Object[paramClasses.length];
-                    for (int i = 0; i < paramClasses.length; i++) {
-                        Class<?> paramClass = paramClasses[i];
+                    compArgs = new Object[args.length];
+                    for (int i = 0; i < args.length; i++) {
+                        Class<?> paramClass = args[i].getClass();
                         if (paramClass.isArray()) {
                             compArgs[i] = new PyObject[]{args[i]};
 
@@ -114,14 +115,15 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
                         "FIXME Java object to Python object !!!!!!!!");
             }
 
-        } catch (IllegalAccessException | InvocationTargetException |
-                IllegalArgumentException e) {
+        } catch (IllegalAccessException | IllegalArgumentException e) {
             // FIXME CPython message???
             throw new CafeBabePyException("Not accessible method "
                     + this.method.getDeclaringClass().getName()
                     + "#" + method.getName(), e);
-        }
 
+        } catch (InvocationTargetException e) {
+            throw (RuntimeException) e.getTargetException();
+        }
     }
 
     public String getName() {

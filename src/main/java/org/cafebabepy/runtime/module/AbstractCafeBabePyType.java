@@ -126,14 +126,26 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @Override
     public PyObject call(PyObject... args) {
-        return getObjectOrThrow(__call__).call(args);
+        return getCallable().call(args);
     }
+
 
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
-        PyObject object = getObjectOrThrow(__new__).call(this);
+        if (args.length == 0) {
+            throw this.runtime.newRaiseTypeError("type is not found");
 
-        getObjectOrThrow(__init__).call(object, args);
+        } else if (!args[0].isType()) {
+            throw this.runtime.newRaiseTypeError("'" + getFullName() + "' is not type");
+        }
+
+        PyObject object = getObjectOrThrow(__new__).call(args[0]);
+
+        PyObject[] as = new PyObject[args.length + 1];
+        as[0] = this;
+        System.arraycopy(args, 0, as, 1, args.length);
+
+        getObjectOrThrow(__init__).call(as);
 
         return object;
     }

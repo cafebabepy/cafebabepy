@@ -143,11 +143,12 @@ public final class Python {
 
             throw new CafeBabePyException("Fail initialize", e);
         }
+
     }
 
     private void initializeObjects() {
         this.objectObject = type("builtins.object")
-                .map(o -> o.call())
+                .map(PyObject::callStatic)
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
         this.noneObject = new PyNoneObject(this);
@@ -156,7 +157,7 @@ public final class Python {
         this.falseObject = bool(false);
 
         this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
-                .map(o -> o.call())
+                .map(PyObject::callStatic)
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
 
@@ -252,6 +253,34 @@ public final class Python {
         }
     }
 
+    public PyObject newPyObject(Class<? extends PyObject> clazz, PyObject... args) {
+        Constructor<? extends PyObject> constructor;
+        try {
+            constructor = clazz.getConstructor(Python.class);
+            constructor.setAccessible(true);
+
+        } catch (NoSuchMethodException e) {
+            throw new CafeBabePyException(
+                    "'" + clazz.getName() + "' constractor is not found (PyObject(Python))");
+        }
+
+        PyObject object;
+        try {
+            object = constructor.newInstance(this);
+
+        } catch (InstantiationException |
+                IllegalAccessException |
+                InvocationTargetException e) {
+            throw new CafeBabePyException(
+                    "Fail initialize '" + clazz.getName() + "'", e);
+        }
+
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
+    }
+
     public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
 
         PyObject next = getNext(object);
@@ -259,7 +288,7 @@ public final class Python {
         try {
             int i = 0;
             while (true) {
-                PyObject value = next.callThis();
+                PyObject value = next.call(next);
                 action.accept(value, i);
                 i++;
             }
@@ -277,7 +306,7 @@ public final class Python {
 
         try {
             while (true) {
-                PyObject value = next.callThis();
+                PyObject value = next.call(next);
                 action.accept(value);
             }
 
@@ -314,13 +343,15 @@ public final class Python {
     public RaiseException newRaiseException(String exceptionType) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
-        PyObject exception = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
+        PyObject eType = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
                 newRaiseException("builtins.NameError",
                         "'" + splitter.getName() + "' module is not found")
 
-        )).getObjectOrThrow(splitter.getSimpleName()).call();
+        )).getObjectOrThrow(splitter.getSimpleName());
 
-        return new RaiseException(exception);
+        PyObject e = PyObject.callStatic(eType);
+
+        return new RaiseException(e);
     }
 
     public RaiseException newRaiseTypeError(String message) {
@@ -331,13 +362,15 @@ public final class Python {
     public RaiseException newRaiseException(String exceptionType, String message) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
-        PyObject exception = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
+        PyObject eType = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
                 newRaiseException("builtins.NameError",
                         "'" + splitter.getName() + "' module is not found")
 
-        )).getObjectOrThrow(splitter.getSimpleName()).call();
+        )).getObjectOrThrow(splitter.getSimpleName());
 
-        return new RaiseException(exception, message);
+        PyObject e = PyObject.callStatic(eType);
+
+        return new RaiseException(e, message);
     }
 
     public void defineModule(PyObject module) {

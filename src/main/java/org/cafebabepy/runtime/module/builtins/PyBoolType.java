@@ -61,7 +61,7 @@ public class PyBoolType extends AbstractCafeBabePyType {
                     "builtins.TypeError", "'" + type.getName() + "' is not bool");
         }
 
-        PyObject object = type.call();
+        PyObject object = PyObject.callStatic(type);
         object.putJavaObject(JAVA_BOOLEAN_NAME, bool);
 
         return object;

@@ -105,7 +105,7 @@ public abstract class AbstractPyObject implements PyObject {
 
         PyObject baseExceptionType = module.getObjectOrThrow("BaseException");
 
-        return call.callThis(getType(), baseExceptionType).isTrue();
+        return call.call(getType(), baseExceptionType).isTrue();
     }
 
     @Override
@@ -227,174 +227,73 @@ public abstract class AbstractPyObject implements PyObject {
     public final PyObject getCallable() {
         return getObject(__call__).orElseThrow(
                 () -> this.runtime.newRaiseException("builtins.TypeError",
-                        "'" + getType().getName() + "' object is not callable"));
+                        "'" + getName() + "' object is not callable"));
     }
 
     @Override
-    public PyObject call(PyObject self) {
+    public PyObject call() {
+        PyObject[] objects = new PyObject[0];
+
+        return call(objects);
+    }
+
+    @Override
+    public PyObject call(PyObject arg1) {
         PyObject[] objects = new PyObject[1];
-        objects[0] = self;
+        objects[0] = arg1;
 
         return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1) {
-        PyObject[] objects = new PyObject[2];
-        objects[0] = self;
-        objects[1] = arg1;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2) {
+        PyObject[] objects = new PyObject[2];
+        objects[0] = arg1;
+        objects[1] = arg2;
+
+        return call(objects);
+    }
+
+    @Override
+    public PyObject call(
+            PyObject arg1,
+            PyObject arg2,
+            PyObject arg3) {
         PyObject[] objects = new PyObject[3];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
 
         return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
-                         PyObject arg2,
-                         PyObject arg3) {
-        PyObject[] objects = new PyObject[4];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4) {
-        PyObject[] objects = new PyObject[5];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
+        PyObject[] objects = new PyObject[4];
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
+        objects[3] = arg4;
 
         return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4,
                          PyObject arg5) {
-        PyObject[] objects = new PyObject[6];
-        objects[0] = self;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-        objects[5] = arg5;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject call(PyObject self, PyObject... args) {
-        PyObject[] objects = new PyObject[args.length + 1];
-        System.arraycopy(args, 0, objects, 1, args.length);
-        objects[0] = self;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis() {
-        PyObject[] objects = new PyObject[0];
-        objects[0] = this;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject arg1) {
-        PyObject[] objects = new PyObject[2];
-        objects[0] = this;
-        objects[1] = arg1;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject arg1,
-                             PyObject arg2) {
-        PyObject[] objects = new PyObject[3];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3) {
-        PyObject[] objects = new PyObject[4];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4) {
         PyObject[] objects = new PyObject[5];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4,
-                             PyObject arg5) {
-        PyObject[] objects = new PyObject[6];
-        objects[0] = this;
-        objects[1] = arg1;
-        objects[2] = arg2;
-        objects[3] = arg3;
-        objects[4] = arg4;
-        objects[5] = arg5;
-
-        return call(objects);
-    }
-
-    @Override
-    public PyObject callThis(PyObject... args) {
-        PyObject[] objects = new PyObject[args.length + 1];
-        System.arraycopy(args, 0, objects, 1, args.length);
-        objects[0] = this;
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
+        objects[3] = arg4;
+        objects[4] = arg5;
 
         return call(objects);
     }

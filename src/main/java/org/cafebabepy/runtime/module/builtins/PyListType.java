@@ -37,7 +37,7 @@ public class PyListType extends AbstractCafeBabePyType {
                     "builtins.TypeError", "'" + type.getName() + "' is not list");
         }
 
-        PyObject object = type.call();
+        PyObject object = PyObject.callStatic(type);
         object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
 
         return object;

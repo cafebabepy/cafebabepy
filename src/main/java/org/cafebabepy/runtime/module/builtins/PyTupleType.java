@@ -36,7 +36,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
                     "builtins.TypeError", "'" + type.getName() + "' is not tuple");
         }
 
-        PyObject object = type.call();
+        PyObject object = PyObject.callStatic(type);
         object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
 
         return object;

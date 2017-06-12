@@ -25,7 +25,7 @@ public class PyStrType extends AbstractCafeBabePyType {
                     "builtins.TypeError", "'" + type.getName() + "' is not str");
         }
 
-        PyObject object = type.call();
+        PyObject object = PyObject.callStatic(type);
         object.putJavaObject(JAVA_STRING_NAME, value);
 
         return object;

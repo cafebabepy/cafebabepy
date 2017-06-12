@@ -80,103 +80,71 @@ public interface PyObject {
 
     PyObject getCallable();
 
-    PyObject call(PyObject self);
+    PyObject call();
 
-    PyObject call(PyObject self,
-                  PyObject arg1);
+    PyObject call(PyObject arg1);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4,
                   PyObject arg5);
 
-    PyObject call(PyObject self,
-                  PyObject... args);
-
-    PyObject callThis();
-
-    PyObject callThis(PyObject arg1);
-
-    PyObject callThis(PyObject arg1,
-                      PyObject arg2);
-
-    PyObject callThis(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3);
-
-    PyObject callThis(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4);
-
-    PyObject callThis(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4,
-                      PyObject arg5);
-
-    PyObject callThis(PyObject... args);
-
     PyObject call(PyObject... args);
 
-    static PyObject callStatic(PyObject self, PyObject... args) {
-        return self.call(args);
-    }
-
     static PyObject callStatic(PyObject self) {
-        return self.callThis(self);
+        return self.call(self);
     }
 
-    static PyObject callStatic(PyObject self,
+    static PyObject callStatic(PyObject target,
                                PyObject arg1) {
-        return self.callThis(arg1);
+        return target.call(arg1);
     }
 
-    static PyObject callStatic(PyObject self,
+    static PyObject callStatic(PyObject target,
                                PyObject arg1,
                                PyObject arg2) {
-        return self.callThis(arg1, arg2);
+        return target.call(arg1, arg2);
     }
 
 
-    static PyObject callStatic(PyObject self,
+    static PyObject callStatic(PyObject target,
                                PyObject arg1,
                                PyObject arg2,
                                PyObject arg3) {
-        return self.callThis(arg1, arg2, arg3);
+        return target.call(arg1, arg2, arg3);
     }
 
-    static PyObject callStatic(PyObject self,
+    static PyObject callStatic(PyObject target,
                                PyObject arg1,
                                PyObject arg2,
                                PyObject arg3,
                                PyObject arg4) {
-        return self.callThis(arg1, arg2, arg3, arg4);
+        return target.call(arg1, arg2, arg3, arg4);
     }
 
-    static PyObject callStatic(PyObject self,
+    static PyObject callStatic(PyObject target,
                                PyObject arg1,
                                PyObject arg2,
                                PyObject arg3,
                                PyObject arg4,
                                PyObject arg5) {
-        return self.callThis(arg1, arg2, arg3, arg4, arg5);
+        return target.call(arg1, arg2, arg3, arg4, arg5);
+    }
+
+    static PyObject callStatic(PyObject target, PyObject... args) {
+        return target.call(args);
     }
 }
