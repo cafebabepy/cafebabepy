@@ -1,6 +1,5 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.runtime.module.builtins.PyNoneTypeType;
 import org.cafebabepy.util.LazyHashMap;
 
 import java.util.Map;
