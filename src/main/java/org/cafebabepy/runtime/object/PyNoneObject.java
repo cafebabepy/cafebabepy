@@ -58,7 +58,6 @@ public class PyNoneObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        // Always Exception
         return getCallable().call(args);
     }
 }
