@@ -14,8 +14,6 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
     AbstractAbstractCafeBabePyAny(Python runtime) {
         super(runtime, new PyObjectScope());
-
-        defineClass();
     }
 
     @Override

@@ -331,8 +331,6 @@ public final class Python {
         return iter.getType().getObject(__next__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
-
-
     }
 
     public RaiseException newRaiseException(String exceptionType) {
