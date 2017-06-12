@@ -28,7 +28,9 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         super(runtime);
     }
 
-    void defineClass(Class<?> clazz) {
+    public void defineClass() {
+        Class<?> clazz = getClass();
+
         DefineCafeBabePyModule defineCafeBabePyModule = clazz.getAnnotation(DefineCafeBabePyModule.class);
         if (defineCafeBabePyModule == null) {
             throw new CafeBabePyException(
@@ -48,7 +50,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
             synchronized (this) {
                 if (this.superTypes == null) {
                     this.superTypes = new ArrayList<>(1);
-                    PyObject type = this.runtime.type("object").orElseThrow(() ->
+                    PyObject type = this.runtime.type("builtins.object").orElseThrow(() ->
                             new CafeBabePyException(
                                     "type '" + this.name + "' parent 'object' is not found")
                     );

@@ -34,7 +34,10 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         super(runtime);
     }
 
-    void defineClass(Class<?> clazz) {
+    @Override
+    public void defineClass() {
+        Class<?> clazz = getClass();
+
         DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
         if (defineCafeBabePyType == null) {
             throw new CafeBabePyException(
@@ -65,14 +68,24 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         if (this.superTypes == null) {
             synchronized (this) {
                 if (this.superTypes == null) {
-                    this.superTypes = new ArrayList<>(this.superTypeNames.length);
+                    List<PyObject> superTypes = new ArrayList<>(this.superTypeNames.length);
                     for (String superTypeName : this.superTypeNames) {
                         PyObject type = this.runtime.type(superTypeName).orElseThrow(() ->
                                 new CafeBabePyException(
                                         "type '" + this.name + "' parent '" + superTypeName + "' is not found")
                         );
 
-                        this.superTypes.add(type);
+                        superTypes.add(type);
+                    }
+
+                    this.superTypes = new ArrayList<>();
+                    this.superTypes.addAll(superTypes);
+
+                    for (PyObject superType : superTypes) {
+                        for (PyObject subSuperType : superType.getSuperTypes())
+                            if (!this.superTypes.contains(subSuperType)) {
+                                this.superTypes.add(subSuperType);
+                            }
                     }
                 }
             }

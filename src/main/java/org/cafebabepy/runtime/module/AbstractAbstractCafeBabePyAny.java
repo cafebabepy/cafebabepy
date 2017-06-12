@@ -16,14 +16,36 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     AbstractAbstractCafeBabePyAny(Python runtime) {
         super(runtime, new PyObjectScope());
 
-        Class<?> clazz = getClass();
-        defineClass(clazz);
-        defineClassMember(clazz);
+        defineClass();
     }
 
-    abstract void defineClass(Class<?> clazz);
+    @Override
+    public void preInitialize() {
+        defineClass();
+        defineClassMember();
+    }
 
-    protected void defineClassMember(Class<?> clazz) {
+    @Override
+    public void postInitialize() {
+        List<PyObject> superTypes = getSuperTypes();
+        for (int i = superTypes.size() - 1; i >= 0; i--) {
+            PyObject superType = superTypes.get(i);
+
+            synchronized (this) {
+                if (!getScope().containsKey(superType.getName())) {
+                    for (Map.Entry<String, PyObject> e : superType.getScope().gets().entrySet()) {
+                        getScope().put(e.getKey(), e.getValue());
+                    }
+                }
+            }
+        }
+    }
+
+    public abstract void defineClass();
+
+    private void defineClassMember() {
+        Class<?> clazz = getClass();
+
         // Check duplicate
         Map<Class<?>, Set<String>> defineNamesMemberNamesMap = new HashMap<>();
 

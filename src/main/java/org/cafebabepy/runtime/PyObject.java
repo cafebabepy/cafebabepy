@@ -32,6 +32,10 @@ public interface PyObject {
 
     String getFullName();
 
+    void preInitialize();
+
+    void postInitialize();
+
     boolean isType();
 
     boolean isModule();

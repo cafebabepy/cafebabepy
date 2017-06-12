@@ -11,10 +11,7 @@ import org.cafebabepy.util.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -73,11 +70,13 @@ public final class Python {
             builtinsClasses = ReflectionUtils.getClasses(packageName);
 
             PyObject module = null;
-            for (Class<?> clazz : builtinsClasses) {
-                DefineCafeBabePyModule defineCafeBabePyModule = clazz.getAnnotation(DefineCafeBabePyModule.class);
-                if (defineCafeBabePyModule == null) {
+            for (Class<?> c : builtinsClasses) {
+                DefineCafeBabePyModule defineCafeBabePyModule = c.getAnnotation(DefineCafeBabePyModule.class);
+                if (defineCafeBabePyModule == null || !PyObject.class.isAssignableFrom(c)) {
                     continue;
                 }
+
+                Class<PyObject> clazz = (Class<PyObject>) c;
 
                 // Check duplicate module
                 if (module != null) {
@@ -91,8 +90,10 @@ public final class Python {
                 }
 
                 try {
-                    Constructor c = clazz.getConstructor(Python.class);
-                    module = (PyObject) c.newInstance(this);
+                    Constructor<PyObject> constructor = clazz.getConstructor(Python.class);
+                    PyObject m = constructor.newInstance(this);
+                    module = m;
+                    module.preInitialize();
 
                 } catch (InvocationTargetException | NoSuchMethodException e) {
                     throw new CafeBabePyException(
@@ -104,20 +105,34 @@ public final class Python {
                 throw new CafeBabePyException("'" + packageName + "' module not found");
             }
 
-            for (Class<?> clazz : builtinsClasses) {
-                DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
-                if (defineCafeBabePyType == null) {
+            Set<PyObject> types = new HashSet<>();
+
+            for (Class<?> c : builtinsClasses) {
+                DefineCafeBabePyType defineCafeBabePyType = c.getAnnotation(DefineCafeBabePyType.class);
+                if (defineCafeBabePyType == null || PyObject.class.isAssignableFrom(c)) {
                     continue;
                 }
 
+                Class<PyObject> clazz = (Class<PyObject>) c;
+
+                PyObject type;
                 try {
-                    Constructor c = clazz.getConstructor(Python.class);
-                    c.newInstance(this);
+                    Constructor<PyObject> constructor = clazz.getConstructor(Python.class);
+                    type = constructor.newInstance(this);
+                    type.preInitialize();
 
                 } catch (InvocationTargetException | NoSuchMethodException e) {
                     throw new CafeBabePyException(
                             "Fail '" + defineCafeBabePyType.name() + "' initialize '" + clazz.getName() + "'", e);
                 }
+
+                types.add(type);
+            }
+
+            module.postInitialize();
+
+            for (PyObject type : types) {
+                type.postInitialize();
             }
 
         } catch (
