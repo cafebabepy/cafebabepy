@@ -5,12 +5,8 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.java.JavaPyObject;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.*;
@@ -26,12 +22,15 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     private boolean appear;
 
-    private String[] superTypeNames;
-
-    private List<PyObject> superTypes;
+    private String[] baseNames;
 
     public AbstractCafeBabePyType(Python runtime) {
         super(runtime);
+    }
+
+    @Override
+    String[] getBaseNames() {
+        return this.baseNames;
     }
 
     @Override
@@ -44,7 +43,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
                     "DefineCafeBabePyModule annotation is not defined " + clazz.getName());
         }
 
-        this.superTypeNames = defineCafeBabePyType.parent();
+        this.baseNames = defineCafeBabePyType.parent();
 
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyType.name());
         this.moduleName = splitter.getModuleName().orElseThrow(() ->
@@ -61,37 +60,6 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
                         "module '" + this.moduleName + "' is not found " + clazz.getName()));
 
         module.getScope().put(this.name, this, this.appear);
-    }
-
-    @Override
-    public List<PyObject> getSuperTypes() {
-        if (this.superTypes == null) {
-            synchronized (this) {
-                if (this.superTypes == null) {
-                    List<PyObject> superTypes = new ArrayList<>(this.superTypeNames.length);
-                    for (String superTypeName : this.superTypeNames) {
-                        PyObject type = this.runtime.type(superTypeName).orElseThrow(() ->
-                                new CafeBabePyException(
-                                        "type '" + this.name + "' parent '" + superTypeName + "' is not found")
-                        );
-
-                        superTypes.add(type);
-                    }
-
-                    this.superTypes = new ArrayList<>();
-                    this.superTypes.addAll(superTypes);
-
-                    for (PyObject superType : superTypes) {
-                        for (PyObject subSuperType : superType.getSuperTypes())
-                            if (!this.superTypes.contains(subSuperType)) {
-                                this.superTypes.add(subSuperType);
-                            }
-                    }
-                }
-            }
-        }
-
-        return Collections.unmodifiableList(this.superTypes);
     }
 
     @Override
@@ -129,7 +97,6 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         return getCallable().call(args);
     }
 
-
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
         if (args.length == 0) {
@@ -139,23 +106,14 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
             throw this.runtime.newRaiseTypeError("'" + getFullName() + "' is not type");
         }
 
-        PyObject object = getObjectOrThrow(__new__).call(args[0]);
+        PyObject object = args[0].getObjectOrThrow(__new__).call(args[0]);
 
         PyObject[] as = new PyObject[args.length + 1];
-        as[0] = this;
+        as[0] = object;
         System.arraycopy(args, 0, as, 1, args.length);
 
-        getObjectOrThrow(__init__).call(as);
+        args[0].getObjectOrThrow(__init__).call(as);
 
         return object;
-    }
-
-    @DefineCafeBabePyFunction(name = __new__)
-    public PyObject __new__(PyObject cls) {
-        return new JavaPyObject(this.runtime, cls);
-    }
-
-    @DefineCafeBabePyFunction(name = __init__)
-    public void __init__(PyObject self, PyObject... args) {
     }
 }

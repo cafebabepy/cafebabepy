@@ -248,32 +248,14 @@ public final class Python {
         }
     }
 
-    public PyObject newPyObject(Class<? extends PyObject> clazz, PyObject... args) {
-        Constructor<? extends PyObject> constructor;
-        try {
-            constructor = clazz.getConstructor(Python.class);
-            constructor.setAccessible(true);
+    public PyObject newPyObject(String typeName, PyObject... args) {
+        PyObject type = typeOrThrow(typeName);
 
-        } catch (NoSuchMethodException e) {
-            throw new CafeBabePyException(
-                    "'" + clazz.getName() + "' constractor is not found (PyObject(Python))");
-        }
+        PyObject[] selfArgs = new PyObject[args.length + 1];
+        selfArgs[0] = type;
+        System.arraycopy(args, 0, selfArgs, 1, args.length);
 
-        PyObject object;
-        try {
-            object = constructor.newInstance(this);
-
-        } catch (InstantiationException |
-                IllegalAccessException |
-                InvocationTargetException e) {
-            throw new CafeBabePyException(
-                    "Fail initialize '" + clazz.getName() + "'", e);
-        }
-
-        object.preInitialize();
-        object.postInitialize();
-
-        return object;
+        return type.call(selfArgs);
     }
 
     public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {

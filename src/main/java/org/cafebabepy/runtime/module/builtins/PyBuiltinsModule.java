@@ -26,32 +26,15 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         }
 
         Set<PyObject> objectTypeSet = new HashSet<>();
-        appendIntoObjectTypeSet(objectTypeSet, object);
+        objectTypeSet.addAll(getTypes());
+        if (classInfo instanceof PyTupleType) {
+            this.runtime.iter(classInfo, objectTypeSet::add);
+        }
 
         if (objectTypeSet.contains(object)) {
             return this.runtime.True();
         }
 
         return this.runtime.False();
-    }
-
-    private void appendIntoObjectTypeSet(Set<PyObject> objectTypeSet, PyObject type) {
-        objectTypeSet.add(type);
-
-        if (type instanceof PyTypeType) {
-            if (objectTypeSet.contains(type)) {
-                return;
-            }
-
-        } else if (type instanceof PyObjectType) {
-            if (objectTypeSet.contains(type)) {
-                return;
-            }
-
-        } else if (type instanceof PyTupleType) {
-            this.runtime.iter(type, t -> appendIntoObjectTypeSet(objectTypeSet, t));
-        }
-
-        type.getSuperTypes().forEach(t -> appendIntoObjectTypeSet(objectTypeSet, t));
     }
 }

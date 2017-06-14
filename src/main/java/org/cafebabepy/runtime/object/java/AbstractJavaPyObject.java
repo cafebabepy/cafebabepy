@@ -36,8 +36,8 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
     }
 
     @Override
-    public List<PyObject> getSuperTypes() {
-        return getType().getSuperTypes();
+    public List<PyObject> getBases() {
+        return getType().getBases();
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +14,9 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/30.
  */
-public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
+public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
+
+    private final static String[] BASE_NAMES = {"builtins.object"};
 
     private String moduleName;
 
@@ -22,12 +24,27 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private boolean appear;
 
-    private List<PyObject> superTypes;
+    private List<PyObject> types;
 
     public AbstractCafeBabePyModule(Python runtime) {
         super(runtime);
     }
 
+    @Override
+    String[] getBaseNames() {
+        return BASE_NAMES;
+    }
+
+    @Override
+    public List<PyObject> getTypes() {
+        PyObject object = typeOrThrow("builtins.object");
+        this.types = Arrays.asList(this, object);
+        this.types = Collections.unmodifiableList(Collections.synchronizedList(this.types));
+
+        return this.types;
+    }
+
+    @Override
     public void defineClass() {
         Class<?> clazz = getClass();
 
@@ -42,25 +59,6 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         this.name = splitter.getSimpleName();
         this.appear = true;
         this.runtime.defineModule(this);
-    }
-
-    @Override
-    public List<PyObject> getSuperTypes() {
-        if (this.superTypes == null) {
-            synchronized (this) {
-                if (this.superTypes == null) {
-                    this.superTypes = new ArrayList<>(1);
-                    PyObject type = this.runtime.type("builtins.object").orElseThrow(() ->
-                            new CafeBabePyException(
-                                    "type '" + this.name + "' parent 'object' is not found")
-                    );
-
-                    this.superTypes.add(type);
-                }
-            }
-        }
-
-        return Collections.unmodifiableList(this.superTypes);
     }
 
     @Override

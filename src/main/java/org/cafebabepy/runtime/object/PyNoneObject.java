@@ -4,7 +4,6 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +21,8 @@ public class PyNoneObject extends AbstractPyObject {
     }
 
     @Override
-    public List<PyObject> getSuperTypes() {
-        return Arrays.asList(this.runtime.typeOrThrow("builtins.object"));
+    public List<PyObject> getBases() {
+        return getType().getBases();
     }
 
     @Override

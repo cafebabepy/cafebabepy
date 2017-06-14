@@ -14,7 +14,9 @@ public interface PyObject {
 
     PyObject getType();
 
-    List<PyObject> getSuperTypes();
+    List<PyObject> getBases();
+
+    List<PyObject> getTypes();
 
     Python getRuntime();
 

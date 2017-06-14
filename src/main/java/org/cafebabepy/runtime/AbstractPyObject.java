@@ -1,11 +1,12 @@
 package org.cafebabepy.runtime;
 
+import org.cafebabepy.runtime.module.builtins.PyObjectType;
 import org.cafebabepy.util.LazyHashMap;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
@@ -19,6 +20,8 @@ public abstract class AbstractPyObject implements PyObject {
     protected final PyObjectScope scope;
 
     protected final boolean appear;
+
+    private volatile List<PyObject> types;
 
     private Map<String, Object> javaObjectMap;
 
@@ -40,6 +43,21 @@ public abstract class AbstractPyObject implements PyObject {
         this.runtime = runtime;
         this.scope = new PyObjectScope(parentScope);
         this.appear = appear;
+    }
+
+    @Override
+    public List<PyObject> getTypes() {
+        if (this.types == null) {
+            synchronized (this) {
+                if (this.types == null) {
+                    this.types = getC3AlgorithmTypes();
+                    this.types = Collections.unmodifiableList(
+                            Collections.synchronizedList(this.types));
+                }
+            }
+        }
+
+        return this.types;
     }
 
     @Override
@@ -296,5 +314,91 @@ public abstract class AbstractPyObject implements PyObject {
         objects[4] = arg5;
 
         return call(objects);
+    }
+
+    private List<PyObject> getC3AlgorithmTypes() {
+        try {
+            return getC3AlgorithmTypes(this);
+
+        } catch (CafeBabePyException e) {
+            throw this.runtime.newRaiseTypeError(e.getMessage());
+        }
+    }
+
+    private static List<PyObject> getC3AlgorithmTypes(PyObject object) {
+        if (!object.isType() && !object.isModule()) {
+            throw new CafeBabePyException("'" + object.getName() + "' is not type");
+        }
+        List<PyObject> result = new ArrayList<>();
+        result.add(object);
+
+        if (object instanceof PyObjectType) {
+            return result;
+        }
+
+        List<PyObject> bases = new LinkedList<>(object.getBases());
+
+        List<List<PyObject>> listOfLinearization = new ArrayList<>();
+
+        for (PyObject base : bases) {
+            listOfLinearization.add(getC3AlgorithmTypes(base));
+        }
+        listOfLinearization.add(bases);
+
+        try {
+            result.addAll(merge(listOfLinearization));
+
+        } catch (CafeBabePyException ignore) {
+            String baseNames = bases.stream()
+                    .map(PyObject::getName)
+                    .collect(Collectors.joining(", "));
+
+            throw new CafeBabePyException("Cannot create a consistent method resolution"
+                    + System.lineSeparator() + "order (MRO) for bases " + baseNames);
+        }
+
+        return result;
+    }
+
+    private static List<PyObject> merge(List<List<PyObject>> listOfLinearization) {
+        for (List<PyObject> il : listOfLinearization) {
+            PyObject h = il.get(0);
+
+            boolean inNotTail = true;
+            for (List<PyObject> jl : listOfLinearization) {
+                if (!jl.isEmpty()) {
+                    List<PyObject> tail = jl.subList(1, jl.size());
+                    inNotTail &= !tail.contains(h);
+                }
+            }
+
+            if (inNotTail) {
+                for (List<PyObject> list : listOfLinearization) {
+                    // Remove head
+                    if (h == list.get(0)) {
+                        list.remove(h);
+                    }
+                }
+
+                List<List<PyObject>> listOfStripped = new ArrayList<>();
+
+                for (List<PyObject> list : listOfLinearization) {
+                    if (!list.isEmpty()) {
+                        listOfStripped.add(list);
+                    }
+                }
+
+                List<PyObject> result = new LinkedList<>();
+                result.add(h);
+
+                if (!listOfStripped.isEmpty()) {
+                    result.addAll(merge(listOfStripped));
+                }
+
+                return result;
+            }
+        }
+
+        throw new CafeBabePyException();
     }
 }

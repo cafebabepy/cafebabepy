@@ -5,6 +5,10 @@ package org.cafebabepy.runtime;
  */
 public class CafeBabePyException extends RuntimeException {
 
+    public CafeBabePyException() {
+        super();
+    }
+
     public CafeBabePyException(String message) {
         super(message);
     }
