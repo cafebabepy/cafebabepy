@@ -2,8 +2,13 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
-import org.cafebabepy.runtime.module.builtins.*;
+import org.cafebabepy.runtime.module.builtins.PyIntType;
+import org.cafebabepy.runtime.module.builtins.PyListType;
+import org.cafebabepy.runtime.module.builtins.PyStrType;
+import org.cafebabepy.runtime.module.builtins.PyTupleType;
+import org.cafebabepy.runtime.object.PyFalseObject;
 import org.cafebabepy.runtime.object.PyNoneObject;
+import org.cafebabepy.runtime.object.PyTrueObject;
 import org.cafebabepy.util.BinaryConsumer;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
@@ -143,16 +148,16 @@ public final class Python {
 
     private void initializeObjects() {
         this.objectObject = type("builtins.object")
-                .map(PyObject::callStatic)
+                .map(o -> o.call(o, o))
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
         this.noneObject = new PyNoneObject(this);
 
-        this.trueObject = bool(true);
-        this.falseObject = bool(false);
+        this.trueObject = new PyTrueObject(this);
+        this.falseObject = new PyFalseObject(this);
 
         this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
-                .map(PyObject::callStatic)
+                .map(o -> o.call(o, o))
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
 
@@ -180,7 +185,11 @@ public final class Python {
         return PyListType.newList(this, args);
     }
 
-    public PyObject object() {
+    public PyObject bool(boolean bool) {
+        return bool ? this.trueObject : this.falseObject;
+    }
+
+    public PyObject Object() {
         return this.objectObject;
     }
 
@@ -194,10 +203,6 @@ public final class Python {
 
     public PyObject False() {
         return this.falseObject;
-    }
-
-    public PyObject bool(boolean bool) {
-        return PyBoolType.newBool(this, bool);
     }
 
     public PyObject NotImplementedType() {
@@ -249,23 +254,52 @@ public final class Python {
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
-        PyObject type = typeOrThrow(typeName);
+        return newPyObject(typeName, true, args);
+    }
+
+    public PyObject newPyObject(String typeName, boolean appear, PyObject... args) {
+        PyObject type = typeOrThrow(typeName, appear);
 
         PyObject[] selfArgs = new PyObject[args.length + 1];
         selfArgs[0] = type;
         System.arraycopy(args, 0, selfArgs, 1, args.length);
 
-        return type.call(selfArgs);
+        return type.call(type, selfArgs);
+    }
+
+    public PyObject callFunction(String name, PyObject... args) {
+        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
+        Optional<String> moduleNameOpt = splitter.getModuleName();
+        if (!splitter.getModuleName().isPresent()) {
+            throw newRaiseException("builtins.NameError",
+                    "name '" + splitter.getSimpleName() + "'is not defined");
+        }
+        PyObject module = moduleOrThrow(moduleNameOpt.get());
+        PyObject object = module.getObjectOrThrow(splitter.getSimpleName());
+
+        return object.call(object.getTargetType(), args);
     }
 
     public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
+        PyObject next;
+        PyObject obj;
 
-        PyObject next = getNext(object);
+        Optional<PyObject> nextOpt = getNext(object);
+        if (nextOpt.isPresent()) {
+            next = nextOpt.get();
+            obj = object;
+
+        } else {
+            PyObject iterType = getIterType(object);
+            PyObject iter = iterType.call(object, object);
+            next = getIterNext(iter);
+            obj = iter;
+        }
 
         try {
             int i = 0;
             while (true) {
-                PyObject value = next.call(next);
+                PyObject value = next.call(obj.getType(), obj);
                 action.accept(value, i);
                 i++;
             }
@@ -278,12 +312,24 @@ public final class Python {
     }
 
     public void iter(PyObject object, Consumer<PyObject> action) {
+        PyObject next;
+        PyObject obj;
 
-        PyObject next = getNext(object);
+        Optional<PyObject> nextOpt = getNext(object);
+        if (nextOpt.isPresent()) {
+            next = nextOpt.get();
+            obj = object;
+
+        } else {
+            PyObject iterType = getIterType(object);
+            PyObject iter = iterType.call(object, object);
+            next = getIterNext(iter);
+            obj = iter;
+        }
 
         try {
             while (true) {
-                PyObject value = next.call(next);
+                PyObject value = next.call(object.getType(), obj);
                 action.accept(value);
             }
 
@@ -294,25 +340,20 @@ public final class Python {
         }
     }
 
-    private PyObject getNext(PyObject object) {
-        PyObject obj;
-        if (object.isType()) {
-            obj = object;
-        } else {
-            obj = object.getType();
-        }
-        Optional<PyObject> next = obj.getObject(__next__);
-        if (next.isPresent()) {
-            return next.get();
-        }
-
-        PyObject iter = obj.getObject(__iter__).orElseThrow(() ->
+    private PyObject getIterType(PyObject object) {
+        return object.getType().getObject(__iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "'" + object.getName() + "' object is not iterable"));
+    }
 
+    private PyObject getIterNext(PyObject iter) {
         return iter.getType().getObject(__next__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
+    }
+
+    private Optional<PyObject> getNext(PyObject object) {
+        return object.getType().getObject(__next__);
     }
 
     public RaiseException newRaiseException(String exceptionType) {
@@ -324,7 +365,7 @@ public final class Python {
 
         )).getObjectOrThrow(splitter.getSimpleName());
 
-        PyObject e = PyObject.callStatic(eType);
+        PyObject e = eType.call(eType, eType);
 
         return new RaiseException(e);
     }
@@ -343,7 +384,7 @@ public final class Python {
 
         )).getObjectOrThrow(splitter.getSimpleName());
 
-        PyObject e = PyObject.callStatic(eType);
+        PyObject e = eType.call(eType, eType);
 
         return new RaiseException(e, message);
     }

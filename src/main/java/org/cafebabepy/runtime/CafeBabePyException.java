@@ -13,6 +13,10 @@ public class CafeBabePyException extends RuntimeException {
         super(message);
     }
 
+    public CafeBabePyException(Throwable t) {
+        super(t);
+    }
+
     public CafeBabePyException(String message, Throwable t) {
         super(message, t);
     }

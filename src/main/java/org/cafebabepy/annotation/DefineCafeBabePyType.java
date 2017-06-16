@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface DefineCafeBabePyType {
 
+    // TODO 複数指定できるようにする
     String name();
 
     String[] parent() default {"builtins.object"};

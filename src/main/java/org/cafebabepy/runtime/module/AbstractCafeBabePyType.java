@@ -93,27 +93,26 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public PyObject call(PyObject... args) {
-        return getCallable().call(args);
+    public PyObject call(PyObject self, PyObject... args) {
+        return getCallable().call(self, args);
     }
 
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
         if (args.length == 0) {
-            throw this.runtime.newRaiseTypeError("type is not found");
+            throw this.runtime.newRaiseTypeError("'" + getFullName() + "' type argument is not found");
 
         } else if (!args[0].isType()) {
-            throw this.runtime.newRaiseTypeError("'" + getFullName() + "' is not type");
+            throw this.runtime.newRaiseTypeError("'" + args[0].getFullName() + "' is not type");
         }
 
-        PyObject object = args[0].getObjectOrThrow(__new__).call(args[0]);
+        PyObject self = args[0].getObjectOrThrow(__new__).call(args[0], args[0]);
+        PyObject[] selfArgs = new PyObject[args.length];
+        System.arraycopy(args, 0, selfArgs, 0, args.length);
+        selfArgs[0] = self;
 
-        PyObject[] as = new PyObject[args.length + 1];
-        as[0] = object;
-        System.arraycopy(args, 0, as, 1, args.length);
+        args[0].getObjectOrThrow(__init__).call(args[0], selfArgs);
 
-        args[0].getObjectOrThrow(__init__).call(as);
-
-        return object;
+        return self;
     }
 }

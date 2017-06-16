@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.cafebabepy.util.ProtocolNames.__call__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/06/08.
@@ -29,20 +29,15 @@ public abstract class AbstractPyObject implements PyObject {
         this(runtime, true);
     }
 
-    protected AbstractPyObject(Python runtime, PyObjectScope parentScope) {
-        this(runtime, true, parentScope);
-    }
-
     protected AbstractPyObject(Python runtime, boolean appear) {
         this.runtime = runtime;
         this.scope = new PyObjectScope();
         this.appear = appear;
     }
 
-    protected AbstractPyObject(Python runtime, boolean appear, PyObjectScope parentScope) {
-        this.runtime = runtime;
-        this.scope = new PyObjectScope(parentScope);
-        this.appear = appear;
+    @Override
+    public PyObject getTargetType() {
+        return getType();
     }
 
     @Override
@@ -93,7 +88,7 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public final String getFullName() {
+    public String getFullName() {
         return getModuleName().map(n -> n + ".").orElse("") + getName();
     }
 
@@ -133,9 +128,27 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public boolean isFalse() {
-        return getRuntime()
-                .getBuiltinsModule()
-                .getObjectOrThrow("bool").call(this) == getRuntime().False();
+        Optional<PyObject> boolOpt = getObject(__bool__);
+        if (boolOpt.isPresent()) {
+            PyObject bool = boolOpt.get();
+            PyObject result = bool.call(getType(), this);
+            return result.isFalse();
+        }
+
+        Optional<PyObject> lenOpt = getObject(__len__);
+        if (lenOpt.isPresent()) {
+            PyObject len = lenOpt.get();
+            PyObject result = len.call(len, this);
+
+            PyObject eq = getObjectOrThrow(__eq__);
+            return eq.call(getType(), result, this.runtime.number(0)).isTrue();
+        }
+
+        if (!isType()) {
+            getType().isFalse();
+        }
+
+        return true;
     }
 
     public final Optional<PyObject> type(String name) {
@@ -164,7 +177,6 @@ public abstract class AbstractPyObject implements PyObject {
         return getScope().getsLazy(appear);
     }
 
-
     @Override
     public final Map<String, PyObject> getObjects() {
         return getObjects(true);
@@ -192,16 +204,32 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final Optional<PyObject> getObject(String name, boolean appear) {
-        return getScope().get(name, appear);
+        Optional<PyObject> objectOpt = getScope().get(name, appear);
+        if (objectOpt.isPresent()) {
+            return objectOpt;
+        }
+
+        if (!isType() && !isModule()) {
+            return getType().getObject(name, appear);
+        }
+
+        for (PyObject type : getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().get(name, appear);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
-    public Supplier<PyObject> getLazyObjectOrThrow(String name) {
+    public final Supplier<PyObject> getLazyObjectOrThrow(String name) {
         return () -> getObjectOrThrow(name);
     }
 
     @Override
-    public Supplier<PyObject> getLazyObjectOrThrow(String name, boolean appear) {
+    public final Supplier<PyObject> getLazyObjectOrThrow(String name, boolean appear) {
         return () -> getObjectOrThrow(name, appear);
     }
 
@@ -213,81 +241,103 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public final PyObject getObjectOrThrow(String name, boolean appear) {
         Optional<PyObject> objectOpt = getObject(name, appear);
-        if (!objectOpt.isPresent()) {
-            if (isModule()) {
-                throw getRuntime().newRaiseException("builtins.NameError",
-                        "name '"
-                                + name
-                                + "' is not defined");
+        if (objectOpt.isPresent()) {
+            return objectOpt.get();
+        }
 
-            } else if (isType()) {
-                throw getRuntime().newRaiseException("builtins.AttributeError",
-                        "type object '"
-                                + getFullName()
-                                + "' has no attribute '"
-                                + name
-                                + "'");
-
-            } else {
-                throw getRuntime().newRaiseException("builtins.AttributeError",
-                        "'"
-                                + getFullName()
-                                + "' object has no attribute '"
-                                + name
-                                + "'");
+        for (PyObject type : getTypes()) {
+            Optional<PyObject> typeObjectOpt = type.getObject(name, appear);
+            if (typeObjectOpt.isPresent()) {
+                return typeObjectOpt.get();
             }
         }
 
-        return objectOpt.get();
+        if (isModule()) {
+            throw getRuntime().newRaiseException("builtins.NameError",
+                    "name '"
+                            + name
+                            + "' is not defined");
+
+        } else if (isType()) {
+            throw getRuntime().newRaiseException("builtins.AttributeError",
+                    "type object '"
+                            + getFullName()
+                            + "' has no attribute '"
+                            + name
+                            + "'");
+
+        } else {
+            throw getRuntime().newRaiseException("builtins.AttributeError",
+                    "'"
+                            + getFullName()
+                            + "' object has no attribute '"
+                            + name
+                            + "'");
+        }
     }
 
     @Override
     public final PyObject getCallable() {
-        return getObject(__call__).orElseThrow(
-                () -> this.runtime.newRaiseException("builtins.TypeError",
-                        "'" + getName() + "' object is not callable"));
+        PyObject callable = null;
+        for (PyObject type : getTypes()) {
+            Optional<PyObject> callableOpt = type.getScope().get(__call__);
+            if (callableOpt.isPresent()) {
+                callable = callableOpt.get();
+                break;
+            }
+        }
+
+        if (callable != null) {
+            return callable;
+        }
+
+        // FIXME getName()が必ずobjectになる
+        throw this.runtime.newRaiseTypeError("'" + getName() + "' object is not callable");
     }
 
     @Override
-    public PyObject call() {
+    public PyObject call(PyObject self) {
         PyObject[] objects = new PyObject[0];
 
-        return call(objects);
+        return call(self, objects);
     }
 
     @Override
-    public PyObject call(PyObject arg1) {
+    public PyObject call(PyObject self,
+                         PyObject arg1) {
         PyObject[] objects = new PyObject[1];
         objects[0] = arg1;
 
-        return call(objects);
+        return call(self, objects);
     }
 
     @Override
-    public PyObject call(PyObject arg1,
+    public PyObject call(PyObject self,
+                         PyObject arg1,
                          PyObject arg2) {
         PyObject[] objects = new PyObject[2];
         objects[0] = arg1;
         objects[1] = arg2;
 
-        return call(objects);
+        return call(self, objects);
     }
 
     @Override
-    public PyObject call(
-            PyObject arg1,
-            PyObject arg2,
-            PyObject arg3) {
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3) {
         PyObject[] objects = new PyObject[3];
         objects[0] = arg1;
         objects[1] = arg2;
         objects[2] = arg3;
 
-        return call(objects);
+        return call(self, objects);
     }
 
     @Override
-    public PyObject call(PyObject arg1,
+    public PyObject call(PyObject self,
+                         PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4) {
@@ -297,11 +347,12 @@ public abstract class AbstractPyObject implements PyObject {
         objects[2] = arg3;
         objects[3] = arg4;
 
-        return call(objects);
+        return call(self, objects);
     }
 
     @Override
-    public PyObject call(PyObject arg1,
+    public PyObject call(PyObject self,
+                         PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4,
@@ -313,7 +364,7 @@ public abstract class AbstractPyObject implements PyObject {
         objects[3] = arg4;
         objects[4] = arg5;
 
-        return call(objects);
+        return call(self, objects);
     }
 
     private List<PyObject> getC3AlgorithmTypes() {

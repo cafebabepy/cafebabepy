@@ -2,37 +2,41 @@ package org.cafebabepy.runtime.object.java;
 
 import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Created by yotchang4s on 2017/06/03.
  */
 abstract class AbstractJavaPyObject extends AbstractPyObject {
 
-    protected final Supplier<Optional<PyObject>> typeReadAccessor;
+    protected final PyObject type;
 
-    protected AbstractJavaPyObject(Python runtime, Supplier<Optional<PyObject>> typeReadAccessor) {
+    protected AbstractJavaPyObject(Python runtime, PyObject type) {
         super(runtime, true);
 
-        this.typeReadAccessor = typeReadAccessor;
-    }
+        if (!type.isType()) {
+            this.runtime.newRaiseTypeError("'" + type.getFullName() + "' is not type");
+        }
 
-    protected AbstractJavaPyObject(Python runtime, Supplier<Optional<PyObject>> typeReadAccessor, PyObjectScope parentScope) {
-        super(runtime, true, parentScope);
-
-        this.typeReadAccessor = typeReadAccessor;
+        this.type = type;
     }
 
     @Override
     public final PyObject getType() {
-        return this.typeReadAccessor.get().orElseThrow(() ->
-                this.runtime.newRaiseException("builtins.TypeError", "type is not found")
-        );
+        return this.type;
+    }
+
+    @Override
+    public PyObject getTargetType() {
+        return super.getTargetType();
+    }
+
+    @Override
+    public List<PyObject> getTypes() {
+        return getType().getTypes();
     }
 
     @Override

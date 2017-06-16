@@ -18,4 +18,7 @@ public final class ProtocolNames {
     public static final String __add__ = "__add__";
     public static final String __iter__ = "__iter__";
     public static final String __next__ = "__next__";
+    public static final String __eq__ = "__eq__";
+    public static final String __bool__ = "__bool__";
+    public static final String __len__ = "__len__";
 }

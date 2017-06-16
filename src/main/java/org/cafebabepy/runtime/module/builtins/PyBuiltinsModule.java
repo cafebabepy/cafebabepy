@@ -26,12 +26,13 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         }
 
         Set<PyObject> objectTypeSet = new HashSet<>();
-        objectTypeSet.addAll(getTypes());
+        objectTypeSet.addAll(object.getTypes());
+
         if (classInfo instanceof PyTupleType) {
             this.runtime.iter(classInfo, objectTypeSet::add);
         }
 
-        if (objectTypeSet.contains(object)) {
+        if (objectTypeSet.contains(classInfo)) {
             return this.runtime.True();
         }
 

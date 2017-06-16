@@ -29,15 +29,8 @@ public class PyListType extends AbstractCafeBabePyType {
     }
 
     public static PyObject newList(Python runtime, PyObject... value) {
+        PyObject object = runtime.newPyObject("builtins.list");
 
-        PyObject type = runtime.moduleOrThrow(Python.BUILTINS_MODULE_NAME).getObjectOrThrow("list");
-        if (!(type instanceof PyListType)) {
-            // FIXME To CPython message
-            throw runtime.newRaiseException(
-                    "builtins.TypeError", "'" + type.getName() + "' is not list");
-        }
-
-        PyObject object = PyObject.callStatic(type);
         object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
 
         return object;

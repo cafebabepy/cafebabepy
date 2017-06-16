@@ -2,6 +2,7 @@ package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -14,10 +15,10 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 /**
  * Created by yotchang4s on 2017/06/07.
  */
-@DefineCafeBabePyType(name = "builtins.GeneratorType")
+@DefineCafeBabePyType(name = "builtins.GeneratorType", appear = false)
 public class PyGeneratorType extends AbstractCafeBabePyType {
 
-    private Function<YieldStopper, PyObject> iter;
+    private static final String JAVA_ITER_NAME = "iter";
 
     private YieldStopper yieldStopper;
 
@@ -39,7 +40,13 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __next__)
     public PyObject __next__(PyObject self) {
-        return iter.apply(this.yieldStopper);
+        Function<YieldStopper, PyObject> f = self.getJavaObject(JAVA_ITER_NAME)
+                .map(o -> (Function<YieldStopper, PyObject>) o)
+                .orElseThrow(() ->
+                        new CafeBabePyException("'" + JAVA_ITER_NAME + "' is not found")
+                );
+
+        return f.apply(this.yieldStopper);
     }
 
     public final class YieldStopper {
@@ -48,13 +55,11 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
         }
     }
 
-    public static PyGeneratorType newGenerator(Python runtime, Function<YieldStopper, PyObject> iter) {
-        PyGeneratorType generatorType = new PyGeneratorType(runtime);
-        generatorType.preInitialize();
-        generatorType.postInitialize();
+    public static PyObject newGenerator(Python runtime, Function<YieldStopper, PyObject> iter) {
+        PyObject object = runtime.newPyObject("builtins.GeneratorType", false);
 
-        generatorType.iter = iter;
+        object.putJavaObject(JAVA_ITER_NAME, iter);
 
-        return generatorType;
+        return object;
     }
 }

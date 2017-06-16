@@ -7,22 +7,23 @@ import org.cafebabepy.runtime.Python;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Optional;
 
 /**
  * Created by yotchang4s on 2017/05/31.
  */
 public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
-    private final PyObject target;
+    private final PyObject targetType;
 
     private final String name;
 
     private final Method method;
 
-    public JavaPyFunctionObject(Python runtime, PyObject target, String name, Method method) {
-        super(runtime, runtime.getBuiltinsModule().getScope().getRaw("FunctionType"));
+    public JavaPyFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
+        super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
 
-        this.target = target;
+        this.targetType = targetType;
         this.name = name;
         this.method = method;
 
@@ -32,7 +33,22 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
     }
 
     @Override
-    public PyObject call(PyObject... args) {
+    public PyObject call(PyObject self, PyObject... args) {
+        PyObject target = self.getScope().get(getName(), false).orElse(null);
+
+        for (PyObject type : self.getTypes()) {
+            Optional<PyObject> selfOpt = type.getScope().get(getName(), false);
+            if (selfOpt.isPresent()) {
+                target = type;
+                break;
+            }
+        }
+
+        if (target == null) {
+            throw this.runtime.newRaiseTypeError(
+                    "'" + self.getType().getName() + "' object is not callable");
+        }
+
         try {
             Object[] compArgs;
             Class<?>[] paramClasses = this.method.getParameterTypes();
@@ -81,7 +97,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
                 } else if (paramClasses.length != args.length) {
                     throw this.runtime.newRaiseException("builtins.TypeError",
-                            this.target.getName() + "() takes at most "
+                            self.getName() + "() takes at most "
                                     + paramClasses.length + " arguments (" + args.length + " given)");
 
                 } else {
@@ -98,7 +114,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
                 }
             }
 
-            Object result = this.method.invoke(this.target, compArgs);
+            Object result = this.method.invoke(target, compArgs);
             if (result == null) {
                 return this.runtime.None();
 
@@ -118,10 +134,21 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
                     + "#" + method.getName(), e);
 
         } catch (InvocationTargetException e) {
-            throw (RuntimeException) e.getTargetException();
+            Throwable targetException = e.getTargetException();
+            if (targetException instanceof RuntimeException) {
+                throw (RuntimeException) targetException;
+            }
+
+            throw new CafeBabePyException(targetException);
         }
     }
 
+    @Override
+    public PyObject getTargetType() {
+        return this.targetType;
+    }
+
+    @Override
     public String getName() {
         return this.name;
     }

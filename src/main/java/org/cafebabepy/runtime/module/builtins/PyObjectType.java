@@ -7,8 +7,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.object.java.JavaPyObject;
 
-import static org.cafebabepy.util.ProtocolNames.__init__;
-import static org.cafebabepy.util.ProtocolNames.__new__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -20,13 +19,17 @@ public class PyObjectType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-
     @DefineCafeBabePyFunction(name = __new__)
-    public final PyObject __new__builtins_object(PyObject cls) {
+    public final PyObject __new__(PyObject cls) {
         return new JavaPyObject(this.runtime, cls);
     }
 
     @DefineCafeBabePyFunction(name = __init__)
-    public final void __init__builtins_object(PyObject self, PyObject... args) {
+    public final void __init__(PyObject self, PyObject... args) {
+    }
+
+    @DefineCafeBabePyFunction(name = __eq__)
+    public PyObject __eq__(PyObject self, PyObject other) {
+        return this.runtime.NotImplementedType();
     }
 }

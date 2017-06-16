@@ -8,16 +8,17 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by yotchang4s on 2017/06/08.
+ * Created by yotchang4s on 2017/06/16.
  */
-public class PyNoneObject extends AbstractPyObject {
-    public PyNoneObject(Python runtime) {
+public class PyTrueObject extends AbstractPyObject {
+
+    public PyTrueObject(Python runtime) {
         super(runtime);
     }
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.NoneType");
+        return this.runtime.typeOrThrow("builtins.bool");
     }
 
     @Override
@@ -46,13 +47,18 @@ public class PyNoneObject extends AbstractPyObject {
     }
 
     @Override
+    public boolean isFalse() {
+        return false;
+    }
+
+    @Override
     public boolean isNone() {
-        return true;
+        return false;
     }
 
     @Override
     public String asJavaString() {
-        return "None";
+        return "True";
     }
 
     @Override

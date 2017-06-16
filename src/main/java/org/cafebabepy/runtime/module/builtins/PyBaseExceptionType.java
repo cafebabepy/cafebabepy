@@ -20,6 +20,9 @@ public class PyBaseExceptionType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        getScope().put("args", args[0]);
+        // FIXME 暫定対処
+        if (args.length > 0) {
+            getScope().put("args", args[0]);
+        }
     }
 }

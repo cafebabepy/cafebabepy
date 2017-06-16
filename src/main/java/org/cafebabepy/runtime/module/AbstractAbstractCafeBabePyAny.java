@@ -23,7 +23,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     private InitializeStage initialize;
 
     AbstractAbstractCafeBabePyAny(Python runtime) {
-        super(runtime, new PyObjectScope());
+        super(runtime);
 
         this.initialize = InitializeStage.NONE;
     }
@@ -80,30 +80,18 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     private void defineClassMembers() {
         Class<?> clazz = getClass();
 
+        defineClassMember(clazz, getScope());
+
+        PyObjectScope objectScope = this.runtime.type("builtins.object")
+                .orElseThrow(() -> new CafeBabePyException("'builtins.object' is not found"))
+                .getScope();
+
         for (Class<?> c = clazz.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
-            defineClassMember(c);
+            defineClassMember(c, objectScope);
         }
-
-        List<PyObject> types = getTypes();
-        for (int i = types.size() - 1; i >= 0; i--) {
-            PyObject type = types.get(i);
-
-            if (type.getName().equals("Expr")) {
-                System.out.println(type.getFullName());
-            }
-
-            type.preInitialize();
-            type.postInitialize();
-
-            for (Map.Entry<String, PyObject> e : type.getScope().gets().entrySet()) {
-                getScope().put(e.getKey(), e.getValue());
-            }
-        }
-
-        defineClassMember(clazz);
     }
 
-    private void defineClassMember(Class<?> clazz) {
+    private void defineClassMember(Class<?> clazz, PyObjectScope scope) {
         // Check duplicate
         Set<String> defineClassMemberNamesSet = new HashSet<>();
 
@@ -133,7 +121,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                 f.getScope().put(__call__, f);
             }
 
-            getScope().put(f.getName(), f);
+            scope.put(f.getName(), f);
 
             defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
         }

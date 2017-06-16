@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/30.
  */
-public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
+public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
 
     private final static String[] BASE_NAMES = {"builtins.object"};
 
@@ -72,7 +72,7 @@ public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
     }
 
     @Override
-    public PyObject call(PyObject... args) {
+    public PyObject call(PyObject self, PyObject... args) {
         throw getRuntime().newRaiseException("builtins.TypeError",
                 "'" + getName() + "' object is not callable");
     }
@@ -90,6 +90,11 @@ public class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public String getFullName() {
+        return this.moduleName;
     }
 
     @Override
