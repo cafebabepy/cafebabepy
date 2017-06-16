@@ -21,6 +21,11 @@ public class PyNoneObject extends AbstractPyObject {
     }
 
     @Override
+    public PyObject getTargetType() {
+        return getType();
+    }
+
+    @Override
     public List<PyObject> getBases() {
         return getType().getBases();
     }

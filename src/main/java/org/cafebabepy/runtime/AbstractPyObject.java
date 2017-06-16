@@ -36,11 +36,6 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public PyObject getTargetType() {
-        return getType();
-    }
-
-    @Override
     public List<PyObject> getTypes() {
         if (this.types == null) {
             synchronized (this) {
@@ -254,25 +249,15 @@ public abstract class AbstractPyObject implements PyObject {
 
         if (isModule()) {
             throw getRuntime().newRaiseException("builtins.NameError",
-                    "name '"
-                            + name
-                            + "' is not defined");
+                    "name '" + name + "' is not defined");
 
         } else if (isType()) {
             throw getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '"
-                            + getFullName()
-                            + "' has no attribute '"
-                            + name
-                            + "'");
+                    "type object '" + getFullName() + "' has no attribute '" + name + "'");
 
         } else {
             throw getRuntime().newRaiseException("builtins.AttributeError",
-                    "'"
-                            + getFullName()
-                            + "' object has no attribute '"
-                            + name
-                            + "'");
+                    "'" + getFullName() + "' object has no attribute '" + "'");
         }
     }
 
@@ -365,6 +350,166 @@ public abstract class AbstractPyObject implements PyObject {
         objects[4] = arg5;
 
         return call(self, objects);
+    }
+
+    @Override
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 1];
+        objects[0] = arg1;
+        System.arraycopy(args, 0, objects, 1, args.length);
+
+        return call(self, objects);
+    }
+
+    @Override
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject arg2,
+                         PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 2];
+        objects[0] = arg1;
+        objects[1] = arg2;
+        System.arraycopy(args, 0, objects, 2, args.length);
+
+        return call(self, objects);
+    }
+
+    @Override
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 3];
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
+        System.arraycopy(args, 0, objects, 3, args.length);
+
+        return call(self, objects);
+    }
+
+    @Override
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4,
+                         PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 4];
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
+        objects[3] = arg4;
+        System.arraycopy(args, 0, objects, 4, args.length);
+
+        return call(self, objects);
+    }
+
+    @Override
+    public PyObject call(PyObject self,
+                         PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4,
+                         PyObject arg5,
+                         PyObject... args) {
+        PyObject[] objects = new PyObject[args.length + 5];
+        objects[0] = arg1;
+        objects[1] = arg2;
+        objects[2] = arg3;
+        objects[3] = arg4;
+        objects[4] = arg5;
+        System.arraycopy(args, 0, objects, 5, args.length);
+
+        return call(self, objects);
+    }
+
+    @Override
+    public PyObject callSelf() {
+        return call(this);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1) {
+        return call(this, arg1);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2) {
+        return call(this, arg1, arg2);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3) {
+        return call(this, arg1, arg2, arg3);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3,
+                             PyObject arg4) {
+        return call(this, arg1, arg2, arg4);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3,
+                             PyObject arg4,
+                             PyObject arg5) {
+        return call(this, arg1, arg2, arg3, arg4, arg5);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject... args) {
+        return call(this, arg1, args);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject... args) {
+        return call(this, arg1, arg2, args);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3,
+                             PyObject... args) {
+        return call(this, arg1, arg2, arg3, args);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3,
+                             PyObject arg4,
+                             PyObject... args) {
+        return call(this, arg1, arg2, arg3, arg4, args);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject arg1,
+                             PyObject arg2,
+                             PyObject arg3,
+                             PyObject arg4,
+                             PyObject arg5,
+                             PyObject... args) {
+        return call(this, arg1, arg2, arg3, arg4, arg5, args);
+    }
+
+    @Override
+    public PyObject callSelf(PyObject... args) {
+        return call(this, args);
     }
 
     private List<PyObject> getC3AlgorithmTypes() {

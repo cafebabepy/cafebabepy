@@ -21,7 +21,7 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
         String method = "visit_" + node.getName();
         PyObject visitor = self.getObject(method).orElse(getObjectOrThrow("generic_visit"));
 
-        return visitor.call(self.getType(), self, node);
+        return visitor.callSelf(self, node);
     }
 
     @DefineCafeBabePyFunction(name = "generic_visit")

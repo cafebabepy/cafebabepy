@@ -13,6 +13,11 @@ public class JavaPyObject extends AbstractJavaPyObject {
     }
 
     @Override
+    public PyObject getTargetType() {
+        return getType();
+    }
+
+    @Override
     public boolean isNone() {
         return false;
     }

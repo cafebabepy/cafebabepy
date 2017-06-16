@@ -148,7 +148,7 @@ public final class Python {
 
     private void initializeObjects() {
         this.objectObject = type("builtins.object")
-                .map(o -> o.call(o, o))
+                .map(o -> o.callSelf())
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
         this.noneObject = new PyNoneObject(this);
@@ -157,7 +157,7 @@ public final class Python {
         this.falseObject = new PyFalseObject(this);
 
         this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
-                .map(o -> o.call(o, o))
+                .map(o -> o.callSelf())
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
 
@@ -258,13 +258,7 @@ public final class Python {
     }
 
     public PyObject newPyObject(String typeName, boolean appear, PyObject... args) {
-        PyObject type = typeOrThrow(typeName, appear);
-
-        PyObject[] selfArgs = new PyObject[args.length + 1];
-        selfArgs[0] = type;
-        System.arraycopy(args, 0, selfArgs, 1, args.length);
-
-        return type.call(type, selfArgs);
+        return typeOrThrow(typeName, appear).callSelf(args);
     }
 
     public PyObject callFunction(String name, PyObject... args) {
@@ -277,7 +271,7 @@ public final class Python {
         PyObject module = moduleOrThrow(moduleNameOpt.get());
         PyObject object = module.getObjectOrThrow(splitter.getSimpleName());
 
-        return object.call(object.getTargetType(), args);
+        return object.call(module, args);
     }
 
     public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
@@ -378,13 +372,13 @@ public final class Python {
     public RaiseException newRaiseException(String exceptionType, String message) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
-        PyObject eType = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
+        PyObject type = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
                 newRaiseException("builtins.NameError",
                         "'" + splitter.getName() + "' module is not found")
 
         )).getObjectOrThrow(splitter.getSimpleName());
 
-        PyObject e = eType.call(eType, eType);
+        PyObject e = type.call(str(message));
 
         return new RaiseException(e, message);
     }

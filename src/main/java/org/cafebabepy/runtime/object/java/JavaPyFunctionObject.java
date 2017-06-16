@@ -34,19 +34,16 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
     @Override
     public PyObject call(PyObject self, PyObject... args) {
-        PyObject target = self.getScope().get(getName(), false).orElse(null);
+        PyObject target = self.getTargetType();
 
-        for (PyObject type : self.getTypes()) {
-            Optional<PyObject> selfOpt = type.getScope().get(getName(), false);
-            if (selfOpt.isPresent()) {
+        Class<?> methodClass = this.method.getDeclaringClass();
+
+        for (PyObject type : target.getTypes()) {
+            Class<?> typeClass = type.getClass();
+            if (methodClass.isAssignableFrom(typeClass)) {
                 target = type;
                 break;
             }
-        }
-
-        if (target == null) {
-            throw this.runtime.newRaiseTypeError(
-                    "'" + self.getType().getName() + "' object is not callable");
         }
 
         try {
@@ -97,7 +94,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
                 } else if (paramClasses.length != args.length) {
                     throw this.runtime.newRaiseException("builtins.TypeError",
-                            self.getName() + "() takes at most "
+                            targetType.getName() + "() takes at most "
                                     + paramClasses.length + " arguments (" + args.length + " given)");
 
                 } else {

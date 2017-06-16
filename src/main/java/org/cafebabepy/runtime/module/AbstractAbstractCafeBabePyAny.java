@@ -29,6 +29,26 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     }
 
     @Override
+    public void preInitialize() {
+        if (this.initialize != InitializeStage.NONE) {
+            return;
+        }
+
+        this.initialize = InitializeStage.PRE;
+        defineClass();
+    }
+
+    @Override
+    public void postInitialize() {
+        if (this.initialize != InitializeStage.PRE) {
+            return;
+        }
+
+        this.initialize = InitializeStage.POST;
+        defineClassMembers();
+    }
+
+    @Override
     public List<PyObject> getBases() {
         if (this.bases == null) {
             synchronized (this) {
@@ -51,26 +71,6 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
         }
 
         return this.bases;
-    }
-
-    @Override
-    public void preInitialize() {
-        if (this.initialize != InitializeStage.NONE) {
-            return;
-        }
-
-        this.initialize = InitializeStage.PRE;
-        defineClass();
-    }
-
-    @Override
-    public void postInitialize() {
-        if (this.initialize != InitializeStage.PRE) {
-            return;
-        }
-
-        this.initialize = InitializeStage.POST;
-        defineClassMembers();
     }
 
     abstract String[] getBaseNames();
@@ -125,6 +125,11 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
             defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
         }
+    }
+
+    @Override
+    public PyObject getTargetType() {
+        return this;
     }
 
     @Override

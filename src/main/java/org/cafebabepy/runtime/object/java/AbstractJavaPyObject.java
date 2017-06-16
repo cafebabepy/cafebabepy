@@ -30,11 +30,6 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
     }
 
     @Override
-    public PyObject getTargetType() {
-        return super.getTargetType();
-    }
-
-    @Override
     public List<PyObject> getTypes() {
         return getType().getTypes();
     }
