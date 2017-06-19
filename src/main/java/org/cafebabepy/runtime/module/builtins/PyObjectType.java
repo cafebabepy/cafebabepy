@@ -13,19 +13,22 @@ import static org.cafebabepy.util.ProtocolNames.*;
  * Created by yotchang4s on 2017/05/13.
  */
 @DefineCafeBabePyType(name = "builtins.object")
-public class PyObjectType extends AbstractCafeBabePyType {
+public final class PyObjectType extends AbstractCafeBabePyType {
 
     public PyObjectType(Python runtime) {
         super(runtime);
     }
 
     @DefineCafeBabePyFunction(name = __new__)
-    public final PyObject __new__(PyObject cls) {
+    public PyObject __new__(PyObject cls) {
+        if (!cls.isType()) {
+            throw this.runtime.newRaiseTypeError("object.__new__(X): X is not a type object (" + cls.getFullName() + ")");
+        }
         return new JavaPyObject(this.runtime, cls);
     }
 
     @DefineCafeBabePyFunction(name = __init__)
-    public final void __init__(PyObject self, PyObject... args) {
+    public void __init__(PyObject self, PyObject... args) {
     }
 
     @DefineCafeBabePyFunction(name = __getattribute__)
