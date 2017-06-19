@@ -65,7 +65,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        this.runtime.str(self.asJavaString());
+        return this.runtime.str(self.asJavaString());
     }
 
     @DefineCafeBabePyFunction(name = __eq__)
