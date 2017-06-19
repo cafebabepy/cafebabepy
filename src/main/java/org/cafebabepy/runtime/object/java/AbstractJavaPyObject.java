@@ -14,6 +14,8 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
 
     protected final PyObject type;
 
+    private volatile String string;
+
     protected AbstractJavaPyObject(Python runtime, PyObject type) {
         super(runtime, true);
 
@@ -41,7 +43,7 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
 
     @Override
     public final Optional<String> getModuleName() {
-        return Optional.empty();
+        return getType().getModuleName();
     }
 
     @Override
@@ -61,8 +63,13 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
 
     @Override
     public String asJavaString() {
-        int hashCode = System.identityHashCode(this);
+        if (this.string == null) {
+            synchronized (this) {
+                int hashCode = System.identityHashCode(this);
+                this.string = "<" + getFullName() + " object at 0x" + Integer.toHexString(hashCode) + ">";
+            }
+        }
 
-        return "0x" + Integer.toHexString(hashCode);
+        return this.string;
     }
 }
