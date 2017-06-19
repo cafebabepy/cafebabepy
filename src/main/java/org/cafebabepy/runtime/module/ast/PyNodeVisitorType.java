@@ -55,37 +55,5 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
                 visit.call(self, self, value);
             }
         });
-
-        /*
-        PyObject astModule = this.runtime.moduleOrThrow("ast");
-        PyObject function = astModule.getObjectOrThrow("iter_fields");
-
-        PyObject result = function.call(astModule, node);
-        List<PyObject> list = result.getJavaObject(PyListType.JAVA_LIST_NAME)
-                .map(l -> (List<PyObject>) l)
-                .orElse(Collections.emptyList());
-
-        PyObject astType = this.runtime.typeOrThrow("_ast.AST");
-
-        for (PyObject fieldAndValue : list) {
-            fieldAndValue.getJavaObject(PyTupleType.JAVA_LIST_NAME);
-            PyObject field = fieldAndValue;
-            PyObject value;
-
-            PyObject listType = this.runtime.typeOrThrow("builtins.list");
-            if (listType == fieldAndValue.getType()) {
-                List<PyObject> value = fieldAndValue.getJavaObject(PyTupleType.JAVA_LIST_NAME)
-                        .map(l -> (List<PyObject>) l)
-                        .orElse(Collections.emptyList());
-
-                for(PyObject item : value) {
-
-                }
-
-            } else if(result.getType() == astType) {
-                self.call(fieldAndValue.);
-            }
-        }
-        */
     }
 }
