@@ -19,15 +19,27 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
     }
 
     @DefineCafeBabePyFunction(name = "isinstance")
-    public PyObject isInstance(PyObject object, PyObject classInfo) {
-        if (classInfo == null || (!classInfo.isType() && classInfo instanceof PyTupleType)) {
+    public PyObject isinstance(PyObject object, PyObject classInfo) {
+        if (!classInfo.isType() && !(classInfo instanceof PyTupleType)) {
             throw this.runtime.newRaiseTypeError(
                     "isinstance() arg 2 must be a type or tuple of types");
         }
 
-        Set<PyObject> objectTypeSet = new HashSet<>();
-        objectTypeSet.addAll(object.getTypes());
+        return issubclass(object.getType(), classInfo);
+    }
 
+    @DefineCafeBabePyFunction(name = "issubclass")
+    public PyObject issubclass(PyObject clazz, PyObject classInfo) {
+        if (!clazz.isType()
+                || (!classInfo.isType() && !(classInfo instanceof PyTupleType))) {
+            throw this.runtime.newRaiseTypeError(
+                    "issubclass() arg 2 must be a type or tuple of types");
+        }
+
+        Set<PyObject> objectTypeSet = new HashSet<>();
+        objectTypeSet.addAll(clazz.getTypes());
+
+        // FIXME 再帰的にtupleを見る
         if (classInfo instanceof PyTupleType) {
             this.runtime.iter(classInfo, objectTypeSet::add);
         }

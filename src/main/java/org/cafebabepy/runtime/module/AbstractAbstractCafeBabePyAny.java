@@ -80,8 +80,6 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     private void defineClassMembers() {
         Class<?> clazz = getClass();
 
-        defineClassMember(clazz, getScope());
-
         PyObjectScope objectScope = this.runtime.type("builtins.object")
                 .orElseThrow(() -> new CafeBabePyException("'builtins.object' is not found"))
                 .getScope();
@@ -89,6 +87,8 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
         for (Class<?> c = clazz.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
             defineClassMember(c, objectScope);
         }
+
+        defineClassMember(clazz, getScope());
     }
 
     private void defineClassMember(Class<?> clazz, PyObjectScope scope) {

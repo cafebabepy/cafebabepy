@@ -21,4 +21,6 @@ public final class ProtocolNames {
     public static final String __eq__ = "__eq__";
     public static final String __bool__ = "__bool__";
     public static final String __len__ = "__len__";
+    public static final String __getattribute__ = "__getattribute__";
+    public static final String __setattr__ = "__setattr__";
 }
