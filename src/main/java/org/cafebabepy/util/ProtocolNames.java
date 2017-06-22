@@ -19,6 +19,10 @@ public final class ProtocolNames {
     public static final String __radd__ = "__radd__";
     public static final String __sub__ = "__sub__";
     public static final String __rsub__ = "__rsub__";
+    public static final String __lt__ = "__lt__";
+    public static final String __rlt__ = "__rlt__";
+    public static final String __gt__ = "__gt__";
+    public static final String __rgt__ = "__rgt__";
     public static final String __iter__ = "__iter__";
     public static final String __next__ = "__next__";
     public static final String __eq__ = "__eq__";

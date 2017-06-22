@@ -73,6 +73,46 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).sub((PyIntObject) self);
     }
 
+    @DefineCafeBabePyFunction(name = __lt__)
+    public PyObject __lt__(PyObject self, PyObject other) {
+        PyObject result = check(self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) self).lt(((PyIntObject) other));
+    }
+
+    @DefineCafeBabePyFunction(name = __rlt__)
+    public PyObject __rlt__(PyObject self, PyObject other) {
+        PyObject result = check(other, self);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) other).lt(((PyIntObject) self));
+    }
+
+    @DefineCafeBabePyFunction(name = __gt__)
+    public PyObject __gt__(PyObject self, PyObject other) {
+        PyObject result = check(self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) self).gt(((PyIntObject) other));
+    }
+
+    @DefineCafeBabePyFunction(name = __rgt__)
+    public PyObject __rgt__(PyObject self, PyObject other) {
+        PyObject result = check(other, self);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) other).gt(((PyIntObject) self));
+    }
+
     private PyObject check(PyObject o1, PyObject o2) {
         PyObject intType = this.runtime.typeOrThrow("builtins.int");
 
