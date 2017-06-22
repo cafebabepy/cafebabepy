@@ -8,73 +8,87 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.object.PyIntObject;
 
-import java.util.Optional;
-
-import static org.cafebabepy.util.ProtocolNames.__bool__;
-import static org.cafebabepy.util.ProtocolNames.__eq__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/13.
  */
 @DefineCafeBabePyType(name = "builtins.int")
-
-    public static final String JAVA_INT_NAME = "int";
 public final class PyIntType extends AbstractCafeBabePyType {
 
     public PyIntType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __bool__)
-    public PyObject __bool__(PyObject self) {
+    @DefineCafeBabePyFunction(name = __int__)
+    public PyObject __int__(PyObject self) {
         PyObject intType = this.runtime.typeOrThrow("builtins.int");
-        PyObject bool = this.runtime.callFunction("builtins.isinstance", self, intType);
 
-        Optional<Object> intOpt = bool.getJavaObject(JAVA_INT_NAME);
-        if (!intOpt.isPresent()
-                || !(intOpt.get() instanceof Integer)
-                || ((Integer) intOpt.get()) == 0) {
-            throw this.runtime.newRaiseTypeError(
-                    "descriptor '__bool__' requires a 'int' object but received a '" + self.getName() + "'");
+        PyObject builtins = this.runtime.getBuiltinsModule();
+        PyObject isinstance = builtins.getObjectOrThrow("isinstance");
+        if (isinstance.call(builtins, self, intType).isFalse()) {
+            throw this.runtime.newRaiseTypeError("descriptor '__int__' requires a 'int' object but received a '" + self.getFullName() + "'");
         }
 
-        int intValue = (Integer) intOpt.get();
-
-        return intValue != 0 ? this.runtime.True() : this.runtime.False();
+        return self;
     }
 
-    @DefineCafeBabePyFunction(name = __eq__)
-    public PyObject __eq__(PyObject self, PyObject other) {
-        PyObject intType = typeOrThrow("builtins.int");
-
-        if (this.runtime.callFunction("builtins.isinstance", self, intType).isFalse()) {
-            throw this.runtime.newRaiseTypeError(
-                    "'__eq__' requires a 'int' object but received a '" + self.getFullName() + "'");
+    @DefineCafeBabePyFunction(name = __add__)
+    public PyObject __add__(PyObject self, PyObject other) {
+        PyObject result = check(self, other);
+        if (result != null) {
+            return result;
         }
-        PyObject otherType = other.getType();
-        if (this.runtime.callFunction("builtins.isinstance", other, other).isFalse()) {
+
+        return ((PyIntObject) self).add((PyIntObject) other);
+    }
+
+    @DefineCafeBabePyFunction(name = __radd__)
+    public PyObject __radd__(PyObject self, PyObject other) {
+        PyObject result = check(other, self);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) other).add((PyIntObject) self);
+    }
+
+    @DefineCafeBabePyFunction(name = __sub__)
+    public PyObject __sub__(PyObject self, PyObject other) {
+        PyObject result = check(self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) self).sub((PyIntObject) other);
+    }
+
+    @DefineCafeBabePyFunction(name = __rsub__)
+    public PyObject __rsub__(PyObject self, PyObject other) {
+        PyObject result = check(other, self);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) other).sub((PyIntObject) self);
+    }
+
+    private PyObject check(PyObject o1, PyObject o2) {
+        PyObject intType = this.runtime.typeOrThrow("builtins.int");
+
+        PyObject builtins = this.runtime.getBuiltinsModule();
+        PyObject isinstance = builtins.getObjectOrThrow("isinstance");
+        if (isinstance.call(builtins, o1, intType).isFalse()) {
+            throw this.runtime.newRaiseTypeError("descriptor '__int__' requires a 'int' object but received a '" + o1.getFullName() + "'");
+
+        } else if (isinstance.call(builtins, o1, intType).isFalse()) {
             return this.runtime.NotImplementedType();
+
+        } else if (!(o1 instanceof PyIntObject) || !(o2 instanceof PyIntObject)) {
+            throw new CafeBabePyException("int " + o2.getFullName() + " object is not PyIntObject");
         }
 
-        Object selfInt = self.getJavaObject(PyIntType.JAVA_INT_NAME);
-        Object otherInt = self.getJavaObject(PyIntType.JAVA_INT_NAME);
-
-        if (!(selfInt instanceof Integer) || !(otherInt instanceof Integer)) {
-            throw new CafeBabePyException("'" + JAVA_INT_NAME + "' is not found");
-        }
-
-        if (self.getJavaObject(PyIntType.JAVA_INT_NAME)
-                .equals(other.getJavaObject(PyIntType.JAVA_INT_NAME))) {
-            return this.runtime.True();
-
-        } else {
-            return this.runtime.False();
-        }
-    }
-
-        }
-
-        throw new CafeBabePyException("'" + JAVA_INT_NAME + "' Java object is not int");
+        return null;
     }
 
     public static PyObject newInt(Python runtime, int value) {
