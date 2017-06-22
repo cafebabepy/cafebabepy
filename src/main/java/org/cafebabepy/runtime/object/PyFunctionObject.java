@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.object.java;
+package org.cafebabepy.runtime.object;
 
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
@@ -7,12 +7,11 @@ import org.cafebabepy.runtime.Python;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Optional;
 
 /**
  * Created by yotchang4s on 2017/05/31.
  */
-public class JavaPyFunctionObject extends AbstractJavaPyObject {
+public class PyFunctionObject extends AbstractPyObjectObject {
 
     private final PyObject targetType;
 
@@ -20,7 +19,7 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
 
     private final Method method;
 
-    public JavaPyFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
+    public PyFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
         super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
 
         this.targetType = targetType;
@@ -148,10 +147,5 @@ public class JavaPyFunctionObject extends AbstractJavaPyObject {
     @Override
     public String getName() {
         return this.name;
-    }
-
-    @Override
-    public boolean isNone() {
-        return false;
     }
 }

@@ -5,7 +5,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.java.JavaPyObject;
+import org.cafebabepy.runtime.object.PyObjectObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -24,7 +24,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         if (!cls.isType()) {
             throw this.runtime.newRaiseTypeError("object.__new__(X): X is not a type object (" + cls.getFullName() + ")");
         }
-        return new JavaPyObject(this.runtime, cls);
+        return new PyObjectObject(this.runtime, cls);
     }
 
     @DefineCafeBabePyFunction(name = __init__)

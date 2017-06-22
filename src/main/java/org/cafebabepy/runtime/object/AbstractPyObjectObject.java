@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.object.java;
+package org.cafebabepy.runtime.object;
 
 import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
@@ -10,13 +10,13 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/06/03.
  */
-abstract class AbstractJavaPyObject extends AbstractPyObject {
+abstract class AbstractPyObjectObject extends AbstractPyObject {
 
     protected final PyObject type;
 
     private volatile String string;
 
-    protected AbstractJavaPyObject(Python runtime, PyObject type) {
+    protected AbstractPyObjectObject(Python runtime, PyObject type) {
         super(runtime, true);
 
         if (!type.isType()) {
@@ -32,12 +32,17 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
     }
 
     @Override
-    public List<PyObject> getTypes() {
+    public PyObject getTargetType() {
+        return this.type;
+    }
+
+    @Override
+    public final List<PyObject> getTypes() {
         return getType().getTypes();
     }
 
     @Override
-    public List<PyObject> getBases() {
+    public final List<PyObject> getBases() {
         return getType().getBases();
     }
 
@@ -52,12 +57,17 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
     }
 
     @Override
-    public boolean isType() {
+    public final boolean isType() {
         return false;
     }
 
     @Override
-    public boolean isModule() {
+    public final boolean isModule() {
+        return false;
+    }
+
+    @Override
+    public boolean isNone() {
         return false;
     }
 
@@ -71,5 +81,10 @@ abstract class AbstractJavaPyObject extends AbstractPyObject {
         }
 
         return this.string;
+    }
+
+    @Override
+    public PyObject call(PyObject self, PyObject... args) {
+        return getCallable().call(self, args);
     }
 }

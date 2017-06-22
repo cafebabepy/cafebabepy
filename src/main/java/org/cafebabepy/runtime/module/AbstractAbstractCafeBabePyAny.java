@@ -2,7 +2,7 @@ package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.runtime.*;
-import org.cafebabepy.runtime.object.java.JavaPyFunctionObject;
+import org.cafebabepy.runtime.object.PyFunctionObject;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -111,7 +111,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                         "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
             }
 
-            JavaPyFunctionObject f = new JavaPyFunctionObject(
+            PyFunctionObject f = new PyFunctionObject(
                     getRuntime(),
                     this,
                     defineCafeBabePyFunction.name(),
