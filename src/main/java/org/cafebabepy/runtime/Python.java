@@ -37,9 +37,9 @@ public final class Python {
 
     private PyObject noneObject;
 
-    private PyObject trueObject;
+    private PyBoolObject trueObject;
 
-    private PyObject falseObject;
+    private PyBoolObject falseObject;
 
     private PyObject notImplementedTypeObject;
 
@@ -195,7 +195,7 @@ public final class Python {
         return object;
     }
 
-    public PyObject bool(boolean bool) {
+    public PyBoolObject bool(boolean bool) {
         return bool ? this.trueObject : this.falseObject;
     }
 
