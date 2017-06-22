@@ -257,7 +257,7 @@ public abstract class AbstractPyObject implements PyObject {
 
         } else {
             throw getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + getFullName() + "' object has no attribute '" + "'");
+                    "'" + getFullName() + "' object has no attribute '" + name + "'");
         }
     }
 
