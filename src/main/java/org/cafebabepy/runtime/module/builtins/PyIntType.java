@@ -90,12 +90,4 @@ public final class PyIntType extends AbstractCafeBabePyType {
 
         return null;
     }
-
-    public static PyObject newInt(Python runtime, int value) {
-        PyObject result = new PyIntObject(runtime, value);
-        result.preInitialize();
-        result.postInitialize();
-
-        return result;
-    }
 }

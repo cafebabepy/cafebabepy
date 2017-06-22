@@ -31,12 +31,4 @@ public final class PyStrType extends AbstractCafeBabePyType {
 
         return self;
     }
-
-    public static PyObject newStr(Python runtime, String value) {
-        PyObject result = new PyStrObject(runtime, value);
-        result.preInitialize();
-        result.postInitialize();
-
-        return result;
-    }
 }

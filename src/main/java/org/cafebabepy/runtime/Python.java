@@ -157,12 +157,20 @@ public final class Python {
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
 
-    public PyObject str(String str) {
-        return PyStrType.newStr(this, str);
+    public PyStrObject str(String value) {
+        PyStrObject object = new PyStrObject(this, value);
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
     }
 
-    public PyObject number(int value) {
-        return PyIntType.newInt(this, value);
+    public PyIntObject number(int value) {
+        PyIntObject object = new PyIntObject(this, value);
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
     }
 
     public PyObject tuple(Collection<PyObject> value) {
