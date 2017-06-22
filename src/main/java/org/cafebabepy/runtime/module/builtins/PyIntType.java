@@ -6,6 +6,7 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.object.PyIntObject;
 
 import java.util.Optional;
 
@@ -71,22 +72,16 @@ public class PyIntType extends AbstractCafeBabePyType {
         }
     }
 
-    public int asInt() {
-        Object intObject = getJavaObject(JAVA_INT_NAME).orElseThrow(() ->
-                new CafeBabePyException("'" + JAVA_INT_NAME + "' Java object is not found")
-        );
-        if (intObject instanceof Integer) {
-            return (int) intObject;
         }
 
         throw new CafeBabePyException("'" + JAVA_INT_NAME + "' Java object is not int");
     }
 
     public static PyObject newInt(Python runtime, int value) {
-        PyObject object = runtime.newPyObject("builtins.int");
+        PyObject result = new PyIntObject(runtime, value);
+        result.preInitialize();
+        result.postInitialize();
 
-        object.putJavaObject(JAVA_INT_NAME, value);
-
-        return object;
+        return result;
     }
 }
