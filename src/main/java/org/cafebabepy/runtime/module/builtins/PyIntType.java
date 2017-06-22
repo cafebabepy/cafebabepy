@@ -17,9 +17,9 @@ import static org.cafebabepy.util.ProtocolNames.__eq__;
  * Created by yotchang4s on 2017/05/13.
  */
 @DefineCafeBabePyType(name = "builtins.int")
-public class PyIntType extends AbstractCafeBabePyType {
 
     public static final String JAVA_INT_NAME = "int";
+public final class PyIntType extends AbstractCafeBabePyType {
 
     public PyIntType(Python runtime) {
         super(runtime);

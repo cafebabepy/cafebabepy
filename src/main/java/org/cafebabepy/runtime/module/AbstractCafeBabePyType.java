@@ -24,7 +24,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     private String[] baseNames;
 
-    public AbstractCafeBabePyType(Python runtime) {
+    protected AbstractCafeBabePyType(Python runtime) {
         super(runtime);
     }
 

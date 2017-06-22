@@ -26,7 +26,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private List<PyObject> types;
 
-    public AbstractCafeBabePyModule(Python runtime) {
+    protected AbstractCafeBabePyModule(Python runtime) {
         super(runtime);
     }
 

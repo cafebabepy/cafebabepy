@@ -13,7 +13,7 @@ import static org.cafebabepy.util.ProtocolNames.__str__;
  * Created by yotchang4s on 2017/05/13.
  */
 @DefineCafeBabePyType(name = "builtins.str")
-public class PyStrType extends AbstractCafeBabePyType {
+public final class PyStrType extends AbstractCafeBabePyType {
 
     public PyStrType(Python runtime) {
         super(runtime);
