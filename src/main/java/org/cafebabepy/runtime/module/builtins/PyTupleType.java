@@ -5,10 +5,10 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.object.PyTupleIteratorObject;
+import org.cafebabepy.runtime.object.PyTupleObject;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 
@@ -18,30 +18,19 @@ import static org.cafebabepy.util.ProtocolNames.__iter__;
 @DefineCafeBabePyType(name = "builtins.tuple")
 public class PyTupleType extends AbstractCafeBabePyType {
 
-    public static final String JAVA_LIST_NAME = "tuple";
-    static final String PY_OBjECT_TUPLE_NAME = "_tuple";
-
     public PyTupleType(Python runtime) {
         super(runtime);
     }
 
     @DefineCafeBabePyFunction(name = __iter__)
-    public PyObject __iter__tuple(PyObject self) {
-        return this.runtime.newPyObject("builtins.tuple_iterator", false, self);
-    }
+    public PyObject __iter__(PyObject self) {
+        if (!(self instanceof PyTupleObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__iter__' requires a 'tuple' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
 
-    public static PyObject newTuple(Python runtime, Collection value) {
-        PyObject[] array = new PyObject[value.size()];
-        value.toArray(array);
-
-        return newTuple(runtime, array);
-    }
-
-    public static PyObject newTuple(Python runtime, PyObject... value) {
-        PyObject object = runtime.newPyObject("builtins.tuple");
-
-        object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
-
-        return object;
+        return new PyTupleIteratorObject(this.runtime, (PyTupleObject) self);
     }
 }

@@ -3,12 +3,8 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.module.builtins.PyIntType;
-import org.cafebabepy.runtime.module.builtins.PyListType;
 import org.cafebabepy.runtime.module.builtins.PyStrType;
-import org.cafebabepy.runtime.module.builtins.PyTupleType;
-import org.cafebabepy.runtime.object.PyFalseObject;
-import org.cafebabepy.runtime.object.PyNoneObject;
-import org.cafebabepy.runtime.object.PyTrueObject;
+import org.cafebabepy.runtime.object.*;
 import org.cafebabepy.util.BinaryConsumer;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
@@ -169,20 +165,34 @@ public final class Python {
         return PyIntType.newInt(this, value);
     }
 
-    public PyObject tuple(PyObject... args) {
-        return PyTupleType.newTuple(this, args);
+    public PyObject tuple(Collection<PyObject> value) {
+        PyObject[] array = new PyObject[value.size()];
+        value.toArray(array);
+
+        return tuple(array);
     }
 
-    public PyObject tuple(Collection<PyObject> args) {
-        return PyTupleType.newTuple(this, args);
+    public PyObject tuple(PyObject... value) {
+        PyTupleObject object = new PyTupleObject(this, value);
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
     }
 
-    public PyObject list(PyObject... args) {
-        return PyListType.newList(this, args);
+    public PyObject list(Collection<PyObject> value) {
+        PyObject[] array = new PyObject[value.size()];
+        value.toArray(array);
+
+        return list(array);
     }
 
-    public PyObject list(Collection<PyObject> args) {
-        return PyListType.newList(this, args);
+    public PyObject list(PyObject... value) {
+        PyListObject object = new PyListObject(this, value);
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
     }
 
     public PyObject bool(boolean bool) {

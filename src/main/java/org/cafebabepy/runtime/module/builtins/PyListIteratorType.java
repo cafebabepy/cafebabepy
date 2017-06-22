@@ -5,8 +5,8 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyTupleIteratorObject;
-import org.cafebabepy.runtime.object.PyTupleObject;
+import org.cafebabepy.runtime.object.PyListIteratorObject;
+import org.cafebabepy.runtime.object.PyListObject;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
@@ -14,34 +14,34 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 /**
  * Created by yotchang4s on 2017/06/14.
  */
-@DefineCafeBabePyType(name = "builtins.tuple_iterator", appear = false)
-public class PyTupleIteratorType extends AbstractCafeBabePyType {
+@DefineCafeBabePyType(name = "builtins.list_iterator", appear = false)
+public class PyListIteratorType extends AbstractCafeBabePyType {
 
-    public PyTupleIteratorType(Python runtime) {
+    public PyListIteratorType(Python runtime) {
         super(runtime);
     }
 
     @DefineCafeBabePyFunction(name = __next__)
     public PyObject __next__(PyObject self) {
-        if (!(self instanceof PyTupleIteratorObject)) {
+        if (!(self instanceof PyListIteratorObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__next__' requires a 'tuple_iterator' object but received a '"
+                    "descriptor '__next__' requires a 'list_iterator' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
 
-        return ((PyTupleIteratorObject) self).next();
+        return ((PyListIteratorObject) self).next();
     }
 
     @DefineCafeBabePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
-        if (!(self instanceof PyTupleObject)) {
+        if (!(self instanceof PyListObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__iter__' requires a 'tuple' object but received a '"
+                    "descriptor '__iter__' requires a 'list' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
 
-        return new PyTupleIteratorObject(self.getRuntime(), (PyTupleObject) self);
+        return new PyListIteratorObject(self.getRuntime(), (PyListObject) self);
     }
 }

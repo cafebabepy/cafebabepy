@@ -1,0 +1,20 @@
+package org.cafebabepy.runtime.object;
+
+import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.Python;
+
+import java.util.Collection;
+
+/**
+ * Created by yotchang4s on 2017/06/19.
+ */
+public class PyListIteratorObject extends AbstractPyIteratorObject {
+
+    public PyListIteratorObject(Python runtime, PyListObject list) {
+        this(runtime, list.getList());
+    }
+
+    public PyListIteratorObject(Python runtime, Collection<PyObject> collection) {
+        super(runtime, runtime.typeOrThrow("builtins.list_iterator", false), collection);
+    }
+}

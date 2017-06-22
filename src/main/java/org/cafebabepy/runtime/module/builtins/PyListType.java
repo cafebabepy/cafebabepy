@@ -1,13 +1,14 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.object.PyListIteratorObject;
+import org.cafebabepy.runtime.object.PyListObject;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import static org.cafebabepy.util.ProtocolNames.__iter__;
 
 /**
  * Created by yotchang4s on 2017/06/03.
@@ -15,24 +16,19 @@ import java.util.Collections;
 @DefineCafeBabePyType(name = "builtins.list")
 public class PyListType extends AbstractCafeBabePyType {
 
-    public static final String JAVA_LIST_NAME = "list";
-
     public PyListType(Python runtime) {
         super(runtime);
     }
 
-    public static PyObject newList(Python runtime, Collection<PyObject> value) {
-        PyObject[] array = new PyObject[value.size()];
-        value.toArray(array);
+    @DefineCafeBabePyFunction(name = __iter__)
+    public PyObject __iter__(PyObject self) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__iter__' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
 
-        return newList(runtime, array);
-    }
-
-    public static PyObject newList(Python runtime, PyObject... value) {
-        PyObject object = runtime.newPyObject("builtins.list");
-
-        object.putJavaObject(JAVA_LIST_NAME, Collections.unmodifiableList(Arrays.asList(value)));
-
-        return object;
+        return new PyListIteratorObject(this.runtime, (PyListObject) self);
     }
 }
