@@ -1,11 +1,10 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.util.LazyHashMap;
+import org.cafebabepy.util.LazyMap;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -17,9 +16,9 @@ public class PyObjectScope {
 
     private PyObjectScope parent;
 
-    private LazyHashMap<String, Supplier<PyObject>> objectMap;
+    private LazyMap<String, Supplier<PyObject>> objectMap;
 
-    private volatile LazyHashMap<String, Supplier<PyObject>> notAppearObjectMap;
+    private volatile LazyMap<String, Supplier<PyObject>> notAppearObjectMap;
 
     public PyObjectScope() {
         this(null);
@@ -27,7 +26,7 @@ public class PyObjectScope {
 
     public PyObjectScope(PyObjectScope parent) {
         this.parent = parent;
-        this.objectMap = new LazyHashMap(new ConcurrentHashMap<>());
+        this.objectMap = new LazyMap(LinkedHashMap::new);
     }
 
     public void put(String name, PyObject object) {
@@ -50,7 +49,7 @@ public class PyObjectScope {
             if (this.notAppearObjectMap == null) {
                 synchronized (this) {
                     if (this.notAppearObjectMap == null) {
-                        this.notAppearObjectMap = new LazyHashMap<>();
+                        this.notAppearObjectMap = new LazyMap<>(LinkedHashMap::new);
                     }
                 }
             }
@@ -67,11 +66,11 @@ public class PyObjectScope {
         return getsLazy(true);
     }
 
-    public LazyHashMap<String, Supplier<PyObject>> getsLazy(boolean appear) {
-        LazyHashMap<String, Supplier<PyObject>> map;
+    public LazyMap<String, Supplier<PyObject>> getsLazy(boolean appear) {
+        LazyMap<String, Supplier<PyObject>> map;
         if (appear) {
             synchronized (this) {
-                map = new LazyHashMap<>(this.objectMap.size());
+                map = new LazyMap<>(LinkedHashMap::new);
 
                 for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
                     map.put(e.getKey(), e.getValue());
@@ -80,7 +79,7 @@ public class PyObjectScope {
 
         } else {
             synchronized (this) {
-                map = new LazyHashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
+                map = new LazyMap<>(LinkedHashMap::new);
 
                 for (Map.Entry<String, Supplier<PyObject>> e : this.notAppearObjectMap.entrySet()) {
                     map.put(e.getKey(), e.getValue());
@@ -103,7 +102,7 @@ public class PyObjectScope {
         Map<String, PyObject> map;
         if (appear) {
             synchronized (this) {
-                map = new HashMap<>(this.objectMap.size());
+                map = new LinkedHashMap<>(this.objectMap.size());
 
                 for (Map.Entry<String, Supplier<PyObject>> e : this.objectMap.entrySet()) {
                     map.put(e.getKey(), e.getValue().get());
@@ -112,7 +111,7 @@ public class PyObjectScope {
 
         } else {
             synchronized (this) {
-                map = new HashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
+                map = new LinkedHashMap<>(this.objectMap.size() + this.notAppearObjectMap.size());
 
                 for (Map.Entry<String, Supplier<PyObject>> e : this.notAppearObjectMap.entrySet()) {
                     map.put(e.getKey(), e.getValue().get());

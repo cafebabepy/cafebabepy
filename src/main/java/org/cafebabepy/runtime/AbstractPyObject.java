@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime;
 
 import org.cafebabepy.runtime.module.builtins.PyObjectType;
-import org.cafebabepy.util.LazyHashMap;
+import org.cafebabepy.util.LazyMap;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -163,12 +163,12 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public final LazyHashMap<String, Supplier<PyObject>> getLazyObjects() {
+    public final LazyMap<String, Supplier<PyObject>> getLazyObjects() {
         return getLazyObjects(true);
     }
 
     @Override
-    public final LazyHashMap<String, Supplier<PyObject>> getLazyObjects(boolean appear) {
+    public final LazyMap<String, Supplier<PyObject>> getLazyObjects(boolean appear) {
         return getScope().getsLazy(appear);
     }
 

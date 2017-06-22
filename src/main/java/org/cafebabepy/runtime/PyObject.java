@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.util.LazyHashMap;
+import org.cafebabepy.util.LazyMap;
 
 import java.util.List;
 import java.util.Map;
@@ -58,9 +58,9 @@ public interface PyObject {
 
     boolean isFalse();
 
-    LazyHashMap<String, Supplier<PyObject>> getLazyObjects();
+    LazyMap<String, Supplier<PyObject>> getLazyObjects();
 
-    LazyHashMap<String, Supplier<PyObject>> getLazyObjects(boolean appear);
+    LazyMap<String, Supplier<PyObject>> getLazyObjects(boolean appear);
 
     Map<String, PyObject> getObjects();
 

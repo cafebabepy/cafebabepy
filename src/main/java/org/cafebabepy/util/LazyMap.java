@@ -1,7 +1,6 @@
 package org.cafebabepy.util;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -9,20 +8,13 @@ import java.util.function.Supplier;
 /**
  * Created by yotchang4s on 2017/06/09.
  */
-public class LazyHashMap<K, V> implements Map<K, V> {
+public class LazyMap<K, V> implements Map<K, V> {
 
     private Map<K, V> source;
 
-    public LazyHashMap() {
-        this.source = new HashMap<>();
-    }
-
-    public LazyHashMap(int initialCapacity) {
-        this.source = new HashMap<>(initialCapacity);
-    }
-
-    public LazyHashMap(Map<K, V> source) {
-        this.source = new HashMap<>(source);
+    public LazyMap(Supplier<Map<K, V>> initializer) {
+        this.source = initializer.get();
+        this.source.putAll(source);
     }
 
     @Override
