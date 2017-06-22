@@ -13,21 +13,29 @@ import java.util.stream.Collectors;
  */
 public class PyTupleObject extends AbstractPyObjectObject {
 
-    private final List<PyObject> tuple;
+    private final List<PyObject> list;
 
     public PyTupleObject(Python runtime, PyObject... value) {
-        super(runtime, runtime.typeOrThrow("builtins.tuple"));
+        super(runtime, runtime.typeOrThrow("builtins.list"));
 
-        this.tuple = Collections.unmodifiableList(Arrays.asList(value));
+        this.list = Collections.unmodifiableList(Arrays.asList(value));
     }
 
     public List<PyObject> getList() {
-        return this.tuple;
+        return this.list;
+    }
+
+    public PyObject get(PyIntObject i) {
+        return this.list.get(i.getIntValue());
+    }
+
+    public PyObject getLen() {
+        return this.runtime.number(list.size());
     }
 
     @Override
     public String asJavaString() {
-        return this.tuple.stream()
+        return this.list.stream()
                 .map(PyObject::asJavaString)
                 .collect(Collectors.joining(",", "(", ")"));
     }

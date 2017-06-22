@@ -25,6 +25,14 @@ public class PyListObject extends AbstractPyObjectObject {
         return this.list;
     }
 
+    public PyObject get(PyIntObject i) {
+        return this.list.get(i.getIntValue());
+    }
+
+    public PyObject getLen() {
+        return this.runtime.number(list.size());
+    }
+
     @Override
     public String asJavaString() {
         return this.list.stream()

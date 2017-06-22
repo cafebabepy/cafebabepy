@@ -16,6 +16,10 @@ public class PyIntObject extends AbstractPyObjectObject {
         this.value = value;
     }
 
+    public int getIntValue() {
+        return this.value;
+    }
+
     public PyIntObject add(PyIntObject other) {
         return new PyIntObject(this.runtime, this.value + other.value);
     }
