@@ -28,6 +28,14 @@ public class PyIntObject extends AbstractPyObjectObject {
         return this.runtime.number(this.value - other.value);
     }
 
+    public PyBoolObject lt(PyIntObject other) {
+        return this.runtime.bool(this.value < other.value);
+    }
+
+    public PyBoolObject gt(PyIntObject other) {
+        return this.runtime.bool(this.value > other.value);
+    }
+
     @Override
     public String asJavaString() {
         return String.valueOf(this.value);
