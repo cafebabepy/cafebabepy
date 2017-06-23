@@ -303,7 +303,7 @@ public final class Python {
 
         } else {
             PyObject iterType = getIterType(object);
-            PyObject iter = iterType.call(object, object);
+            PyObject iter = iterType.callSelf(object);
             next = getIterNext(iter);
             obj = iter;
         }
@@ -311,7 +311,7 @@ public final class Python {
         try {
             int i = 0;
             while (true) {
-                PyObject value = next.call(obj.getType(), obj);
+                PyObject value = next.callSelf(obj);
                 action.accept(value, i);
                 i++;
             }
@@ -334,14 +334,14 @@ public final class Python {
 
         } else {
             PyObject iterType = getIterType(object);
-            PyObject iter = iterType.call(object, object);
+            PyObject iter = iterType.callSelf(object);
             next = getIterNext(iter);
             obj = iter;
         }
 
         try {
             while (true) {
-                PyObject value = next.call(object.getType(), obj);
+                PyObject value = next.callSelf(obj);
                 action.accept(value);
             }
 
