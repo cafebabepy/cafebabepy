@@ -21,11 +21,11 @@ public class PyIntObject extends AbstractPyObjectObject {
     }
 
     public PyIntObject add(PyIntObject other) {
-        return new PyIntObject(this.runtime, this.value + other.value);
+        return this.runtime.number(this.value + other.value);
     }
 
     public PyIntObject sub(PyIntObject other) {
-        return new PyIntObject(this.runtime, this.value - other.value);
+        return this.runtime.number(this.value - other.value);
     }
 
     @Override
