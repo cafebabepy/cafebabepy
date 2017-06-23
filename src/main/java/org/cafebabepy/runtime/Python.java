@@ -368,6 +368,14 @@ public final class Python {
         return object.getType().getObject(__next__);
     }
 
+    public boolean isInstance(PyObject instance, PyObject type) {
+        return callFunction("builtins.isinstance", instance, type).isTrue();
+    }
+
+    public boolean isInstance(PyObject instance, String typeName) {
+        return isInstance(instance, typeOrThrow(typeName));
+    }
+
     public RaiseException newRaiseException(String exceptionType) {
         ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
 
