@@ -20,10 +20,12 @@ public class PyCompareType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        if (args.length >= 3) {
-            self.getScope().put("left", args[0]);
-            self.getScope().put("ops", args[1]);
-            self.getScope().put("comparators", args[2]);
+        if (args.length == 0) {
+            return;
         }
+
+        self.getScope().put("left", args[0]);
+        self.getScope().put("ops", args[1]);
+        self.getScope().put("comparators", args[2]);
     }
 }

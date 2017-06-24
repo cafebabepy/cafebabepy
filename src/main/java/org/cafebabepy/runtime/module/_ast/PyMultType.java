@@ -7,7 +7,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 /**
  * Created by yotchang4s on 2017/05/29.
  */
-@DefineCafeBabePyType(name = "_ast.Sub", parent = {"_ast.operator"})
+@DefineCafeBabePyType(name = "_ast.Mult", parent = {"_ast.operator"})
 public class PyMultType extends AbstractCafeBabePyType {
 
     public PyMultType(Python runtime) {

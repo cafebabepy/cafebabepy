@@ -20,8 +20,10 @@ public class PyNumType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        if (args.length >= 1) {
-            self.getScope().put("n", args[0]);
+        if (args.length == 0) {
+            return;
         }
+
+        self.getScope().put("n", args[0]);
     }
 }

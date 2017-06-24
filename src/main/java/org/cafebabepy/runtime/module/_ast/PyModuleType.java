@@ -20,9 +20,10 @@ public class PyModuleType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        if(args.length >= 1) {
-            // FIXME __iter__, next
-            self.getScope().put("body",args[0]);
+        if (args.length == 0) {
+            return;
         }
+
+        self.getScope().put("body", args[0]);
     }
 }

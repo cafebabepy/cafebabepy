@@ -20,12 +20,12 @@ public class PyIfType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        if(args.length >= 2) {
-            self.getScope().put("test", args[0]);
-            self.getScope().put("body", args[1]);
+        if (args.length == 0) {
+            return;
         }
-        if(args.length >= 3) {
-            self.getScope().put("orelse", args[2]);
-        }
+
+        self.getScope().put("test", args[0]);
+        self.getScope().put("body", args[1]);
+        self.getScope().put("orelse", args[2]);
     }
 }

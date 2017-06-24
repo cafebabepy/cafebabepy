@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2017/05/29.
  */
-@DefineCafeBabePyType(name = "_ast.Compare", parent = {"_ast.expr"})
+@DefineCafeBabePyType(name = "_ast.Name", parent = {"_ast.expr"})
 public class PyNameType extends AbstractCafeBabePyType {
 
     public PyNameType(Python runtime) {
@@ -20,9 +20,11 @@ public class PyNameType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
-        if (args.length >= 2) {
-            self.getScope().put("value", args[0]);
-            self.getScope().put("ctx", args[1]);
+        if (args.length == 0) {
+            return;
         }
+
+        self.getScope().put("id", args[0]);
+        self.getScope().put("ctx", args[1]);
     }
 }
