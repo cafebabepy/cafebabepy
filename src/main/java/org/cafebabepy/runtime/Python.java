@@ -104,6 +104,7 @@ public final class Python {
         }
 
         Set<PyObject> types = new HashSet<>();
+        Set<String> checkDuplicateTypes = new HashSet<>();
 
         for (Class<?> c : builtinsClasses) {
             DefineCafeBabePyType defineCafeBabePyType = c.getAnnotation(DefineCafeBabePyType.class);
@@ -116,7 +117,11 @@ public final class Python {
             PyObject type = createType(clazz, defineCafeBabePyType.name());
             type.preInitialize();
 
+            if (checkDuplicateTypes.contains(defineCafeBabePyType.name())) {
+                throw new CafeBabePyException("Duplicate type '" + defineCafeBabePyType.name() + "'");
+            }
             types.add(type);
+            checkDuplicateTypes.add(defineCafeBabePyType.name());
         }
 
         module.postInitialize();
