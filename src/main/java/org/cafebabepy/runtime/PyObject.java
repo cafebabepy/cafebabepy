@@ -26,11 +26,9 @@ public interface PyObject {
 
     Optional<String> getModuleName();
 
-    // FIXME Remove
-    void putJavaObject(String name, Object object);
+    PyObjectScope popScope();
 
-    // FIXME Remove
-    Optional<Object> getJavaObject(String name);
+    Optional<String> getModuleName();
 
     String getName();
 

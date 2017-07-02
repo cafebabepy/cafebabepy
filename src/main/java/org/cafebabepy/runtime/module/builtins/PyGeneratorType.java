@@ -2,14 +2,14 @@ package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
-import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.object.PyGeneratorObject;
 
 import java.util.Optional;
-import java.util.function.Function;
 
+import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
 
 /**
@@ -18,14 +18,8 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 @DefineCafeBabePyType(name = "builtins.GeneratorType", appear = false)
 public class PyGeneratorType extends AbstractCafeBabePyType {
 
-    private static final String JAVA_ITER_NAME = "iter";
-
-    private YieldStopper yieldStopper;
-
     public PyGeneratorType(Python runtime) {
         super(runtime);
-
-        this.yieldStopper = new YieldStopper();
     }
 
     @Override
@@ -38,28 +32,27 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
         return "generator";
     }
 
+    @DefineCafeBabePyFunction(name = __iter__)
+    public PyObject __iter__(PyObject self) {
+        if (!(self instanceof PyGeneratorObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__iter__' requires a 'tuple' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        return this;
+    }
+
     @DefineCafeBabePyFunction(name = __next__)
     public PyObject __next__(PyObject self) {
-        Function<YieldStopper, PyObject> f = self.getJavaObject(JAVA_ITER_NAME)
-                .map(o -> (Function<YieldStopper, PyObject>) o)
-                .orElseThrow(() ->
-                        new CafeBabePyException("'" + JAVA_ITER_NAME + "' is not found")
-                );
-
-        return f.apply(this.yieldStopper);
-    }
-
-    public final class YieldStopper {
-        public void stop() {
-            throw getRuntime().newRaiseException("builtins.StopIteration");
+        if (!(self instanceof PyGeneratorObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__next__' requires a 'generator' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
         }
-    }
 
-    public static PyObject newGenerator(Python runtime, Function<YieldStopper, PyObject> iter) {
-        PyObject object = runtime.newPyObject("builtins.GeneratorType", false);
-
-        object.putJavaObject(JAVA_ITER_NAME, iter);
-
-        return object;
+        return ((PyGeneratorObject) self).next();
     }
 }

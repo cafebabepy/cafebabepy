@@ -4,7 +4,6 @@ import org.cafebabepy.runtime.module.builtins.PyObjectType;
 import org.cafebabepy.util.LazyMap;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -22,9 +21,7 @@ public abstract class AbstractPyObject implements PyObject {
     protected final boolean appear;
 
     private volatile List<PyObject> types;
-
-    private Map<String, Object> javaObjectMap;
-
+    
     protected AbstractPyObject(Python runtime) {
         this(runtime, true);
     }
@@ -61,25 +58,10 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public final void putJavaObject(String name, Object object) {
-        if (this.javaObjectMap == null) {
-            synchronized (this) {
-                if (this.javaObjectMap == null) {
-                    this.javaObjectMap = new ConcurrentHashMap<>();
-                }
-            }
-        }
-
-        this.javaObjectMap.put(name, object);
     }
 
     @Override
-    public final Optional<Object> getJavaObject(String name) {
-        if (this.javaObjectMap == null) {
-            return Optional.empty();
-        }
 
-        return Optional.ofNullable(this.javaObjectMap.get(name));
     }
 
     @Override
