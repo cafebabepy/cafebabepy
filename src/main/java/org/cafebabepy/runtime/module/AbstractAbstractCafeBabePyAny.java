@@ -2,7 +2,7 @@ package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
 import org.cafebabepy.runtime.*;
-import org.cafebabepy.runtime.object.PyFunctionObject;
+import org.cafebabepy.runtime.object.PyFunctionJavaObject;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -85,13 +85,13 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                 .getScope();
 
         for (Class<?> c = clazz.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
-            defineClassMember(c, objectScope);
+            defineClassMember(c);
         }
 
-        defineClassMember(clazz, getScope());
+        defineClassMember(clazz);
     }
 
-    private void defineClassMember(Class<?> clazz, PyObjectScope scope) {
+    private void defineClassMember(Class<?> clazz) {
         // Check duplicate
         Set<String> defineClassMemberNamesSet = new HashSet<>();
 
@@ -121,7 +121,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                 f.getScope().put(__call__, f);
             }
 
-            scope.put(f.getName(), f);
+            this.scope.put(f.getName(), f);
 
             defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
         }
