@@ -162,7 +162,7 @@ small_stmt
 
 expr_stmt
  : testlist_star_expr (annassign | augassign (yield_expr | testlist)
- | '=' ( yield_expr | testlist_star_expr))*
+ | ('=' ( yield_expr | testlist_star_expr))*)
  ;
 
 annassign
