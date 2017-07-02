@@ -111,7 +111,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                         "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
             }
 
-            PyFunctionObject f = new PyFunctionObject(
+            PyFunctionJavaObject f = new PyFunctionJavaObject(
                     getRuntime(),
                     this,
                     defineCafeBabePyFunction.name(),

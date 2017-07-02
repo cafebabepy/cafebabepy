@@ -93,15 +93,15 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public PyObject call(PyObject self, PyObject... args) {
-        return getCallable().call(self, args);
+    public PyObject call(PyObject... args) {
+        return getCallable().call(args);
     }
 
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
-        PyObject object = getObjectOrThrow(__new__).callSelf(this);
+        PyObject object = getObjectOrThrow(__new__).call(this);
 
-        object.getObjectOrThrow(__init__).callSelf(object, args);
+        object.getObjectOrThrow(__init__).call(object, args);
 
         return object;
     }

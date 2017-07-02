@@ -149,7 +149,7 @@ public final class Python {
 
     private void initializeObjects() {
         this.objectObject = type("builtins.object")
-                .map(o -> o.callSelf())
+                .map(c -> c.call())
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
         this.noneObject = new PyNoneObject(this);
@@ -158,7 +158,7 @@ public final class Python {
         this.falseObject = new PyFalseObject(this);
 
         this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
-                .map(o -> o.callSelf())
+                .map(o -> o.call())
                 .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
     }
 
@@ -281,7 +281,7 @@ public final class Python {
     }
 
     public PyObject newPyObject(String typeName, boolean appear, PyObject... args) {
-        return typeOrThrow(typeName, appear).callSelf(args);
+        return typeOrThrow(typeName, appear).call(args);
     }
 
     public PyObject callFunction(String name, PyObject... args) {
@@ -294,7 +294,7 @@ public final class Python {
         PyObject module = moduleOrThrow(moduleNameOpt.get());
         PyObject object = module.getObjectOrThrow(splitter.getSimpleName());
 
-        return object.call(module, args);
+        return object.call(args);
     }
 
     public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
@@ -308,7 +308,7 @@ public final class Python {
 
         } else {
             PyObject iterType = getIterType(object);
-            PyObject iter = iterType.callSelf(object);
+            PyObject iter = iterType.call(object);
             next = getIterNext(iter);
             obj = iter;
         }
@@ -316,7 +316,7 @@ public final class Python {
         try {
             int i = 0;
             while (true) {
-                PyObject value = next.callSelf(obj);
+                PyObject value = next.call(obj);
                 action.accept(value, i);
                 i++;
             }
@@ -339,14 +339,14 @@ public final class Python {
 
         } else {
             PyObject iterType = getIterType(object);
-            PyObject iter = iterType.callSelf(object);
+            PyObject iter = iterType.call(object);
             next = getIterNext(iter);
             obj = iter;
         }
 
         try {
             while (true) {
-                PyObject value = next.callSelf(obj);
+                PyObject value = next.call(obj);
                 action.accept(value);
             }
 

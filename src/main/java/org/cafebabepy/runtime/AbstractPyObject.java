@@ -263,35 +263,32 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public PyObject call(PyObject self) {
+    public PyObject call() {
         PyObject[] objects = new PyObject[0];
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1) {
+    public PyObject call(PyObject arg1) {
         PyObject[] objects = new PyObject[1];
         objects[0] = arg1;
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2) {
         PyObject[] objects = new PyObject[2];
         objects[0] = arg1;
         objects[1] = arg2;
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3) {
         PyObject[] objects = new PyObject[3];
@@ -299,12 +296,11 @@ public abstract class AbstractPyObject implements PyObject {
         objects[1] = arg2;
         objects[2] = arg3;
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4) {
@@ -314,12 +310,11 @@ public abstract class AbstractPyObject implements PyObject {
         objects[2] = arg3;
         objects[3] = arg4;
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4,
@@ -331,23 +326,21 @@ public abstract class AbstractPyObject implements PyObject {
         objects[3] = arg4;
         objects[4] = arg5;
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject... args) {
         PyObject[] objects = new PyObject[args.length + 1];
         objects[0] = arg1;
         System.arraycopy(args, 0, objects, 1, args.length);
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject... args) {
         PyObject[] objects = new PyObject[args.length + 2];
@@ -355,12 +348,11 @@ public abstract class AbstractPyObject implements PyObject {
         objects[1] = arg2;
         System.arraycopy(args, 0, objects, 2, args.length);
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject... args) {
@@ -370,12 +362,11 @@ public abstract class AbstractPyObject implements PyObject {
         objects[2] = arg3;
         System.arraycopy(args, 0, objects, 3, args.length);
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4,
@@ -387,12 +378,11 @@ public abstract class AbstractPyObject implements PyObject {
         objects[3] = arg4;
         System.arraycopy(args, 0, objects, 4, args.length);
 
-        return call(self, objects);
+        return call(objects);
     }
 
     @Override
-    public PyObject call(PyObject self,
-                         PyObject arg1,
+    public PyObject call(PyObject arg1,
                          PyObject arg2,
                          PyObject arg3,
                          PyObject arg4,
@@ -406,92 +396,7 @@ public abstract class AbstractPyObject implements PyObject {
         objects[4] = arg5;
         System.arraycopy(args, 0, objects, 5, args.length);
 
-        return call(self, objects);
-    }
-
-    @Override
-    public PyObject callSelf() {
-        return call(this);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1) {
-        return call(this, arg1);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2) {
-        return call(this, arg1, arg2);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3) {
-        return call(this, arg1, arg2, arg3);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4) {
-        return call(this, arg1, arg2, arg4);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4,
-                             PyObject arg5) {
-        return call(this, arg1, arg2, arg3, arg4, arg5);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject... args) {
-        return call(this, arg1, args);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject... args) {
-        return call(this, arg1, arg2, args);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject... args) {
-        return call(this, arg1, arg2, arg3, args);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4,
-                             PyObject... args) {
-        return call(this, arg1, arg2, arg3, arg4, args);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject arg1,
-                             PyObject arg2,
-                             PyObject arg3,
-                             PyObject arg4,
-                             PyObject arg5,
-                             PyObject... args) {
-        return call(this, arg1, arg2, arg3, arg4, arg5, args);
-    }
-
-    @Override
-    public PyObject callSelf(PyObject... args) {
-        return call(this, args);
+        return call(objects);
     }
 
     private List<PyObject> getC3AlgorithmTypes() {

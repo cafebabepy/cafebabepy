@@ -72,9 +72,8 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public PyObject call(PyObject self, PyObject... args) {
-        throw getRuntime().newRaiseException("builtins.TypeError",
-                "'" + getName() + "' object is not callable");
+    public PyObject call(PyObject... args) {
+        throw getRuntime().newRaiseTypeError("'" + getName() + "' object is not callable");
     }
 
     @Override

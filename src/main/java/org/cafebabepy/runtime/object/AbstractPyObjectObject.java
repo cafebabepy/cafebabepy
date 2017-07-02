@@ -79,7 +79,7 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     }
 
     @Override
-    public PyObject call(PyObject self, PyObject... args) {
-        return getCallable().call(self, args);
+    public PyObject call(PyObject... args) {
+        return getCallable().call(args);
     }
 }

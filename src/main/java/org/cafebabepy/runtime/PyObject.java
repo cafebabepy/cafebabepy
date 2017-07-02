@@ -80,112 +80,52 @@ public interface PyObject {
 
     PyObject getCallable();
 
-    PyObject call(PyObject self);
+    PyObject call();
 
-    PyObject call(PyObject self,
-                  PyObject arg1);
+    PyObject call(PyObject arg1);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4,
                   PyObject arg5);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject... args);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject... args);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject... args);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4,
                   PyObject... args);
 
-    PyObject call(PyObject self,
-                  PyObject arg1,
+    PyObject call(PyObject arg1,
                   PyObject arg2,
                   PyObject arg3,
                   PyObject arg4,
                   PyObject arg5,
                   PyObject... args);
 
-    PyObject call(PyObject self,
-                  PyObject... args);
-
-    PyObject callSelf();
-
-    PyObject callSelf(PyObject arg1);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4,
-                      PyObject arg5);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject... args);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject... args);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject... args);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4,
-                      PyObject... args);
-
-    PyObject callSelf(PyObject arg1,
-                      PyObject arg2,
-                      PyObject arg3,
-                      PyObject arg4,
-                      PyObject arg5,
-                      PyObject... args);
-
-    PyObject callSelf(PyObject... args);
+    PyObject call(PyObject... args);
 }
