@@ -54,7 +54,7 @@ public class PySuperType extends AbstractCafeBabePyType {
 
         PyObject object = self.getScope().get("_proxy_object").orElseThrow(() ->
                 getRuntime().newRaiseException("builtins.AttributeError",
-                        "'" + self.getFullName() + "' object has no attribute '_object'"));
+                        "'" + self.getFullName() + "' object has no attribute '_proxy_object'"));
 
         PyObject selfProxy;
         List<PyObject> types = object.getTypes();
