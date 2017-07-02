@@ -50,4 +50,12 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
 
         return this.runtime.False();
     }
+
+    // FIXME Same CPython
+    @DefineCafeBabePyFunction(name = "print")
+    public PyObject print(PyObject objects) {
+        System.out.println(objects.asJavaString());
+
+        return this.runtime.None();
+    }
 }
