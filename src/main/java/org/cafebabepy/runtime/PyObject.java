@@ -14,8 +14,6 @@ public interface PyObject {
 
     PyObject getType();
 
-    PyObject getTargetType();
-
     List<PyObject> getBases();
 
     List<PyObject> getTypes();

@@ -21,7 +21,7 @@ public abstract class AbstractPyObject implements PyObject {
     protected final boolean appear;
 
     private volatile List<PyObject> types;
-    
+
     protected AbstractPyObject(Python runtime) {
         this(runtime, true);
     }

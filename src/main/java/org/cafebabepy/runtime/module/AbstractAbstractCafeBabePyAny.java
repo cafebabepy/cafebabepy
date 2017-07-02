@@ -128,11 +128,6 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     }
 
     @Override
-    public PyObject getTargetType() {
-        return this;
-    }
-
-    @Override
     public boolean isNone() {
         return false;
     }

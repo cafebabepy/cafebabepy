@@ -11,7 +11,7 @@ import java.lang.reflect.Modifier;
 /**
  * Created by yotchang4s on 2017/05/31.
  */
-public class PyFunctionObject extends AbstractPyObjectObject {
+public class PyFunctionJavaObject extends AbstractPyObjectObject {
 
     private final PyObject targetType;
 
@@ -19,7 +19,7 @@ public class PyFunctionObject extends AbstractPyObjectObject {
 
     private final Method method;
 
-    public PyFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
+    public PyFunctionJavaObject(Python runtime, PyObject targetType, String name, Method method) {
         super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
 
         this.targetType = targetType;
@@ -32,8 +32,8 @@ public class PyFunctionObject extends AbstractPyObjectObject {
     }
 
     @Override
-    public PyObject call(PyObject self, PyObject... args) {
-        PyObject target = self.getTargetType();
+    public PyObject call(PyObject... args) {
+        PyObject target = this.targetType;
 
         Class<?> methodClass = this.method.getDeclaringClass();
 
@@ -137,11 +137,6 @@ public class PyFunctionObject extends AbstractPyObjectObject {
 
             throw new CafeBabePyException(targetException);
         }
-    }
-
-    @Override
-    public PyObject getTargetType() {
-        return this.targetType;
     }
 
     @Override
