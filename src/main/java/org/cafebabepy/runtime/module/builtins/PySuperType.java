@@ -43,10 +43,7 @@ public class PySuperType extends AbstractCafeBabePyType {
     public PyObject __getattribute__(PyObject self, PyObject name) {
         PyObject strType = typeOrThrow("builtins.str");
 
-        PyObject builtinsModule = this.runtime.getBuiltinsModule();
-        PyObject isinstance = builtinsModule.getObjectOrThrow("isinstance");
-
-        if (isinstance.call(builtinsModule, name, strType).isFalse()) {
+        if (!this.runtime.isInstance(name, strType)) {
             throw this.runtime.newRaiseTypeError(
                     "attribute name must be string, not '" + name.getFullName() + "'"
             );

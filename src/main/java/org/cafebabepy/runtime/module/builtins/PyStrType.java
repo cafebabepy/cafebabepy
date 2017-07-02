@@ -23,9 +23,7 @@ public final class PyStrType extends AbstractCafeBabePyType {
     public PyObject __str__(PyObject self) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
-        PyObject builtins = this.runtime.getBuiltinsModule();
-        PyObject isinstance = builtins.getObjectOrThrow("isinstance");
-        if (isinstance.call(builtins, self, strType).isFalse()) {
+        if (!this.runtime.isInstance(self, strType)) {
             throw this.runtime.newRaiseTypeError("descriptor '__str__' requires a 'str' object but received a '" + self.getFullName() + "'");
         }
 

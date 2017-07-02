@@ -28,11 +28,8 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
     public void generic_visit(PyObject self, PyObject node) {
         PyObject visit = self.getType().getObjectOrThrow("visit");
 
-        PyObject builtins = this.runtime.getBuiltinsModule();
-
         PyObject astModule = this.runtime.moduleOrThrow("ast");
         PyObject iter_fields = astModule.getObjectOrThrow("iter_fields");
-        PyObject isinstance = builtins.getObjectOrThrow("isinstance");
 
         PyObject list = typeOrThrow("builtins.list");
         PyObject ast = this.runtime.typeOrThrow("_ast.AST");
@@ -44,15 +41,15 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
             this.runtime.iterIndex(fvs, (fv, i) -> fieldAndValue[i] = fv);
 
             PyObject value = fieldAndValue[1];
-            if (isinstance.call(builtins, value, list).isTrue()) {
+            if (this.runtime.isInstance(value, list)) {
                 this.runtime.iter(value, item -> {
-                    if (isinstance.call(builtins, value, ast).isTrue()) {
-                        visit.call(self, self, item);
+                    if (this.runtime.isInstance(item, ast)) {
+                        visit.call(self, item);
                     }
                 });
 
-            } else if (isinstance.call(builtins, value, ast).isTrue()) {
-                visit.call(self, self, value);
+            } else if (this.runtime.isInstance(value, ast)) {
+                visit.call(self, value);
             }
         });
     }

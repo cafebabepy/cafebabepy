@@ -116,12 +116,10 @@ public final class PyIntType extends AbstractCafeBabePyType {
     private PyObject check(PyObject o1, PyObject o2) {
         PyObject intType = this.runtime.typeOrThrow("builtins.int");
 
-        PyObject builtins = this.runtime.getBuiltinsModule();
-        PyObject isinstance = builtins.getObjectOrThrow("isinstance");
-        if (isinstance.call(builtins, o1, intType).isFalse()) {
+        if (!this.runtime.isInstance(o1, intType)) {
             throw this.runtime.newRaiseTypeError("descriptor '__int__' requires a 'int' object but received a '" + o1.getFullName() + "'");
 
-        } else if (isinstance.call(builtins, o1, intType).isFalse()) {
+        } else if (!this.runtime.isInstance(o1, intType)) {
             return this.runtime.NotImplementedType();
 
         } else if (!(o1 instanceof PyIntObject) || !(o2 instanceof PyIntObject)) {
