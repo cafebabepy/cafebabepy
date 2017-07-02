@@ -371,6 +371,13 @@ public final class Python {
         }
     }
 
+    public List<PyObject> toList(PyObject object) {
+        List<PyObject> list = new ArrayList<>();
+        iter(object, list::add);
+
+        return list;
+    }
+
     private PyObject getIterType(PyObject object) {
         return object.getType().getObject(__iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
