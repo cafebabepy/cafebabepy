@@ -2,8 +2,6 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
-import org.cafebabepy.runtime.module.builtins.PyIntType;
-import org.cafebabepy.runtime.module.builtins.PyStrType;
 import org.cafebabepy.runtime.object.*;
 import org.cafebabepy.util.BinaryConsumer;
 import org.cafebabepy.util.ModuleOrClassSplitter;
@@ -15,6 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
@@ -56,11 +55,18 @@ public final class Python {
 
     private void initialize() {
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
-        initializeBuiltins("org.cafebabepy.runtime.module.types");
-
         initializeBuiltins("org.cafebabepy.runtime.module");
 
         initializeObjects();
+
+        // TODO __main__でいいの？
+        PyObject builtinsModule = moduleOrThrow("builtins");
+        PyObject mainModule = moduleOrThrow("__main__");
+
+        Map<String, PyObject> objectMap = builtinsModule.getObjects();
+        for (Map.Entry<String, PyObject> e : objectMap.entrySet()) {
+            mainModule.getScope().put(e.getKey(), e.getValue());
+        }
     }
 
     @SuppressWarnings("unchecked")

@@ -16,7 +16,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     protected final Python runtime;
 
-    protected final PyObjectScope scope;
+    protected PyObjectScope scope;
 
     protected final boolean appear;
 
@@ -58,10 +58,18 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
+    public void pushScope() {
+        this.scope = new PyObjectScope(this.scope);
     }
 
     @Override
+    public PyObjectScope popScope() {
+        PyObjectScope parent = this.scope.getParentScope();
 
+        PyObjectScope oldScope = this.scope;
+        this.scope = parent;
+
+        return oldScope;
     }
 
     @Override

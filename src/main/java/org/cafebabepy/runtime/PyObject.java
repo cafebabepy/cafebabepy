@@ -22,7 +22,7 @@ public interface PyObject {
 
     PyObjectScope getScope();
 
-    Optional<String> getModuleName();
+    void pushScope();
 
     PyObjectScope popScope();
 

@@ -162,7 +162,7 @@ public class PyObjectScope {
             return this.emptyObjectReadAccessor;
         }
 
-        return () -> Optional.of(getter.get());
+        return () -> Optional.ofNullable(getter.get());
     }
 
     public Optional<PyObject> getAppearOnly(String name) {
@@ -184,7 +184,7 @@ public class PyObjectScope {
 
         final Supplier<PyObject> g = getter;
 
-        return () -> Optional.of(g.get());
+        return () -> Optional.ofNullable(g.get());
     }
 
     public boolean containsKey(String name) {
