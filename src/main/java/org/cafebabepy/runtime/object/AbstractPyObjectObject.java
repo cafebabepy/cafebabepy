@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/06/03.
  */
-abstract class AbstractPyObjectObject extends AbstractPyObject {
+public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
     protected final PyObject type;
 
