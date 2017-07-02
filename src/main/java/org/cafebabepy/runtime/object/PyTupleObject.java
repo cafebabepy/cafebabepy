@@ -16,7 +16,7 @@ public class PyTupleObject extends AbstractPyObjectObject {
     private final List<PyObject> list;
 
     public PyTupleObject(Python runtime, PyObject... value) {
-        super(runtime, runtime.typeOrThrow("builtins.list"));
+        super(runtime, runtime.typeOrThrow("builtins.tuple"));
 
         this.list = Collections.unmodifiableList(Arrays.asList(value));
     }
