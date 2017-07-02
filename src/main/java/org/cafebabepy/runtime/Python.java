@@ -212,6 +212,14 @@ public final class Python {
         return bool ? this.trueObject : this.falseObject;
     }
 
+    public PyGeneratorObject generator(Function<PyGeneratorObject.YieldStopper, PyObject> iter) {
+        PyGeneratorObject object = new PyGeneratorObject(this, iter);
+        object.preInitialize();
+        object.postInitialize();
+
+        return object;
+    }
+
     public PyObject Object() {
         return this.objectObject;
     }

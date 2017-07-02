@@ -5,7 +5,6 @@ import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
-import org.cafebabepy.runtime.module.builtins.PyGeneratorType;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -25,9 +24,9 @@ public class PyAstModule extends AbstractCafeBabePyModule {
         Map<String, PyObject> objectMap = node.getObjects();
         Iterator<Map.Entry<String, PyObject>> objectIter = objectMap.entrySet().iterator();
 
-        return PyGeneratorType.newGenerator(this.runtime, stopper -> {
+        return this.runtime.generator(stopper -> {
             if (!objectIter.hasNext()) {
-                stopper.stop();
+                stopper.stop(this.runtime);
                 // Always RaiseException
 
                 return this.runtime.None();
@@ -35,7 +34,7 @@ public class PyAstModule extends AbstractCafeBabePyModule {
 
             Map.Entry<String, PyObject> e = objectIter.next();
 
-            return this.runtime.tuple(this.runtime.str(e.getKey()), e.getValue());
+            return this.runtime.list(this.runtime.str(e.getKey()), e.getValue());
         });
     }
 }
