@@ -3,6 +3,7 @@ package org.cafebabepy.runtime.object;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,10 +19,14 @@ public class PyListObject extends AbstractPyObjectObject {
     public PyListObject(Python runtime, PyObject... value) {
         super(runtime, runtime.typeOrThrow("builtins.list"));
 
-        this.list = Collections.unmodifiableList(Arrays.asList(value));
+        this.list = new ArrayList<>(Arrays.asList(value));
     }
 
     public List<PyObject> getList() {
+        return Collections.unmodifiableList(this.list);
+    }
+
+    public List<PyObject> getRawList() {
         return this.list;
     }
 
@@ -37,6 +42,6 @@ public class PyListObject extends AbstractPyObjectObject {
     public String asJavaString() {
         return this.list.stream()
                 .map(PyObject::asJavaString)
-                .collect(Collectors.joining(",", "[", "]"));
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 }

@@ -3,7 +3,6 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.object.*;
-import org.cafebabepy.util.BinaryConsumer;
 import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
 
@@ -12,11 +11,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.cafebabepy.util.ProtocolNames.__iter__;
-import static org.cafebabepy.util.ProtocolNames.__next__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/12.
@@ -27,20 +26,18 @@ public final class Python {
 
     public static final String BUILTINS_MODULE_NAME = "builtins";
 
-    public static final String TYPES_MODULE_NAME = "types";
-
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
 
     private PyObject objectObject;
 
-    private PyObject noneObject;
+    private PyNoneObject noneObject;
 
     private PyBoolObject trueObject;
 
     private PyBoolObject falseObject;
 
-    private PyObject notImplementedTypeObject;
+    private PyNotImplementedObject notImplementedTypeObject;
 
     private Python() {
         this.moduleMap = new ConcurrentHashMap<>();
@@ -159,13 +156,9 @@ public final class Python {
                 .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
 
         this.noneObject = new PyNoneObject(this);
-
         this.trueObject = new PyTrueObject(this);
         this.falseObject = new PyFalseObject(this);
-
-        this.notImplementedTypeObject = type("builtins.NotImplementedType", false)
-                .map(o -> o.call())
-                .orElseThrow(() -> new CafeBabePyException("'NotImplementedType' is not found"));
+        this.notImplementedTypeObject = new PyNotImplementedObject(this);
     }
 
     public PyStrObject str(String value) {
@@ -311,7 +304,13 @@ public final class Python {
         return object.call(args);
     }
 
-    public void iterIndex(PyObject object, BinaryConsumer<PyObject, Integer> action) {
+    public void iterIndex(PyObject object, BiConsumer<PyObject, Integer> action) {
+
+        if(object instanceof PyListObject) {
+            iterIndex((PyListObject)object, action);
+            return;
+        }
+
         PyObject next;
         PyObject obj;
 
@@ -327,22 +326,41 @@ public final class Python {
             obj = iter;
         }
 
-        try {
-            int i = 0;
-            while (true) {
-                PyObject value = next.call(obj);
-                action.accept(value, i);
-                i++;
+
+        int i = 0;
+        do {
+            PyObject value;
+            try {
+                value = next.call(obj);
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                if (!isInstance(exception, "builtins.StopIteration")) {
+                    throw e;
+                }
+                break;
             }
 
-        } catch (RaiseException e) {
-            if (e.getException().getType() != typeOrThrow("builtins.StopIteration")) {
-                throw e;
-            }
+            action.accept(value, i);
+            i++;
+
+        } while (true);
+    }
+
+    private void iterIndex(PyListObject listObject, BiConsumer<PyObject, Integer> action) {
+        List<PyObject> list = listObject.getRawList();
+        for(int i = 0; i < list.size(); i++) {
+            action.accept(list.get(i), i);
         }
     }
 
     public void iter(PyObject object, Consumer<PyObject> action) {
+
+        if(object instanceof PyListObject) {
+            iter((PyListObject)object, action);
+            return;
+        }
+
         PyObject next;
         PyObject obj;
 
@@ -358,17 +376,155 @@ public final class Python {
             obj = iter;
         }
 
-        try {
-            while (true) {
-                PyObject value = next.call(obj);
-                action.accept(value);
+
+        do {
+            PyObject value;
+
+            try {
+                value = next.call(obj);
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                if (!isInstance(exception, "builtins.StopIteration")) {
+                    throw e;
+                }
+                break;
             }
 
-        } catch (RaiseException e) {
-            if (e.getException().getType() != typeOrThrow("builtins.StopIteration")) {
-                throw e;
+            action.accept(value);
+
+        } while (true);
+    }
+
+    private void iter(PyListObject listObject, Consumer<PyObject> action) {
+        List<PyObject> list = listObject.getRawList();
+        for(int i = 0; i < list.size(); i++) {
+            action.accept(list.get(i));
+        }
+    }
+
+    public PyObject eq(PyObject x, PyObject y) {
+        PyObject xType = x.getType();
+        PyObject yType = y.getType();
+
+        PyObject result;
+        if (xType == yType || !isSubClass(xType, yType)) {
+            result = refSimpleOp(x, y, "==", __eq__, __eq__);
+
+        } else {
+            result = refSimpleOp(y, x, "==", __eq__, __eq__);
+        }
+        if (result.isNotImplemented()) {
+            result = bool(x == y);
+        }
+
+        return result;
+    }
+
+    public PyObject ne(PyObject x, PyObject y) {
+        PyObject xType = x.getType();
+        PyObject yType = y.getType();
+
+        PyObject result;
+        if (xType == yType || !isSubClass(xType, yType)) {
+            result = refSimpleOp(x, y, "!=", __ne__, __ne__);
+
+        } else {
+            result = refSimpleOp(y, x, "!=", __ne__, __ne__);
+        }
+
+        if (result.isNotImplemented()) {
+            if (eq(x, y).isTrue()) {
+                return False();
+
+            } else {
+                return True();
             }
         }
+
+        return result;
+    }
+
+    // <
+    public PyObject lt(PyObject x, PyObject y) {
+        return refOp(x, y, "<", __lt__, __gt__);
+    }
+
+    // <=
+    public PyObject le(PyObject x, PyObject y) {
+        return refOp(x, y, "<=", __le__, __rle__);
+    }
+
+    // >
+    public PyObject gt(PyObject x, PyObject y) {
+        return refOp(x, y, ">", __gt__, __lt__);
+    }
+
+    // >=
+    public PyObject ge(PyObject x, PyObject y) {
+        return refOp(x, y, ">=", __ge__, __rge__);
+    }
+
+    // +
+    public PyObject add(PyObject x, PyObject y) {
+        return refOp(x, y, "+", __add__, __radd__);
+    }
+
+    // -
+    public PyObject sub(PyObject x, PyObject y) {
+        return refOp(x, y, "-", __sub__, __rsub__);
+    }
+
+    // %
+    public PyObject mod(PyObject x, PyObject y) {
+        return refOp(x, y, "%", __mod__, __rmod__);
+    }
+
+    // *
+    public PyObject mul(PyObject x, PyObject y) {
+        return refOp(x, y, "*", __mul__, __mul__);
+    }
+
+    private PyObject refOp(PyObject x, PyObject y, String op, String opFunctionName, String ropFunctionName) {
+        PyObject xType = x.getType();
+        PyObject yType = y.getType();
+
+        PyObject result;
+        if (xType == yType || !isSubClass(xType, yType)) {
+            result = refSimpleOp(x, y, op, opFunctionName, ropFunctionName);
+
+        } else {
+            result = refSimpleOp(y, x, op, ropFunctionName, opFunctionName);
+        }
+
+        if (result.isNotImplemented()) {
+            throw newRaiseTypeError(
+                    "'" + op + "' not supported between instances of '"
+                            + x.getType().getFullName()
+                            + "' and '"
+                            + y.getType().getFullName()
+                            + "'");
+        }
+
+        return result;
+    }
+
+    private PyObject refSimpleOp(PyObject x, PyObject y, String op, String opFunctionName, String ropFunctionName) {
+        PyObject operator = x.getObject(opFunctionName).orElseThrow(() ->
+                newRaiseTypeError("unsupported operand type(s) for " + op + ": '"
+                        + x.getType().getFullName()
+                        + "' and '"
+                        + y.getType().getFullName()
+                        + "'")
+        );
+        PyObject result = operator.call(x, y);
+
+        if (result.isNotImplemented()) {
+            PyObject rop = y.getObjectOrThrow(ropFunctionName);
+            result = rop.call(y, x);
+        }
+
+        return result;
     }
 
     public List<PyObject> toList(PyObject object) {
@@ -398,8 +554,16 @@ public final class Python {
         return callFunction("builtins.isinstance", instance, type).isTrue();
     }
 
+    public boolean isSubClass(PyObject clazz, PyObject classInfo) {
+        return callFunction("builtins.issubclass", clazz, classInfo).isTrue();
+    }
+
     public boolean isInstance(PyObject instance, String typeName) {
         return isInstance(instance, typeOrThrow(typeName));
+    }
+
+    public boolean isIterable(PyObject object) {
+        return object.getObject(__iter__).map(x -> true).orElse(false);
     }
 
     public RaiseException newRaiseException(String exceptionType) {

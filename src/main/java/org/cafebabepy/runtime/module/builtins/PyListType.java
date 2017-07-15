@@ -44,7 +44,7 @@ public class PyListType extends AbstractCafeBabePyType {
     public PyObject __len__(PyObject self) {
         if (!(self instanceof PyListObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__getitem__' requires a 'list' object but received a '"
+                    "descriptor '__len__' requires a 'list' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }

@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime.object;
 
+import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
 /**
@@ -20,6 +21,10 @@ public class PyIntObject extends AbstractPyObjectObject {
         return this.value;
     }
 
+    public PyBoolObject eq(PyIntObject other) {
+        return this.runtime.bool(this.value == other.value);
+    }
+
     public PyIntObject add(PyIntObject other) {
         return this.runtime.number(this.value + other.value);
     }
@@ -28,12 +33,44 @@ public class PyIntObject extends AbstractPyObjectObject {
         return this.runtime.number(this.value - other.value);
     }
 
+    public PyIntObject mul(PyIntObject other) {
+        return this.runtime.number(this.value * other.value);
+    }
+
+    public PyIntObject mod(PyIntObject other) {
+        return this.runtime.number(this.value % other.value);
+    }
+
     public PyBoolObject lt(PyIntObject other) {
         return this.runtime.bool(this.value < other.value);
     }
 
+    public PyBoolObject le(PyIntObject other) {
+        return this.runtime.bool(this.value <= other.value);
+    }
+
     public PyBoolObject gt(PyIntObject other) {
         return this.runtime.bool(this.value > other.value);
+    }
+
+    public PyBoolObject ge(PyIntObject other) {
+        return this.runtime.bool(this.value >= other.value);
+    }
+
+    public PyBoolObject bool() {
+        return this.runtime.bool(this.value != 0);
+    }
+
+    public PyIntObject invert() {
+        return this.runtime.number(~this.value);
+    }
+
+    public PyObject pos() {
+        return this.runtime.number(+this.value);
+    }
+
+    public PyObject neg() {
+        return this.runtime.number(-this.value);
     }
 
     @Override

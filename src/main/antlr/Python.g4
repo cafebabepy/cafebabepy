@@ -295,7 +295,7 @@ while_stmt
  ;
 
 for_stmt
- : 'for' exprlist 'in' testlist ':' suite ('else' ':' suite)
+ : 'for' exprlist 'in' testlist ':' suite ('else' ':' suite)?
  ;
 
 try_stmt: ('try' ':' suite ((except_clause ':' suite)+

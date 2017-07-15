@@ -11,16 +11,16 @@ import static org.cafebabepy.util.ProtocolNames.__bool__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefineCafeBabePyType(name = "builtins.NoneType", appear = false)
-public class PyNoneTypeType extends AbstractCafeBabePyType {
+@DefineCafeBabePyType(name = "builtins.None", appear = false)
+public class PyNoneType extends AbstractCafeBabePyType {
 
-    public PyNoneTypeType(Python runtime) {
+    public PyNoneType(Python runtime) {
         super(runtime);
     }
 
     @DefineCafeBabePyFunction(name = __bool__)
     public PyObject __bool__(PyObject self) {
-        PyObject noneType = typeOrThrow("builtins.NoneType", false);
+        PyObject noneType = typeOrThrow("builtins.None", false);
 
         if (this.runtime.callFunction("builtins.isinstance", self, noneType).isFalse()) {
             throw this.runtime.newRaiseTypeError(

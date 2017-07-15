@@ -9,7 +9,7 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/12.
  */
-@DefineCafeBabePyType(name = "builtins.ModuleType")
+@DefineCafeBabePyType(name = "builtins.module", appear = false)
 public class PyModuleType extends AbstractCafeBabePyType {
 
     public PyModuleType(Python runtime) {
@@ -19,10 +19,5 @@ public class PyModuleType extends AbstractCafeBabePyType {
     @Override
     public Optional<String> getModuleName() {
         return Optional.of("builtins");
-    }
-
-    @Override
-    public String getName() {
-        return "module";
     }
 }

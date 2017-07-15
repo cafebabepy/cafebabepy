@@ -78,7 +78,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     @Override
     public PyObject getType() {
-        return this.runtime.getBuiltinsModule().getObjectOrThrow("module");
+        return this.runtime.typeOrThrow("builtins.module", false);
     }
 
     @Override

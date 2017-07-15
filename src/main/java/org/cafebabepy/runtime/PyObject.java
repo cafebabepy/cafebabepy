@@ -1,11 +1,8 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.util.LazyMap;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -44,6 +41,8 @@ public interface PyObject {
 
     boolean isNone();
 
+    boolean isNotImplemented();
+
     PyObject getStr();
 
     String asJavaString();
@@ -54,25 +53,13 @@ public interface PyObject {
 
     boolean isFalse();
 
-    LazyMap<String, Supplier<PyObject>> getLazyObjects();
-
-    LazyMap<String, Supplier<PyObject>> getLazyObjects(boolean appear);
-
     Map<String, PyObject> getObjects();
 
     Map<String, PyObject> getObjects(boolean appear);
 
-    Supplier<Optional<PyObject>> getLazyObject(String name);
-
-    Supplier<Optional<PyObject>> getLazyObject(String name, boolean appear);
-
     Optional<PyObject> getObject(String name);
 
     Optional<PyObject> getObject(String name, boolean appear);
-
-    Supplier<PyObject> getLazyObjectOrThrow(String name);
-
-    Supplier<PyObject> getLazyObjectOrThrow(String name, boolean appear);
 
     PyObject getObjectOrThrow(String name);
 

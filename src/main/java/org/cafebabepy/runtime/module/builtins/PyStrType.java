@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.object.PyStrObject;
 
+import static org.cafebabepy.util.ProtocolNames.__add__;
 import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
@@ -28,5 +29,20 @@ public final class PyStrType extends AbstractCafeBabePyType {
         }
 
         return self;
+    }
+
+    @DefineCafeBabePyFunction(name = __add__)
+    public PyObject __add__(PyObject self, PyObject other) {
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
+
+        if (!(self instanceof PyStrObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__add__' requires a 'str' object but received a '" + self.getFullName() + "'");
+
+        } else if (!(other instanceof PyStrObject)) {
+            throw this.runtime.newRaiseTypeError("must be str, not " + other);
+        }
+
+        return ((PyStrObject) self).add((PyStrObject) other);
     }
 }

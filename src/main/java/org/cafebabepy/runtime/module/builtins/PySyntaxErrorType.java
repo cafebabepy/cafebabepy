@@ -7,11 +7,10 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-// TODO builtins????
-@DefineCafeBabePyType(name = "builtins.NotImplementedType", appear = false)
-public class PyNotImplementedTypeType extends AbstractCafeBabePyType {
+@DefineCafeBabePyType(name = "builtins.SyntaxError", parent = {"builtins.Exception"})
+public class PySyntaxErrorType extends AbstractCafeBabePyType {
 
-    public PyNotImplementedTypeType(Python runtime) {
+    public PySyntaxErrorType(Python runtime) {
         super(runtime);
     }
 }

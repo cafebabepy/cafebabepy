@@ -15,7 +15,7 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 /**
  * Created by yotchang4s on 2017/06/07.
  */
-@DefineCafeBabePyType(name = "builtins.GeneratorType", appear = false)
+@DefineCafeBabePyType(name = "builtins.generator", appear = false)
 public class PyGeneratorType extends AbstractCafeBabePyType {
 
     public PyGeneratorType(Python runtime) {
@@ -27,16 +27,11 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
         return Optional.of("builtins");
     }
 
-    @Override
-    public String getName() {
-        return "generator";
-    }
-
     @DefineCafeBabePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
         if (!(self instanceof PyGeneratorObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__iter__' requires a 'tuple' object but received a '"
+                    "descriptor '__iter__' requires a 'generator' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }

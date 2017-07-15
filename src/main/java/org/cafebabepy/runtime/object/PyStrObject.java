@@ -15,6 +15,10 @@ public class PyStrObject extends AbstractPyObjectObject {
         this.value = value;
     }
 
+    public PyStrObject add(PyStrObject str) {
+        return this.runtime.str(this.value + str.value);
+    }
+
     @Override
     public String asJavaString() {
         return this.value;

@@ -35,13 +35,13 @@ public class PyListIteratorType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
-        if (!(self instanceof PyListObject)) {
+        if (!(self instanceof PyListIteratorObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__iter__' requires a 'list' object but received a '"
+                    "descriptor '__iter__' requires a 'list_iterator' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
 
-        return new PyListIteratorObject(self.getRuntime(), (PyListObject) self);
+        return this;
     }
 }

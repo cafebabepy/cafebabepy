@@ -128,7 +128,12 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     }
 
     @Override
-    public boolean isNone() {
+    public final boolean isNone() {
+        return false;
+    }
+
+    @Override
+    public final boolean isNotImplemented() {
         return false;
     }
 }

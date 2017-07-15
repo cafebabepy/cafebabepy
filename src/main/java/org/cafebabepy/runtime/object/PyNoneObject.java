@@ -8,7 +8,7 @@ import org.cafebabepy.runtime.Python;
 public class PyNoneObject extends AbstractPyObjectObject {
 
     public PyNoneObject(Python runtime) {
-        super(runtime, runtime.typeOrThrow("builtins.NoneType", false));
+        super(runtime, runtime.typeOrThrow("builtins.None", false));
     }
 
     @Override

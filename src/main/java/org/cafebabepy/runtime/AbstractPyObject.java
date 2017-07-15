@@ -1,10 +1,8 @@
 package org.cafebabepy.runtime;
 
 import org.cafebabepy.runtime.module.builtins.PyObjectType;
-import org.cafebabepy.util.LazyMap;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.*;
@@ -125,8 +123,7 @@ public abstract class AbstractPyObject implements PyObject {
             PyObject len = lenOpt.get();
             PyObject result = len.call(len, this);
 
-            PyObject eq = getObjectOrThrow(__eq__);
-            return eq.call(getType(), result, this.runtime.number(0)).isTrue();
+            return this.runtime.eq(result, this.runtime.number(0)).isTrue();
         }
 
         if (!isType()) {
@@ -153,16 +150,6 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public final LazyMap<String, Supplier<PyObject>> getLazyObjects() {
-        return getLazyObjects(true);
-    }
-
-    @Override
-    public final LazyMap<String, Supplier<PyObject>> getLazyObjects(boolean appear) {
-        return getScope().getsLazy(appear);
-    }
-
-    @Override
     public final Map<String, PyObject> getObjects() {
         return getObjects(true);
     }
@@ -170,16 +157,6 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public final Map<String, PyObject> getObjects(boolean appear) {
         return getScope().gets(appear);
-    }
-
-    @Override
-    public final Supplier<Optional<PyObject>> getLazyObject(String name) {
-        return getLazyObject(name, true);
-    }
-
-    @Override
-    public final Supplier<Optional<PyObject>> getLazyObject(String name, boolean appear) {
-        return getScope().getLazy(name, appear);
     }
 
     @Override
@@ -206,16 +183,6 @@ public abstract class AbstractPyObject implements PyObject {
         }
 
         return Optional.empty();
-    }
-
-    @Override
-    public final Supplier<PyObject> getLazyObjectOrThrow(String name) {
-        return () -> getObjectOrThrow(name);
-    }
-
-    @Override
-    public final Supplier<PyObject> getLazyObjectOrThrow(String name, boolean appear) {
-        return () -> getObjectOrThrow(name, appear);
     }
 
     @Override

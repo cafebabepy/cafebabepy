@@ -5,8 +5,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyTupleIteratorObject;
-import org.cafebabepy.runtime.object.PyTupleObject;
+import org.cafebabepy.runtime.object.PyRangeIteratorObject;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
@@ -14,30 +13,30 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 /**
  * Created by yotchang4s on 2017/06/14.
  */
-@DefineCafeBabePyType(name = "builtins.tuple_iterator", appear = false)
-public class PyTupleIteratorType extends AbstractCafeBabePyType {
+@DefineCafeBabePyType(name = "builtins.range_iterator", appear = false)
+public class PyRangeIteratorType extends AbstractCafeBabePyType {
 
-    public PyTupleIteratorType(Python runtime) {
+    public PyRangeIteratorType(Python runtime) {
         super(runtime);
     }
 
     @DefineCafeBabePyFunction(name = __next__)
     public PyObject __next__(PyObject self) {
-        if (!(self instanceof PyTupleIteratorObject)) {
+        if (!(self instanceof PyRangeIteratorObject)) {
             throw this.runtime.newRaiseTypeError(
                     "descriptor '__next__' requires a 'tuple_iterator' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
 
-        return ((PyTupleIteratorObject) self).next();
+        return ((PyRangeIteratorObject) self).next();
     }
 
     @DefineCafeBabePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
-        if (!(self instanceof PyTupleIteratorObject)) {
+        if (!(self instanceof PyRangeIteratorObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__iter__' requires a 'tuple_iterator' object but received a '"
+                    "descriptor '__iter__' requires a 'range' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
