@@ -11,11 +11,11 @@ import org.cafebabepy.runtime.RaiseException;
 /**
  * Created by yotchang4s on 2017/05/28.
  */
-public class Parser {
+public class CafeBabePyParser {
 
     private final Python runtime;
 
-    public Parser(Python runtime) {
+    public CafeBabePyParser(Python runtime) {
         this.runtime = runtime;
     }
 
@@ -31,7 +31,7 @@ public class Parser {
 
         ParserRuleContext rootContext = parser.file_input();
 
-        AstCreateVisitor creator = new AstCreateVisitor(this.runtime);
+        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime);
         return creator.visit(rootContext);
     }
 }

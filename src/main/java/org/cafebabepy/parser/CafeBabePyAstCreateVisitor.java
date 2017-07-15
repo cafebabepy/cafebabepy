@@ -16,11 +16,11 @@ import java.util.List;
  * Created by yotchang4s on 2017/05/29.
  */
 // FIXME SyntaxError
-class AstCreateVisitor extends PythonBaseVisitor<PyObject> {
+class CafeBabePyAstCreateVisitor extends PythonBaseVisitor<PyObject> {
 
     private final Python runtime;
 
-    public AstCreateVisitor(Python runtime) {
+    public CafeBabePyAstCreateVisitor(Python runtime) {
         this.runtime = runtime;
     }
 
