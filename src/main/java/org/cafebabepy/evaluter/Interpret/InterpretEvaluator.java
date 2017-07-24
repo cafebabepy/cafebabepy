@@ -1,4 +1,4 @@
-package org.cafebabepy.evaluter.ast;
+package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
@@ -14,18 +14,17 @@ import static org.cafebabepy.util.ProtocolNames.*;
 /**
  * Created by yotchang4s on 2017/06/09.
  */
-public class AstEvaluator {
+public class InterpretEvaluator {
 
     private Python runtime;
 
-    public AstEvaluator(Python runtime) {
+    public InterpretEvaluator(Python runtime) {
         this.runtime = runtime;
     }
 
     public PyObject eval(PyObject node) {
         PyObject context = this.runtime.moduleOrThrow("__main__");
         return eval(context, node);
-
 
         /*
         System.out.println(node.asJavaString());
@@ -57,6 +56,12 @@ public class AstEvaluator {
         switch (node.getName()) {
             case "Module":
                 return evalModule(context, node);
+
+            case "Interactive":
+                return evalInteractive(context, node);
+
+            case "Suite":
+                return evalSuite(context, node);
 
             case "FunctionDef":
                 return evalFunctionDef(context, node);
@@ -121,6 +126,23 @@ public class AstEvaluator {
         return eval(context, body);
     }
 
+    private PyObject evalInteractive(PyObject context, PyObject node) {
+        PyObject body = node.getObjectOrThrow("body");
+        return eval(context, body);
+    }
+
+    private PyObject evalSuite(PyObject context, PyObject node) {
+        PyObject body = node.getObjectOrThrow("body");
+
+        PyObject[] result = new PyObject[1];
+        result[0] = this.runtime.None();
+        this.runtime.iter(body, b -> {
+            result[0] = eval(body);
+        });
+
+        return result[0];
+    }
+
     private PyObject evalFunctionDef(PyObject context, PyObject node) {
         PyObject name = node.getObjectOrThrow("name");
         PyObject args = node.getObjectOrThrow("args");
@@ -128,11 +150,11 @@ public class AstEvaluator {
         PyObject decorator_list = node.getObjectOrThrow("decorator_list");
         PyObject returns = node.getObjectOrThrow("returns");
 
-        PyObject function = new PyAstFunctionObject(this.runtime, this, context, args, body);
+        PyObject function = new PyInterpretFunctionObject(this.runtime, this, context, args, body);
 
         context.getScope().put(name.asJavaString(), function);
 
-        return null;
+        return this.runtime.None();
     }
 
     private PyObject evalIfAndIfExp(PyObject context, PyObject node) {
@@ -419,7 +441,7 @@ public class AstEvaluator {
         try {
             result = funcEval.call(argArray);
 
-        } catch (AstReturn re) {
+        } catch (InterpretReturn re) {
             result = re.getValue();
         }
 
@@ -430,7 +452,7 @@ public class AstEvaluator {
         PyObject value = node.getObjectOrThrow("value");
         PyObject evalValue = eval(context, value);
 
-        throw new AstReturn(evalValue);
+        throw new InterpretReturn(evalValue);
     }
 
     private PyObject evalCompare(PyObject context, PyObject node) {

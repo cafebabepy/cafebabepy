@@ -16,12 +16,31 @@ import java.util.List;
  * Created by yotchang4s on 2017/05/29.
  */
 // FIXME SyntaxError
-class CafeBabePyAstCreateVisitor extends PythonBaseVisitor<PyObject> {
+class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     private final Python runtime;
 
     public CafeBabePyAstCreateVisitor(Python runtime) {
         this.runtime = runtime;
+    }
+
+    @Override
+    public PyObject visitSingle_input(PythonParser.Single_inputContext ctx) {
+        PyObject body;
+
+        PythonParser.Simple_stmtContext simple_stmtContext = ctx.simple_stmt();
+        PythonParser.Compound_stmtContext compound_stmtContext = ctx.compound_stmt();
+        if (simple_stmtContext != null) {
+            body = this.runtime.list(visitSimple_stmt(simple_stmtContext));
+
+        } else if (compound_stmtContext != null) {
+            body = this.runtime.list(visitCompound_stmt(compound_stmtContext));
+
+        } else {
+            body = this.runtime.list();
+        }
+
+        return this.runtime.newPyObject("_ast.Interactive", body);
     }
 
     @Override
@@ -40,6 +59,21 @@ class CafeBabePyAstCreateVisitor extends PythonBaseVisitor<PyObject> {
         PyObject module = this.runtime.newPyObject("_ast.Module", body);
 
         return module;
+    }
+
+    @Override
+    public PyObject visitStmt(PythonParser.StmtContext ctx) {
+        PythonParser.Simple_stmtContext simple_stmtContext = ctx.simple_stmt();
+        if (simple_stmtContext != null) {
+            return visitSimple_stmt(simple_stmtContext);
+        }
+
+        PythonParser.Compound_stmtContext compound_stmtContext = ctx.compound_stmt();
+        if (compound_stmtContext != null) {
+            return visitCompound_stmt(compound_stmtContext);
+        }
+
+        throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
     }
 
     @Override
@@ -570,12 +604,20 @@ class CafeBabePyAstCreateVisitor extends PythonBaseVisitor<PyObject> {
         String open = ctx.getChild(0).getText();
         String close = ctx.getChild(ctx.getChildCount() - 1).getText();
 
-        if ("[".equals(open) && "]".equals(close)) {
+        if ("[".equals(open)) {
+            if (!"]".equals(close)) {
+                throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
+            }
+
             // list
             return visitList(ctx.testlist_comp());
 
-        } else if ("(".equals(open) && ")".equals(close)) {
-            // tuple and ()
+        } else if ("(".equals(open)) {
+            if (!")".equals(close)) {
+                throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
+            }
+
+            // tuple or ()
             return visitTuple(ctx.testlist_comp());
         }
 

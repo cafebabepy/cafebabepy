@@ -1,4 +1,7 @@
 apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'org.cafebabepy.Main'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -34,6 +37,7 @@ sourceSets.main.java.srcDirs = [antlr.destinationDir] + sourceSets.main.java.src
 
 dependencies {
     compile group: "org.antlr", name: "antlr4-runtime", version: '4.7'
+    compile group: 'jline', name: 'jline', version: '2.14.5'
     antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7'
 }
 
@@ -50,8 +54,10 @@ task wrapper(type: Wrapper) {
     gradleVersion = versions.gradle
 }
 
-task antlrOutputDir << {
-    mkdir(antlr.destinationDir)
+task antlrOutputDir {
+    doLast {
+        mkdir(antlr.destinationDir)
+    }
 }
 
 task generateGrammarSource(dependsOn: antlrOutputDir, type: JavaExec) {
@@ -60,13 +66,15 @@ task generateGrammarSource(dependsOn: antlrOutputDir, type: JavaExec) {
     inputs.dir file(antlr.antlrSource)
     outputs.dir file(antlr.destinationDir)
 
-    def grammars = fileTree(antlr.antlrSource).include('**/*.g4')
+    def grammars = []
+    grammars += file(antlr.antlrSource + '/PythonLexer.g4')
+    grammars += file(antlr.antlrSource + '/PythonParser.g4')
+    grammars += file(antlr.antlrSource + '/PythonInteractiveValidateParser.g4')
 
     main = 'org.antlr.v4.Tool'
     classpath = configurations.antlr4
     def pkg = antlr.grammarpackage.replaceAll("\\.", "/")
-    args = ["-o", "${antlr.destinationDir}/${pkg}"/*, "-atn"*/, "-visitor", "-package", antlr.grammarpackage, grammars.files].flatten()
-
+    args = ["-o", "${antlr.destinationDir}/${pkg}", "-visitor", "-no-listener", "-package", antlr.grammarpackage, grammars].flatten()
 }
 
 compileJava {

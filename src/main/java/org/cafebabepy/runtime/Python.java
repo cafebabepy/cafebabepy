@@ -22,6 +22,10 @@ import static org.cafebabepy.util.ProtocolNames.*;
  */
 public final class Python {
 
+    public static final String VERSION = "3.6.2.0";
+
+    public static final String APPLICATION_NAME = "cafebabepy";
+
     public static final String MAIN_MODULE_NAME = "__main__";
 
     public static final String BUILTINS_MODULE_NAME = "builtins";
@@ -54,6 +58,8 @@ public final class Python {
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
         initializeBuiltins("org.cafebabepy.runtime.module");
 
+        initializeBuiltins("org.cafebabepy.runtime.module._ast");
+
         initializeObjects();
 
         // TODO __main__でいいの？
@@ -67,7 +73,7 @@ public final class Python {
     }
 
     @SuppressWarnings("unchecked")
-    public void initializeBuiltins(String packageName) {
+    private void initializeBuiltins(String packageName) {
         Set<Class<?>> builtinsClasses;
 
         // FIXME 本当は form builtins import * の形にしたい

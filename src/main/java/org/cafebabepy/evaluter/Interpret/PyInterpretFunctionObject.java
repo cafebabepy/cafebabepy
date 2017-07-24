@@ -1,4 +1,4 @@
-package org.cafebabepy.evaluter.ast;
+package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
@@ -10,13 +10,13 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
 /**
  * Created by yotchang4s on 2017/06/30.
  */
-public class PyAstFunctionObject extends AbstractPyObjectObject {
+public class PyInterpretFunctionObject extends AbstractPyObjectObject {
     private PyObject context;
-    private AstEvaluator evaluator;
+    private InterpretEvaluator evaluator;
     private PyObject args;
     private PyObject body;
 
-    public PyAstFunctionObject(Python runtime, AstEvaluator evaluator, PyObject context, PyObject args, PyObject body) {
+    public PyInterpretFunctionObject(Python runtime, InterpretEvaluator evaluator, PyObject context, PyObject args, PyObject body) {
         super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
 
         this.evaluator = evaluator;
