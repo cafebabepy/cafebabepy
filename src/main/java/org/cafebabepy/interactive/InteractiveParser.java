@@ -45,7 +45,11 @@ public class InteractiveParser extends CafeBabePyParser {
             return true;
 
         } catch (Throwable ignore) {
-            return !lexer.getIndents().isEmpty() || lexer.isOpened();
+            if (lexer.isOpened()) {
+                while (lexer.nextToken().getType() != Lexer.EOF) ;
+            }
+
+            return lexer.isOpened();
         }
     }
 }

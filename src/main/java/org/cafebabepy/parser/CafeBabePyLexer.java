@@ -4,9 +4,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by yotchang4s on 2017/07/19.
@@ -16,8 +14,6 @@ public class CafeBabePyLexer extends PythonLexer {
     private LinkedList<Token> tokens = new LinkedList<>();
 
     private LinkedList<Integer> indents = new LinkedList<>();
-
-    private List<Integer> unmodifiableIndents = Collections.unmodifiableList(this.indents);
 
     private StringBuilder newLineBuilder = new StringBuilder();
 
@@ -33,16 +29,19 @@ public class CafeBabePyLexer extends PythonLexer {
         super(input);
     }
 
-    public List<Integer> getIndents() {
-        return this.unmodifiableIndents;
-    }
-
     public boolean isOpened() {
         return this.opened > 0;
     }
 
     @Override
     public void emit(Token t) {
+        int resultType = t.getType();
+        if (resultType == OPEN_PAREN || resultType == OPEN_BRACK || resultType == OPEN_BRACE) {
+            this.opened++;
+
+        } else if (resultType == CLOSE_PAREN || resultType == CLOSE_BRACK || resultType == CLOSE_BRACE) {
+            this.opened--;
+        }
         super.setToken(t);
         this.tokens.offer(t);
     }
@@ -54,12 +53,6 @@ public class CafeBabePyLexer extends PythonLexer {
         this.spacesBuilder.setLength(0);
 
         int la = this._input.LA(1);
-        if (la == '(' || la == '[' || la == '{') {
-            this.opened++;
-
-        } else if (la == ')' || la == ']' || la == '}') {
-            this.opened--;
-        }
 
         int newLineCharIndex = -1;
         do {
