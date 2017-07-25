@@ -164,7 +164,7 @@ public class CafeBabePyLexer extends PythonLexer {
         } else {
             if (la == EOF && !this.eof) {
                 CommonToken newLine = new CommonToken(NEWLINE, System.lineSeparator());
-                newLine.setLine(this.lastToken.getLine());
+                newLine.setLine(getLine());
                 emit(newLine);
 
                 this.eof = true;
@@ -177,10 +177,7 @@ public class CafeBabePyLexer extends PythonLexer {
             this.lastToken = next;
         }
 
-        Token result = this.tokens.isEmpty() ? next : this.tokens.poll();
-
-
-        return result;
+        return this.tokens.isEmpty() ? next : this.tokens.poll();
     }
 
     private CommonToken getCommonToken(int type, String text, int charIndex) {
