@@ -41,16 +41,19 @@ public final class ReflectionUtils {
             throw new IOException(e);
         }
 
-        throw new IllegalArgumentException("Unsupported Class Load Protodol[" + protocol + "]");
+        throw new IllegalArgumentException("Unsupported Class Load Protocol[" + protocol + "]");
     }
 
     private static Set<Class<?>> getClassesWithFile(ClassLoader classLoader, String packageName, File dir) throws ClassNotFoundException {
         Set<Class<?>> classes = new LinkedHashSet<>();
 
-        for (String path : dir.list()) {
-            File entry = new File(dir, path);
-            if (entry.isFile() && isClassFile(entry.getName())) {
-                classes.add(classLoader.loadClass(packageName + "." + fileNameToClassName(entry.getName())));
+        String[] dirList = dir.list();
+        if (dirList != null) {
+            for (String path : dirList) {
+                File entry = new File(dir, path);
+                if (entry.isFile() && isClassFile(entry.getName())) {
+                    classes.add(classLoader.loadClass(packageName + "." + fileNameToClassName(entry.getName())));
+                }
             }
         }
 
