@@ -17,7 +17,11 @@ public class CafeBabePyLexer extends PythonLexer {
 
     private StringBuilder newLineBuilder = new StringBuilder();
 
+    private int newLineCharIndex = -1;
+
     private StringBuilder spacesBuilder = new StringBuilder();
+
+    private int spaceCharIndex = -1;
 
     private int opened = 0;
 
@@ -34,153 +38,208 @@ public class CafeBabePyLexer extends PythonLexer {
     }
 
     @Override
-    public void emit(Token t) {
-        int resultType = t.getType();
+    public void emit(Token token) {
+        Token result = token;
+        int resultType = token.getType();
+
         if (resultType == OPEN_PAREN || resultType == OPEN_BRACK || resultType == OPEN_BRACE) {
             this.opened++;
 
         } else if (resultType == CLOSE_PAREN || resultType == CLOSE_BRACK || resultType == CLOSE_BRACE) {
             this.opened--;
+
+        } else if (resultType == PHYSICAL_NEWLINE) {
+            if (this.opened > 0) {
+                // nextToken result is null
+                return;
+
+            } else {
+                result = nextToken();
+            }
         }
-        super.setToken(t);
-        this.tokens.offer(t);
+
+        emitOnly(result);
+    }
+
+    private void emitOnly(Token token) {
+        super.setToken(token);
+        this.tokens.offer(token);
     }
 
     @Override
     public Token nextToken() {
         boolean atStartOfInput = getCharPositionInLine() == 0 && getLine() == 1;
-        this.newLineBuilder.setLength(0);
-        this.spacesBuilder.setLength(0);
 
-        int la = this._input.LA(1);
+        int la = readNewLine();
 
-        int newLineCharIndex = -1;
-        do {
-            if (la == '\r') {
-                this.newLineBuilder.append((char) la);
-                newLineCharIndex = getCharIndex();
+        if (this.opened == 0
+                && (this.newLineBuilder.length() > 0 || atStartOfInput)) {
 
-                this._input.consume();
-                la = this._input.LA(1);
+            la = readSpaces();
 
-                if (la == '\n') {
-                    this.newLineBuilder.append((char) la);
-                    newLineCharIndex = getCharIndex();
-
-                    this._input.consume();
-                    la = this._input.LA(1);
-
-                }
-
-            } else if (la == '\n' || la == '\f') {
-                this.newLineBuilder.append((char) la);
-                newLineCharIndex = getCharIndex();
-
-                this._input.consume();
-                la = this._input.LA(1);
-
-            } else {
-                break;
-            }
-
-        } while (true);
-
-        int spaceCharIndex = -1;
-        do {
-            if (la == ' ' || la == '\t') {
-                this.spacesBuilder.append((char) la);
-                spaceCharIndex = getCharIndex();
-
-                this._input.consume();
-                la = this._input.LA(1);
-
-            } else {
-                break;
-            }
-
-        } while (true);
-
-        if ((this.newLineBuilder.length() > 0)
-                || (atStartOfInput && this.spacesBuilder.length() > 0)) {
-
-            String newLine = this.newLineBuilder.toString();
-            String spaces = this.spacesBuilder.toString();
-            int indent = getIndentCount(spaces);
-            int previous = this.indents.isEmpty() ? 0 : this.indents.peekFirst();
-
-            if (!isOpened() && this.newLineBuilder.length() > 0) {
-                emit(getCommonToken(NEWLINE, newLine, newLineCharIndex));
-                this.newLineBuilder.setLength(0);
-            }
-
-            if (indent == previous) {
+            if (atStartOfInput && this.spacesBuilder.length() == 0) {
                 // skip
 
-            } else if (indent > previous) {
-                this.indents.addFirst(indent);
-                emit(getCommonToken(INDENT, spaces, spaceCharIndex));
-
             } else {
-                while (!this.indents.isEmpty() && this.indents.peekFirst() > indent) {
-                    CommonToken dedent = new CommonToken(DEDENT, "<DEDENT>");
-                    dedent.setLine(getLine());
-                    emit(dedent);
-                    this.indents.removeFirst();
-                }
-            }
+                if (la == '\r' || la == '\n' || la == '\f') {
+                    return nextToken();
 
-        } else {
-            if (!isOpened() && this.newLineBuilder.length() > 0) {
-                emit(getCommonToken(NEWLINE, newLineBuilder.toString(), newLineCharIndex));
-                this.newLineBuilder.setLength(0);
+                } else if (la == '#') {
+                    return super.nextToken();
+                }
+
+                String spaces = this.spacesBuilder.toString();
+                int indent = getIndentCount(spaces);
+                int previous = this.indents.isEmpty() ? 0 : this.indents.peekFirst();
+
+                if (indent == previous) {
+                    newLine(false);
+                    // skip
+
+                } else if (indent > previous) {
+                    if (la != EOF) {
+                        newLine(false);
+                        this.indents.addFirst(indent);
+                        emitOnly(createCommonToken(INDENT, spaces, this.spaceCharIndex));
+                    }
+
+                } else {
+                    newLine(false);
+                    while (!this.indents.isEmpty() && this.indents.peekFirst() > indent) {
+                        CommonToken dedent = new CommonToken(DEDENT, "<DEDENT>");
+                        dedent.setLine(getLine());
+                        emitOnly(dedent);
+                        this.indents.removeFirst();
+                    }
+                }
             }
         }
 
-        if (la == EOF && !this.indents.isEmpty()) {
-            for (int i = this.tokens.size() - 1; i >= 0; i--) {
-                if (this.tokens.get(i).getType() == EOF) {
-                    this.tokens.remove(i);
+        Token next;
+        while ((next = super.nextToken()) == null) ;
+        la = this._input.LA(1);
+
+        if (la == EOF) {
+            if (!this.eof) {
+                for (int i = this.tokens.size() - 1; i >= 0; i--) {
+                    if (this.tokens.get(i).getType() == EOF) {
+                        this.tokens.remove(i);
+                    }
                 }
-            }
+                if (!this.indents.isEmpty()) {
+                    newLine(true);
 
-            CommonToken newLine = new CommonToken(NEWLINE, System.lineSeparator());
-            newLine.setLine(this.lastToken.getLine());
-            emit(newLine);
+                    while (!this.indents.isEmpty()) {
+                        CommonToken dedent = new CommonToken(DEDENT, "<DEDENT>");
+                        int dedentLine = (this.lastToken != null) ? this.lastToken.getLine() : getLine();
+                        dedent.setLine(dedentLine);
+                        emitOnly(dedent);
 
-            while (!this.indents.isEmpty()) {
-                CommonToken dedent = new CommonToken(DEDENT, "<DEDENT>");
-                dedent.setLine(this.lastToken.getLine());
-                emit(dedent);
+                        this.indents.removeFirst();
+                    }
 
-                this.indents.removeFirst();
-            }
+                    newEof();
 
-            CommonToken eof = new CommonToken(EOF, "<EOF>");
-            eof.setLine(this.lastToken.getLine());
-            emit(eof);
-
-            this.eof = true;
-
-        } else {
-            if (la == EOF && !this.eof) {
-                CommonToken newLine = new CommonToken(NEWLINE, System.lineSeparator());
-                newLine.setLine(getLine());
-                emit(newLine);
+                } else {
+                    newLine(true);
+                    newEof();
+                }
 
                 this.eof = true;
             }
         }
 
-        Token next = super.nextToken();
-
         if (next.getChannel() == Token.DEFAULT_CHANNEL) {
             this.lastToken = next;
         }
 
-        return this.tokens.isEmpty() ? next : this.tokens.poll();
+        Token token = this.tokens.isEmpty() ? next : this.tokens.poll();
+
+        return token;
     }
 
-    private CommonToken getCommonToken(int type, String text, int charIndex) {
+    private int readSpaces() {
+        this.spacesBuilder.setLength(0);
+        this.spaceCharIndex = -1;
+
+        int la = this._input.LA(1);
+
+        do {
+            if (la == ' ' || la == '\t') {
+                this.spacesBuilder.appendCodePoint(la);
+                this.spaceCharIndex = getCharIndex();
+
+                this._input.consume();
+                la = this._input.LA(1);
+
+            } else {
+                return la;
+            }
+
+        } while (true);
+    }
+
+    private int readNewLine() {
+        this.newLineBuilder.setLength(0);
+        this.newLineCharIndex = -1;
+
+        int la = _input.LA(1);
+        do {
+            if (la == '\r') {
+                this.newLineBuilder.appendCodePoint(la);
+                this.newLineCharIndex = getCharIndex();
+
+                this._input.consume();
+                la = this._input.LA(1);
+
+                if (la == '\n') {
+                    this.newLineBuilder.appendCodePoint(la);
+                    this.newLineCharIndex = getCharIndex();
+
+                    this._input.consume();
+                    la = this._input.LA(1);
+                }
+
+            } else if (la == '\n' || la == '\f') {
+                this.newLineBuilder.appendCodePoint(la);
+                this.newLineCharIndex = getCharIndex();
+
+                this._input.consume();
+                la = this._input.LA(1);
+
+            } else {
+                return la;
+            }
+
+        } while (true);
+    }
+
+    private void newLine(boolean createNewLIne) {
+        if (this.opened == 0 && this.newLineBuilder.length() > 0) {
+            emitOnly(createCommonToken(NEWLINE, this.newLineBuilder.toString(), this.newLineCharIndex));
+            this.newLineBuilder.setLength(0);
+
+        } else if (createNewLIne) {
+            CommonToken newLine = new CommonToken(NEWLINE, "\n");
+            if (this.lastToken != null) {
+                newLine.setLine(this.lastToken.getLine());
+
+            } else {
+                newLine.setLine(getLine());
+            }
+
+            emitOnly(newLine);
+        }
+    }
+
+    private void newEof() {
+        CommonToken eof = new CommonToken(EOF, "<EOF>");
+        int eofLine = (this.lastToken != null) ? this.lastToken.getLine() : getLine();
+        eof.setLine(eofLine);
+        emitOnly(eof);
+    }
+
+    private CommonToken createCommonToken(int type, String text, int charIndex) {
         int stop = charIndex;
         int start = text.isEmpty() ? stop : stop - text.length() + 1;
         return new CommonToken(this._tokenFactorySourcePair, type, DEFAULT_TOKEN_CHANNEL, start, stop);

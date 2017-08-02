@@ -128,6 +128,10 @@ NAME
  : ID_START ID_CONTINUE*
  ;
 
+PHYSICAL_NEWLINE
+ : ('\r'? '\n' | '\r' | '\f')
+ ;
+
 SKIP_
  : ( SPACES | COMMENT | LINE_JOINING ) -> skip
  ;
