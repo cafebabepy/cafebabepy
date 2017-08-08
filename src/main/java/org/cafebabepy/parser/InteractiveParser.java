@@ -1,7 +1,7 @@
-package org.cafebabepy.interactive;
+package org.cafebabepy.parser;
 
 import org.antlr.v4.runtime.*;
-import org.cafebabepy.parser.*;
+import org.cafebabepy.parser.antlr.PythonInteractiveValidateParser;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
 
@@ -10,16 +10,22 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/07/16.
  */
-public class InteractiveParser extends CafeBabePyParser {
+public class InteractiveParser extends AbstractParser {
 
     public InteractiveParser(Python runtime) {
         super(runtime);
     }
 
     @Override
-    protected Optional<ParserRuleContext> parse(String input, PythonParser parser) {
+    Optional<ParserRuleContext> parse(
+            String input, CafeBabePyLexer lexer, CafeBabePyParser parser) {
         try {
-            return Optional.of(parser.single_input());
+            Optional<ParserRuleContext> result = Optional.of(parser.single_input());
+            if (lexer.isLineJoining()) {
+                return Optional.empty();
+            }
+
+            return result;
 
         } catch (Throwable e) {
             if (validate(input)) {

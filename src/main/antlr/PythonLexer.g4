@@ -132,8 +132,14 @@ PHYSICAL_NEWLINE
  : ('\r'? '\n' | '\r' | '\f')
  ;
 
+
+
 SKIP_
- : ( SPACES | COMMENT | LINE_JOINING ) -> skip
+ : ( SPACES | COMMENT ) -> skip
+ ;
+
+LINE_JOINING
+ : '\\' SPACES? PHYSICAL_NEWLINE?
  ;
 
 fragment SHORT_STRING
@@ -216,10 +222,6 @@ fragment SPACES
 
 fragment COMMENT
  : '#' ~[\r\n\f]*
- ;
-
-fragment LINE_JOINING
- : '\\' SPACES? ( '\r'? '\n' | '\r' | '\f' )
  ;
 
 fragment ID_START

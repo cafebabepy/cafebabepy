@@ -3,6 +3,7 @@ package org.cafebabepy.parser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
+import org.cafebabepy.parser.antlr.PythonLexer;
 
 import java.util.LinkedList;
 
@@ -25,16 +26,22 @@ public class CafeBabePyLexer extends PythonLexer {
 
     private int opened = 0;
 
+    private int lineJoining = 0;
+
     private Token lastToken = null;
 
     private boolean eof = false;
 
-    public CafeBabePyLexer(CharStream input) {
+    CafeBabePyLexer(CharStream input) {
         super(input);
     }
 
-    public boolean isOpened() {
+    boolean isOpened() {
         return this.opened > 0;
+    }
+
+    boolean isLineJoining() {
+        return this.lineJoining > 0;
     }
 
     @Override
@@ -56,6 +63,10 @@ public class CafeBabePyLexer extends PythonLexer {
             } else {
                 result = nextToken();
             }
+
+        } else if (resultType == LINE_JOINING) {
+            this.lineJoining++;
+            return;
         }
 
         emitOnly(result);
@@ -70,12 +81,12 @@ public class CafeBabePyLexer extends PythonLexer {
     public Token nextToken() {
         boolean atStartOfInput = getCharPositionInLine() == 0 && getLine() == 1;
 
-        int la = readNewLine();
+        readNewLine();
 
         if (this.opened == 0
                 && (this.newLineBuilder.length() > 0 || atStartOfInput)) {
 
-            la = readSpaces();
+            int la = readSpaces();
 
             if (atStartOfInput && this.spacesBuilder.length() == 0) {
                 // skip
@@ -117,7 +128,7 @@ public class CafeBabePyLexer extends PythonLexer {
 
         Token next;
         while ((next = super.nextToken()) == null) ;
-        la = this._input.LA(1);
+        int la = this._input.LA(1);
 
         if (la == EOF) {
             if (!this.eof) {
@@ -208,6 +219,9 @@ public class CafeBabePyLexer extends PythonLexer {
                 la = this._input.LA(1);
 
             } else {
+                if(this.newLineBuilder.length() > 0 && this.lineJoining > 0) {
+                    this.lineJoining=0;
+                }
                 return la;
             }
 

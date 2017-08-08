@@ -4,6 +4,7 @@ import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
 import org.cafebabepy.evaluter.Interpret.InterpretEvaluator;
+import org.cafebabepy.parser.InteractiveParser;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;

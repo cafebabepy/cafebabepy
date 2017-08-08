@@ -2,6 +2,8 @@ package org.cafebabepy.parser;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.cafebabepy.parser.antlr.PythonParser;
+import org.cafebabepy.parser.antlr.PythonParserBaseVisitor;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.PyListType;
@@ -20,7 +22,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     private final Python runtime;
 
-    public CafeBabePyAstCreateVisitor(Python runtime) {
+    CafeBabePyAstCreateVisitor(Python runtime) {
         this.runtime = runtime;
     }
 

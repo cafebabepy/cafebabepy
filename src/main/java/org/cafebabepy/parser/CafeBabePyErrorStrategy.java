@@ -6,11 +6,11 @@ import org.cafebabepy.runtime.Python;
 /**
  * Created by yotchang4s on 2017/07/16.
  */
-public class CafeBabePyErrorStrategy extends DefaultErrorStrategy {
+class CafeBabePyErrorStrategy extends DefaultErrorStrategy {
 
-    protected final Python runtime;
+    final Python runtime;
 
-    public CafeBabePyErrorStrategy(Python runtime) {
+    CafeBabePyErrorStrategy(Python runtime) {
         this.runtime = runtime;
     }
 
