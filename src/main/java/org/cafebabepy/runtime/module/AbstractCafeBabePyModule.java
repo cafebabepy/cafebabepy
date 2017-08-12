@@ -4,12 +4,10 @@ import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.util.ModuleOrClassSplitter;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -18,13 +16,11 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private final static String[] BASE_NAMES = {"builtins.object"};
 
-    private String moduleName;
-
     private String name;
 
     private boolean appear;
 
-    private List<PyObject> types;
+    private volatile List<PyObject> types;
 
     protected AbstractCafeBabePyModule(Python runtime) {
         super(runtime);
@@ -37,10 +33,15 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     @Override
     public List<PyObject> getTypes() {
-        PyObject object = typeOrThrow("builtins.object");
-        this.types = Arrays.asList(this, object);
-        this.types = Collections.unmodifiableList(Collections.synchronizedList(this.types));
-
+        if (this.types == null) {
+            synchronized (this) {
+                if (this.types == null) {
+                    PyObject object = typeOrThrow("builtins.object");
+                    this.types = Arrays.asList(this, object);
+                    this.types = Collections.unmodifiableList(Collections.synchronizedList(this.types));
+                }
+            }
+        }
         return this.types;
     }
 
@@ -54,9 +55,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
                     "DefineCafeBabePyModule or DefineCafeBabePyModule annotation is not defined " + clazz.getName());
         }
 
-        this.moduleName = defineCafeBabePyModule.name();
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyModule.name());
-        this.name = splitter.getSimpleName();
+        this.name = defineCafeBabePyModule.name();
         this.appear = true;
         this.runtime.defineModule(this);
     }
@@ -82,18 +81,13 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public Optional<String> getModuleName() {
-        return Optional.ofNullable(this.moduleName);
+    public PyObject getModule() {
+        return this;
     }
 
     @Override
     public String getName() {
         return this.name;
-    }
-
-    @Override
-    public String getFullName() {
-        return this.moduleName;
     }
 
     @Override

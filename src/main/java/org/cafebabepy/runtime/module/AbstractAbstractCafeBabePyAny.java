@@ -1,7 +1,10 @@
 package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.runtime.*;
+import org.cafebabepy.runtime.AbstractPyObject;
+import org.cafebabepy.runtime.CafeBabePyException;
+import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.PyFunctionJavaObject;
 
 import java.lang.reflect.Method;
@@ -80,7 +83,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     private void defineClassMembers() {
         Class<?> clazz = getClass();
 
-        PyObjectScope objectScope = this.runtime.type("builtins.object")
+        this.runtime.type("builtins.object")
                 .orElseThrow(() -> new CafeBabePyException("'builtins.object' is not found"))
                 .getScope();
 
@@ -121,7 +124,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                 f.getScope().put(__call__, f);
             }
 
-            this.scope.put(f.getName(), f);
+            getScope().put(f.getName(), f);
 
             defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
         }

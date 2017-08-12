@@ -5,9 +5,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.util.ModuleOrClassSplitter;
-
-import java.util.Optional;
+import org.cafebabepy.util.StringUtils;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -16,11 +14,9 @@ import static org.cafebabepy.util.ProtocolNames.*;
  */
 public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyAny {
 
-    private String moduleName;
+    private PyObject module;
 
     private String name;
-
-    private boolean appear;
 
     private String[] baseNames;
 
@@ -45,21 +41,17 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
         this.baseNames = defineCafeBabePyType.parent();
 
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(defineCafeBabePyType.name());
-        this.moduleName = splitter.getModuleName().orElseThrow(() ->
-                new CafeBabePyException("name '"
-                        + defineCafeBabePyType.name()
-                        + "' is not found module")
-        );
+        String[] splitStr = StringUtils.splitLastDot(defineCafeBabePyType.name());
 
-        this.name = splitter.getSimpleName();
-        this.appear = defineCafeBabePyType.appear();
+        if (StringUtils.isEmpty(splitStr[0])) {
+            throw new CafeBabePyException("name '"
+                    + defineCafeBabePyType.name()
+                    + "' is not found module");
+        }
 
-        PyObject module = this.runtime.module(this.moduleName).orElseThrow(() ->
-                new CafeBabePyException(
-                        "module '" + this.moduleName + "' is not found " + clazz.getName()));
-
-        module.getScope().put(this.name, this, this.appear);
+        this.module = this.runtime.moduleOrThrow(splitStr[0]);
+        this.name = splitStr[1];
+        this.module.getScope().put(this.name, this, defineCafeBabePyType.appear());
     }
 
     @Override
@@ -69,12 +61,12 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @Override
     public PyObject getType() {
-        return this.runtime.getBuiltinsModule().getObjectOrThrow("type");
+        return this.runtime.typeOrThrow("builtins.type");
     }
 
-    public Optional<String> getModuleName() {
-        // moduleName is not null
-        return Optional.of(this.moduleName);
+    @Override
+    public final PyObject getModule() {
+        return this.module;
     }
 
     @Override
@@ -99,9 +91,8 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
-        PyObject object = getObjectOrThrow(__new__).call(this);
-
-        object.getObjectOrThrow(__init__).call(object, args);
+        PyObject object = getScope().getOrThrow(__new__).call(this);
+        object.getScope().getOrThrow(__init__).call(object, args);
 
         return object;
     }

@@ -133,7 +133,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject type = target.getType();
         if (type instanceof PyStarredType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
-            PyObject value = target.getObjectOrThrow("value");
+            PyObject value = target.getScope().getOrThrow("value");
             if (this.runtime.isIterable(value)) {
                 this.runtime.iter(target, this::toStore);
             }
@@ -143,7 +143,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
         } else if (type instanceof PyListType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
-            PyObject elts = target.getObjectOrThrow("elts");
+            PyObject elts = target.getScope().getOrThrow("elts");
 
             this.runtime.iter(elts, this::toStore);
 
@@ -367,6 +367,11 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             return this.runtime.list(stmtList);
         }
+    }
+
+    @Override
+    public PyObject visitPass_stmt(PythonParser.Pass_stmtContext ctx) {
+        return this.runtime.newPyObject("_ast.Pass");
     }
 
     @Override
@@ -722,6 +727,32 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
+    }
+
+    @Override
+    public PyObject visitClassdef(PythonParser.ClassdefContext ctx) {
+        PyObject name = this.runtime.str(ctx.NAME().getText());
+
+        PythonParser.ArglistContext arglistContext = ctx.arglist();
+        PyObject bases;
+        if(arglistContext != null) {
+            bases = visitArglist(arglistContext);
+
+        } else {
+            bases = this.runtime.list();
+        }
+
+        // TODO 何これ？
+        PyObject keywords = this.runtime.list();
+
+        PythonParser.SuiteContext suiteContext = ctx.suite();
+        PyObject body = visitSuite(suiteContext);
+
+        // TODO 何これ？
+        PyObject decorator_list = this.runtime.None();
+
+        return this.runtime.newPyObject("_ast.ClassDef",
+                name, bases, keywords, body, decorator_list);
     }
 
     @Override

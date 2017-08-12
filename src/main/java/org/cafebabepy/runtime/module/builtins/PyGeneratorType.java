@@ -7,8 +7,6 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.object.PyGeneratorObject;
 
-import java.util.Optional;
-
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
 
@@ -20,11 +18,6 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
 
     public PyGeneratorType(Python runtime) {
         super(runtime);
-    }
-
-    @Override
-    public Optional<String> getModuleName() {
-        return Optional.of("builtins");
     }
 
     @DefineCafeBabePyFunction(name = __iter__)

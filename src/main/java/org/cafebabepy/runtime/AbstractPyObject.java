@@ -14,9 +14,9 @@ public abstract class AbstractPyObject implements PyObject {
 
     protected final Python runtime;
 
-    protected PyObjectScope scope;
+    private volatile PyObjectScope scope;
 
-    protected final boolean appear;
+    private final boolean appear;
 
     private volatile List<PyObject> types;
 
@@ -26,7 +26,6 @@ public abstract class AbstractPyObject implements PyObject {
 
     protected AbstractPyObject(Python runtime, boolean appear) {
         this.runtime = runtime;
-        this.scope = new PyObjectScope();
         this.appear = appear;
     }
 
@@ -51,28 +50,26 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public final PyObjectScope getScope() {
+    public PyObjectScope getScope() {
+        if (this.scope == null) {
+            synchronized (this) {
+                if (this.scope == null) {
+                    this.scope = new PyObjectScope(this);
+                }
+            }
+        }
+
         return this.scope;
     }
 
     @Override
-    public void pushScope() {
-        this.scope = new PyObjectScope(this.scope);
-    }
+    public final String getFullName() {
+        if (isModule()) {
+            return getName();
 
-    @Override
-    public PyObjectScope popScope() {
-        PyObjectScope parent = this.scope.getParentScope();
-
-        PyObjectScope oldScope = this.scope;
-        this.scope = parent;
-
-        return oldScope;
-    }
-
-    @Override
-    public String getFullName() {
-        return getModuleName().map(n -> n + ".").orElse("") + getName();
+        } else {
+            return getModule().getName() + "." + getName();
+        }
     }
 
     @Override
@@ -96,10 +93,10 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public final boolean isException() {
         // FIXME 親がBaseExceptionかどうかを判定する
-        PyObject module = getRuntime().getBuiltinsModule();
-        PyObject call = module.getObjectOrThrow("issubclass");
+        PyObject module = this.runtime.typeOrThrow("builtins");
+        PyObject call = module.getScope().getOrThrow("issubclass");
 
-        PyObject baseExceptionType = module.getObjectOrThrow("BaseException");
+        PyObject baseExceptionType = module.getScope().getOrThrow("BaseException");
 
         return call.call(getType(), baseExceptionType).isTrue();
     }
@@ -111,14 +108,14 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public boolean isFalse() {
-        Optional<PyObject> boolOpt = getObject(__bool__);
+        Optional<PyObject> boolOpt = getScope().get(__bool__);
         if (boolOpt.isPresent()) {
             PyObject bool = boolOpt.get();
             PyObject result = bool.call(getType(), this);
             return result.isFalse();
         }
 
-        Optional<PyObject> lenOpt = getObject(__len__);
+        Optional<PyObject> lenOpt = getScope().get(__len__);
         if (lenOpt.isPresent()) {
             PyObject len = lenOpt.get();
             PyObject result = len.call(len, this);
@@ -147,75 +144,6 @@ public abstract class AbstractPyObject implements PyObject {
 
     public final PyObject typeOrThrow(String name, boolean appear) {
         return getRuntime().typeOrThrow(name, appear);
-    }
-
-    @Override
-    public final Map<String, PyObject> getObjects() {
-        return getObjects(true);
-    }
-
-    @Override
-    public final Map<String, PyObject> getObjects(boolean appear) {
-        return getScope().gets(appear);
-    }
-
-    @Override
-    public final Optional<PyObject> getObject(String name) {
-        return getObject(name, true);
-    }
-
-    @Override
-    public final Optional<PyObject> getObject(String name, boolean appear) {
-        Optional<PyObject> objectOpt = getScope().get(name, appear);
-        if (objectOpt.isPresent()) {
-            return objectOpt;
-        }
-
-        if (!isType() && !isModule()) {
-            return getType().getObject(name, appear);
-        }
-
-        for (PyObject type : getTypes()) {
-            Optional<PyObject> typeObject = type.getScope().get(name, appear);
-            if (typeObject.isPresent()) {
-                return typeObject;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    @Override
-    public final PyObject getObjectOrThrow(String name) {
-        return getObjectOrThrow(name, true);
-    }
-
-    @Override
-    public final PyObject getObjectOrThrow(String name, boolean appear) {
-        Optional<PyObject> objectOpt = getObject(name, appear);
-        if (objectOpt.isPresent()) {
-            return objectOpt.get();
-        }
-
-        for (PyObject type : getTypes()) {
-            Optional<PyObject> typeObjectOpt = type.getObject(name, appear);
-            if (typeObjectOpt.isPresent()) {
-                return typeObjectOpt.get();
-            }
-        }
-
-        if (isModule()) {
-            throw getRuntime().newRaiseException("builtins.NameError",
-                    "name '" + name + "' is not defined");
-
-        } else if (isType()) {
-            throw getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '" + getFullName() + "' has no attribute '" + name + "'");
-
-        } else {
-            throw getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + getFullName() + "' object has no attribute '" + name + "'");
-        }
     }
 
     @Override

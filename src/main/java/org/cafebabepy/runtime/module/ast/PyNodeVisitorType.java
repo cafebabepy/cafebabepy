@@ -19,17 +19,17 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
     @DefineCafeBabePyFunction(name = "visit")
     public PyObject visit(PyObject self, PyObject node) {
         String method = "visit_" + node.getName();
-        PyObject visitor = self.getObject(method).orElse(getObjectOrThrow("generic_visit"));
+        PyObject visitor = self.getScope().get(method).orElse(getScope().getOrThrow("generic_visit"));
 
         return visitor.call(self, node);
     }
 
     @DefineCafeBabePyFunction(name = "generic_visit")
     public void generic_visit(PyObject self, PyObject node) {
-        PyObject visit = self.getType().getObjectOrThrow("visit");
+        PyObject visit = self.getType().getScope().getOrThrow("visit");
 
         PyObject astModule = this.runtime.moduleOrThrow("ast");
-        PyObject iter_fields = astModule.getObjectOrThrow("iter_fields");
+        PyObject iter_fields = astModule.getScope().getOrThrow("iter_fields");
 
         PyObject list = typeOrThrow("builtins.list");
         PyObject ast = this.runtime.typeOrThrow("_ast.AST");

@@ -53,7 +53,7 @@ public class InteractiveParser extends AbstractParser {
         } catch (Throwable ignore) {
             while (lexer.nextToken().getType() != Lexer.EOF) ;
 
-            return lexer.isOpened();
+            return lexer.isOpened() || lexer.isLineJoining();
         }
     }
 }

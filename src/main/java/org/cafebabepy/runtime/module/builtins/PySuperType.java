@@ -62,6 +62,6 @@ public class PySuperType extends AbstractCafeBabePyType {
             selfProxy = types.get(1);
         }
 
-        return selfProxy.getObjectOrThrow(name.asJavaString());
+        return selfProxy.getScope().getOrThrow(name.asJavaString());
     }
 }

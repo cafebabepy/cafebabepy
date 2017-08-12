@@ -35,8 +35,8 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     public PyObject __getattribute__(PyObject self, PyObject name) {
         PyObject strType = typeOrThrow("builtins.str");
 
-        PyObject builtinsModule = this.runtime.getBuiltinsModule();
-        PyObject isinstance = builtinsModule.getObjectOrThrow("isinstance");
+        PyObject builtinsModule = this.runtime.moduleOrThrow("builtins");
+        PyObject isinstance = builtinsModule.getScope().getOrThrow("isinstance");
 
         if (isinstance.call(builtinsModule, name, strType).isFalse()) {
             throw this.runtime.newRaiseTypeError(
@@ -44,15 +44,15 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             );
         }
 
-        return self.getObjectOrThrow(name.asJavaString());
+        return self.getScope().getOrThrow(name.asJavaString());
     }
 
     @DefineCafeBabePyFunction(name = __setattr__)
     public void __setattr__(PyObject self, PyObject name, PyObject value) {
         PyObject strType = typeOrThrow("builtins.str");
 
-        PyObject builtinsModule = this.runtime.getBuiltinsModule();
-        PyObject isinstance = builtinsModule.getObjectOrThrow("isinstance");
+        PyObject builtinsModule = this.runtime.typeOrThrow("builtins");
+        PyObject isinstance = builtinsModule.getScope().getOrThrow("isinstance");
 
         if (isinstance.call(builtinsModule, name, strType).isFalse()) {
             throw this.runtime.newRaiseTypeError(

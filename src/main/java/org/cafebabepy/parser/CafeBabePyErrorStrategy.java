@@ -1,6 +1,7 @@
 package org.cafebabepy.parser;
 
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.Parser;
 import org.cafebabepy.runtime.Python;
 
 /**
@@ -21,25 +22,25 @@ class CafeBabePyErrorStrategy extends DefaultErrorStrategy {
     }
 
     @Override
-    protected void reportInputMismatch(Parser recognizer, InputMismatchException e) {
+    protected void reportInputMismatch(org.antlr.v4.runtime.Parser recognizer, InputMismatchException e) {
         throw this.runtime.newRaiseException("builtins.SyntaxError",
                 "invalid syntax");
     }
 
     @Override
-    protected void reportUnwantedToken(Parser recognizer) {
+    protected void reportUnwantedToken(org.antlr.v4.runtime.Parser recognizer) {
         throw this.runtime.newRaiseException("builtins.SyntaxError",
                 "invalid syntax");
     }
 
     @Override
-    protected void reportFailedPredicate(Parser recognizer, FailedPredicateException e) {
+    protected void reportFailedPredicate(org.antlr.v4.runtime.Parser recognizer, FailedPredicateException e) {
         throw this.runtime.newRaiseException("builtins.SyntaxError",
                 "invalid syntax");
     }
 
     @Override
-    protected void reportNoViableAlternative(Parser recognizer, NoViableAltException e) {
+    protected void reportNoViableAlternative(org.antlr.v4.runtime.Parser recognizer, NoViableAltException e) {
         throw this.runtime.newRaiseException("builtins.SyntaxError",
                 "invalid syntax");
     }

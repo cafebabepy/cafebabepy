@@ -21,7 +21,7 @@ public class PyAstModule extends AbstractCafeBabePyModule {
 
     @DefineCafeBabePyFunction(name = "iter_fields")
     public PyObject iter_fields(PyObject node) {
-        Map<String, PyObject> objectMap = node.getObjects();
+        Map<String, PyObject> objectMap = node.getScope().gets();
         Iterator<Map.Entry<String, PyObject>> objectIter = objectMap.entrySet().iterator();
 
         return this.runtime.generator(stopper -> {

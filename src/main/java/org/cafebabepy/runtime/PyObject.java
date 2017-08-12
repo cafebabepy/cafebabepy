@@ -19,11 +19,7 @@ public interface PyObject {
 
     PyObjectScope getScope();
 
-    void pushScope();
-
-    PyObjectScope popScope();
-
-    Optional<String> getModuleName();
+    PyObject getModule();
 
     String getName();
 
@@ -52,18 +48,6 @@ public interface PyObject {
     boolean isTrue();
 
     boolean isFalse();
-
-    Map<String, PyObject> getObjects();
-
-    Map<String, PyObject> getObjects(boolean appear);
-
-    Optional<PyObject> getObject(String name);
-
-    Optional<PyObject> getObject(String name, boolean appear);
-
-    PyObject getObjectOrThrow(String name);
-
-    PyObject getObjectOrThrow(String name, boolean appear);
 
     PyObject getCallable();
 

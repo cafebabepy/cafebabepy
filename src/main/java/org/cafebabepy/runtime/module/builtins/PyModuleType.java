@@ -15,9 +15,4 @@ public class PyModuleType extends AbstractCafeBabePyType {
     public PyModuleType(Python runtime) {
         super(runtime);
     }
-
-    @Override
-    public Optional<String> getModuleName() {
-        return Optional.of("builtins");
-    }
 }

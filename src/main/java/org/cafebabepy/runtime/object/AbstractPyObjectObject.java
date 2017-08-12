@@ -5,7 +5,6 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by yotchang4s on 2017/06/03.
@@ -42,8 +41,8 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     }
 
     @Override
-    public final Optional<String> getModuleName() {
-        return getType().getModuleName();
+    public final PyObject getModule() {
+        return getType().getModule();
     }
 
     @Override

@@ -64,7 +64,7 @@ public class PyRangeType extends AbstractCafeBabePyType {
         if (object instanceof PyIntObject) {
             return object;
         }
-        PyObject indexMethod = object.getObject(__index__).orElseThrow(() ->
+        PyObject indexMethod = object.getScope().get(__index__).orElseThrow(() ->
                 this.runtime.newRaiseTypeError(
                         "'" + object.getFullName() + "' object cannot be interpreted as an integer")
         );
@@ -86,9 +86,9 @@ public class PyRangeType extends AbstractCafeBabePyType {
                             + "'");
         }
 
-        PyObject start = self.getObjectOrThrow("start");
-        PyObject stop = self.getObjectOrThrow("stop");
-        PyObject step = self.getObjectOrThrow("step");
+        PyObject start = self.getScope().getOrThrow("start");
+        PyObject stop = self.getScope().getOrThrow("stop");
+        PyObject step = self.getScope().getOrThrow("step");
 
         int startInt = ((PyIntObject) start).getIntValue();
         int stopInt = ((PyIntObject) stop).getIntValue();

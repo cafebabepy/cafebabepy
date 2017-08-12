@@ -6,6 +6,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.PyListType;
 import org.cafebabepy.runtime.module._ast.PyNameType;
 import org.cafebabepy.runtime.module._ast.PyStarredType;
+import org.cafebabepy.runtime.object.PyLexicalScopeProxyObject;
 
 import java.util.*;
 
@@ -66,6 +67,9 @@ public class InterpretEvaluator {
             case "FunctionDef":
                 return evalFunctionDef(context, node);
 
+            case "ClassDef":
+                return evalClassDef(context, node);
+
             case "If":
                 return evalIfAndIfExp(context, node);
 
@@ -122,17 +126,17 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalModule(PyObject context, PyObject node) {
-        PyObject body = node.getObjectOrThrow("body");
+        PyObject body = node.getScope().getOrThrow("body");
         return eval(context, body);
     }
 
     private PyObject evalInteractive(PyObject context, PyObject node) {
-        PyObject body = node.getObjectOrThrow("body");
+        PyObject body = node.getScope().getOrThrow("body");
         return eval(context, body);
     }
 
     private PyObject evalSuite(PyObject context, PyObject node) {
-        PyObject body = node.getObjectOrThrow("body");
+        PyObject body = node.getScope().getOrThrow("body");
 
         PyObject[] result = new PyObject[1];
         result[0] = this.runtime.None();
@@ -144,23 +148,51 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalFunctionDef(PyObject context, PyObject node) {
-        PyObject name = node.getObjectOrThrow("name");
-        PyObject args = node.getObjectOrThrow("args");
-        PyObject body = node.getObjectOrThrow("body");
-        PyObject decorator_list = node.getObjectOrThrow("decorator_list");
-        PyObject returns = node.getObjectOrThrow("returns");
+        PyObject name = node.getScope().getOrThrow("name");
+        PyObject args = node.getScope().getOrThrow("args");
+        PyObject body = node.getScope().getOrThrow("body");
+        PyObject decorator_list = node.getScope().getOrThrow("decorator_list");
+        PyObject returns = node.getScope().getOrThrow("returns");
 
-        PyObject function = new PyInterpretFunctionObject(this.runtime, this, context, args, body);
+        PyObject function = new PyInterpretFunctionObject(
+                this.runtime, this, context, args, body);
 
         context.getScope().put(name.asJavaString(), function);
 
         return this.runtime.None();
     }
 
+    private PyObject evalClassDef(PyObject context, PyObject node) {
+        PyObject name = node.getScope().getOrThrow("name");
+        PyObject bases = node.getScope().getOrThrow("bases");
+        PyObject keywords = node.getScope().getOrThrow("keywords");
+        PyObject body = node.getScope().getOrThrow("body");
+        PyObject decorator_list = node.getScope().getOrThrow("decorator_list");
+
+        List<PyObject> baseList = new ArrayList<>();
+        Set<String> duplicateCheckSet = new LinkedHashSet<>();
+        this.runtime.iter(bases, base -> {
+            boolean exists = !duplicateCheckSet.add(base.asJavaString());
+            if (exists) {
+                throw this.runtime.newRaiseTypeError("duplicate base class " + base.getName());
+            }
+            baseList.add(base);
+        });
+
+        PyObject clazz = new PyInterpretClassObject(
+                this.runtime, context, name.asJavaString(), baseList);
+
+        context.getScope().put(name.asJavaString(), clazz);
+
+        eval(clazz, body);
+
+        return this.runtime.None();
+    }
+
     private PyObject evalIfAndIfExp(PyObject context, PyObject node) {
-        PyObject test = node.getObjectOrThrow("test");
-        PyObject body = node.getObjectOrThrow("body");
-        PyObject orElse = node.getObjectOrThrow("orelse");
+        PyObject test = node.getScope().getOrThrow("test");
+        PyObject body = node.getScope().getOrThrow("body");
+        PyObject orElse = node.getScope().getOrThrow("orelse");
 
         PyObject evalTest = eval(context, test);
         if (evalTest.isTrue()) {
@@ -172,14 +204,14 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalFor(PyObject context, PyObject node) {
-        PyObject target = node.getObjectOrThrow("target");
-        PyObject iter = node.getObjectOrThrow("iter");
-        PyObject body = node.getObjectOrThrow("body");
-        PyObject orelse = node.getObjectOrThrow("orelse");
+        PyObject target = node.getScope().getOrThrow("target");
+        PyObject iter = node.getScope().getOrThrow("iter");
+        PyObject body = node.getScope().getOrThrow("body");
+        PyObject orelse = node.getScope().getOrThrow("orelse");
 
         PyObject evalIter = eval(context, iter);
         this.runtime.iter(evalIter, next -> {
-            unpackAssign(context, target, next);
+            assign(context, target, next);
             eval(context, body);
         });
 
@@ -189,7 +221,7 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalList(PyObject context, PyObject node) {
-        PyObject elts = node.getObjectOrThrow("elts");
+        PyObject elts = node.getScope().getOrThrow("elts");
 
         List<PyObject> elements = new ArrayList<>();
         this.runtime.iter(elts, elt -> {
@@ -210,30 +242,24 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalListComp(PyObject context, PyObject node) {
-        PyObject elt = node.getObjectOrThrow("elt");
-        PyObject generators = node.getObjectOrThrow("generators");
+        PyObject elt = node.getScope().getOrThrow("elt");
+        PyObject generators = node.getScope().getOrThrow("generators");
 
-        try {
-            context.pushScope();
+        List<PyObject> generatorList = this.runtime.toList(generators);
+        List<PyObject> resultList = new ArrayList<>();
 
-            List<PyObject> generatorList = this.runtime.toList(generators);
-            List<PyObject> resultList = new ArrayList<>();
+        PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
+        evalGenerators(lexicalContext, elt, generatorList, resultList);
 
-            evalGenerators(context, elt, generatorList, resultList);
-
-            return this.runtime.list(resultList);
-
-        } finally {
-            context.popScope();
-        }
+        return this.runtime.list(resultList);
     }
 
     private void evalGenerators(PyObject context, PyObject elt, List<PyObject> generators, List<PyObject> resultList) {
         PyObject generator = generators.get(0);
-        PyObject target = generator.getObjectOrThrow("target");
-        PyObject iter = generator.getObjectOrThrow("iter");
-        PyObject ifs = generator.getObjectOrThrow("ifs");
-        PyObject is_async = generator.getObjectOrThrow("is_async");
+        PyObject target = generator.getScope().getOrThrow("target");
+        PyObject iter = generator.getScope().getOrThrow("iter");
+        PyObject ifs = generator.getScope().getOrThrow("ifs");
+        PyObject is_async = generator.getScope().getOrThrow("is_async");
 
         PyObject evalIter = eval(context, iter);
 
@@ -245,7 +271,7 @@ public class InterpretEvaluator {
             ifList = this.runtime.toList(ifs);
         }
         this.runtime.iter(evalIter, next -> {
-            unpackAssign(context, target, next);
+            assign(context, target, next);
             for (int i = 0; i < ifList.size(); i++) {
                 PyObject result = eval(context, ifList.get(i));
                 if (result.isFalse()) {
@@ -265,30 +291,30 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalStarred(PyObject context, PyObject node) {
-        PyObject value = node.getObjectOrThrow("value");
+        PyObject value = node.getScope().getOrThrow("value");
 
         return eval(context, value);
     }
 
     private PyObject evalExpr(PyObject context, PyObject node) {
-        PyObject value = node.getObjectOrThrow("value");
+        PyObject value = node.getScope().getOrThrow("value");
 
         return eval(context, value);
     }
 
     private PyObject evalAssign(PyObject context, PyObject node) {
-        PyObject targets = node.getObjectOrThrow("targets");
-        PyObject value = node.getObjectOrThrow("value");
+        PyObject targets = node.getScope().getOrThrow("targets");
+        PyObject value = node.getScope().getOrThrow("value");
         PyObject evalValue = eval(context, value);
 
-        this.runtime.iter(targets, target -> unpackAssign(context, target, evalValue));
+        this.runtime.iter(targets, target -> assign(context, target, evalValue));
 
         return this.runtime.None();
     }
 
-    private void unpackAssign(PyObject context, PyObject target, PyObject evalValue) {
+    private void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
-            PyObject id = target.getObjectOrThrow("id");
+            PyObject id = target.getScope().getOrThrow("id");
 
             context.getScope().put(id.asJavaString(), evalValue);
 
@@ -309,17 +335,17 @@ public class InterpretEvaluator {
         PyObject targets;
 
         if (targetType instanceof PyNameType) {
-            PyObject id = target.getObjectOrThrow("id");
+            PyObject id = target.getScope().getOrThrow("id");
             assignMap.put(id.asJavaString(), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
-            PyObject value = target.getObjectOrThrow("value");
+            PyObject value = target.getScope().getOrThrow("value");
             unpack(context, value, evalValue, assignMap);
             return;
 
         } else if (targetType instanceof PyListType) {
-            targets = target.getObjectOrThrow("elts");
+            targets = target.getScope().getOrThrow("elts");
 
         } else {
             throw this.runtime.newRaiseTypeError("Invalid '" + targetType.getFullName() + "' type");
@@ -402,10 +428,10 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalAnnassign(PyObject context, PyObject node) {
-        PyObject target = node.getObjectOrThrow("target");
-        PyObject value = node.getObjectOrThrow("value");
+        PyObject target = node.getScope().getOrThrow("target");
+        PyObject value = node.getScope().getOrThrow("value");
         if (!value.isNone()) {
-            PyObject id = target.getObjectOrThrow("id");
+            PyObject id = target.getScope().getOrThrow("id");
             PyObject evalValue = eval(context, value);
 
             context.getScope().put(id.asJavaString(), evalValue);
@@ -415,10 +441,10 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalCall(PyObject context, PyObject node) {
-        PyObject func = node.getObjectOrThrow("func");
+        PyObject func = node.getScope().getOrThrow("func");
         PyObject funcEval = eval(context, func);
 
-        PyObject args = node.getObjectOrThrow("args");
+        PyObject args = node.getScope().getOrThrow("args");
 
         PyObject[] argArray;
         if (args.isNone()) {
@@ -449,7 +475,7 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalReturn(PyObject context, PyObject node) {
-        PyObject value = node.getObjectOrThrow("value");
+        PyObject value = node.getScope().getOrThrow("value");
         PyObject evalValue = eval(context, value);
 
         throw new InterpretReturn(evalValue);
@@ -460,13 +486,13 @@ public class InterpretEvaluator {
         // 1 < 2 < 3 < 4 => 1 < 2 && 2 < 3 && 3 < 4
         // 1 < 2 < 3 => 1 < 2 && 2 < 3
         // 1 < 2 => 1 < 2
-        PyObject comparators = node.getObjectOrThrow("comparators");
+        PyObject comparators = node.getScope().getOrThrow("comparators");
 
         List<PyObject> comparatorList = getLinkedList(comparators);
-        PyObject left = node.getObjectOrThrow("left");
+        PyObject left = node.getScope().getOrThrow("left");
         comparatorList.add(0, left);
 
-        PyObject ops = node.getObjectOrThrow("ops");
+        PyObject ops = node.getScope().getOrThrow("ops");
         List<PyObject> opList = getLinkedList(ops);
 
         PyObject eqType = this.runtime.typeOrThrow("_ast.Eq");
@@ -522,10 +548,10 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalBinOp(PyObject context, PyObject node) {
-        PyObject left = node.getObjectOrThrow("left");
+        PyObject left = node.getScope().getOrThrow("left");
         PyObject evalLeft = eval(context, left);
 
-        PyObject right = node.getObjectOrThrow("right");
+        PyObject right = node.getScope().getOrThrow("right");
         PyObject evalRight = eval(context, right);
 
         PyObject addType = this.runtime.typeOrThrow("_ast.Add");
@@ -533,7 +559,7 @@ public class InterpretEvaluator {
         PyObject modType = this.runtime.typeOrThrow("_ast.Mod");
         PyObject multType = this.runtime.typeOrThrow("_ast.Mult");
 
-        PyObject op = node.getObjectOrThrow("op");
+        PyObject op = node.getScope().getOrThrow("op");
         if (this.runtime.isInstance(op, addType)) {
             return this.runtime.add(evalLeft, evalRight);
 
@@ -551,8 +577,8 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalUnaryOp(PyObject context, PyObject node) {
-        PyObject op = node.getObjectOrThrow("op");
-        PyObject operand = node.getObjectOrThrow("operand");
+        PyObject op = node.getScope().getOrThrow("op");
+        PyObject operand = node.getScope().getOrThrow("operand");
 
         PyObject evalOperand = eval(context, operand);
 
@@ -562,19 +588,19 @@ public class InterpretEvaluator {
         PyObject notType = this.runtime.typeOrThrow("_ast.Not");
 
         if (this.runtime.isInstance(op, uAddType)) {
-            PyObject pos = evalOperand.getObjectOrThrow(__pos__);
+            PyObject pos = evalOperand.getScope().getOrThrow(__pos__);
             return pos.call(evalOperand);
 
         } else if (this.runtime.isInstance(op, uSubType)) {
-            PyObject pos = evalOperand.getObjectOrThrow(__neg__);
+            PyObject pos = evalOperand.getScope().getOrThrow(__neg__);
             return pos.call(evalOperand);
 
         } else if (this.runtime.isInstance(op, invertType)) {
-            PyObject pos = evalOperand.getObjectOrThrow(__invert__);
+            PyObject pos = evalOperand.getScope().getOrThrow(__invert__);
             return pos.call(evalOperand);
 
         } else if (this.runtime.isInstance(op, notType)) {
-            PyObject bool = evalOperand.getObjectOrThrow(__bool__);
+            PyObject bool = evalOperand.getScope().getOrThrow(__bool__);
             PyObject result = bool.call(evalOperand);
             if (result.isTrue()) {
                 return this.runtime.False();
@@ -589,20 +615,20 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalName(PyObject context, PyObject node) {
-        PyObject ctx = node.getObjectOrThrow("ctx");
+        PyObject ctx = node.getScope().getOrThrow("ctx");
         if (this.runtime.isInstance(ctx, "_ast.Load")) {
-            PyObject id = node.getObjectOrThrow("id");
-            return context.getObjectOrThrow(id.asJavaString());
+            PyObject id = node.getScope().getOrThrow("id");
+            return context.getScope().getOrThrow(id.asJavaString());
         }
 
         return node;
     }
 
     private PyObject evalNum(PyObject context, PyObject node) {
-        return node.getObjectOrThrow("n");
+        return node.getScope().getOrThrow("n");
     }
 
     private PyObject evalStr(PyObject context, PyObject node) {
-        return node.getObjectOrThrow("s");
+        return node.getScope().getOrThrow("s");
     }
 }

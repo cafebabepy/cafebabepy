@@ -3,8 +3,8 @@ package org.cafebabepy.runtime;
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.object.*;
-import org.cafebabepy.util.ModuleOrClassSplitter;
 import org.cafebabepy.util.ReflectionUtils;
+import org.cafebabepy.util.StringUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -27,8 +27,6 @@ public final class Python {
     public static final String APPLICATION_NAME = "cafebabepy";
 
     public static final String MAIN_MODULE_NAME = "__main__";
-
-    public static final String BUILTINS_MODULE_NAME = "builtins";
 
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
@@ -66,7 +64,7 @@ public final class Python {
         PyObject builtinsModule = moduleOrThrow("builtins");
         PyObject mainModule = moduleOrThrow("__main__");
 
-        Map<String, PyObject> objectMap = builtinsModule.getObjects();
+        Map<String, PyObject> objectMap = builtinsModule.getScope().gets();
         for (Map.Entry<String, PyObject> e : objectMap.entrySet()) {
             mainModule.getScope().put(e.getKey(), e.getValue());
         }
@@ -245,10 +243,6 @@ public final class Python {
         return this.notImplementedTypeObject;
     }
 
-    public PyObject getBuiltinsModule() {
-        return moduleOrThrow(Python.BUILTINS_MODULE_NAME);
-    }
-
     public PyObject moduleOrThrow(String name) {
         return module(name).orElseThrow(() ->
                 newRaiseException("builtins.NameError", "name '" + name + "' is not defined"));
@@ -263,14 +257,15 @@ public final class Python {
     }
 
     public PyObject typeOrThrow(String name, boolean appear) {
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
-        if (!splitter.getModuleName().isPresent()) {
-            return moduleOrThrow(splitter.getSimpleName());
+        String[] splitLastDot = StringUtils.splitLastDot(name);
+
+        if (StringUtils.isEmpty(splitLastDot[0])) {
+            return moduleOrThrow(splitLastDot[1]);
 
         } else {
-            return moduleOrThrow(splitter.getModuleName().orElseThrow(
-                    () -> newRaiseException("builtins.NameError", "name '" + name + "' is not defined")))
-                    .getObjectOrThrow(splitter.getSimpleName(), appear);
+            return moduleOrThrow(splitLastDot[0])
+                    .getScope()
+                    .getOrThrow(splitLastDot[1], appear);
         }
     }
 
@@ -279,13 +274,15 @@ public final class Python {
     }
 
     public Optional<PyObject> type(String name, boolean appear) {
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
-        if (!splitter.getModuleName().isPresent()) {
-            return module(splitter.getSimpleName());
+        String[] splitDot = StringUtils.splitLastDot(name);
+
+        if (StringUtils.isEmpty(splitDot[0])) {
+            return module(splitDot[1]);
 
         } else {
-            return module(splitter.getModuleName().get())
-                    .flatMap(n -> n.getScope().get(splitter.getSimpleName(), appear));
+            return module(splitDot[0]).
+                    map(PyObject::getScope)
+                    .flatMap(scope -> scope.get(splitDot[1], appear));
         }
     }
 
@@ -298,22 +295,23 @@ public final class Python {
     }
 
     public PyObject callFunction(String name, PyObject... args) {
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(name);
-        Optional<String> moduleNameOpt = splitter.getModuleName();
-        if (!splitter.getModuleName().isPresent()) {
+        String[] splitLastDot = StringUtils.splitLastDot(name);
+        if (StringUtils.isEmpty(splitLastDot[0])) {
             throw newRaiseException("builtins.NameError",
-                    "name '" + splitter.getSimpleName() + "'is not defined");
+                    "name '" + splitLastDot[1] + "'is not defined");
         }
-        PyObject module = moduleOrThrow(moduleNameOpt.get());
-        PyObject object = module.getObjectOrThrow(splitter.getSimpleName());
+
+        PyObject object = moduleOrThrow(splitLastDot[0])
+                .getScope()
+                .getOrThrow(splitLastDot[1]);
 
         return object.call(args);
     }
 
     public void iterIndex(PyObject object, BiConsumer<PyObject, Integer> action) {
 
-        if(object instanceof PyListObject) {
-            iterIndex((PyListObject)object, action);
+        if (object instanceof PyListObject) {
+            iterIndex((PyListObject) object, action);
             return;
         }
 
@@ -355,15 +353,15 @@ public final class Python {
 
     private void iterIndex(PyListObject listObject, BiConsumer<PyObject, Integer> action) {
         List<PyObject> list = listObject.getRawList();
-        for(int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             action.accept(list.get(i), i);
         }
     }
 
     public void iter(PyObject object, Consumer<PyObject> action) {
 
-        if(object instanceof PyListObject) {
-            iter((PyListObject)object, action);
+        if (object instanceof PyListObject) {
+            iter((PyListObject) object, action);
             return;
         }
 
@@ -404,7 +402,7 @@ public final class Python {
 
     private void iter(PyListObject listObject, Consumer<PyObject> action) {
         List<PyObject> list = listObject.getRawList();
-        for(int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             action.accept(list.get(i));
         }
     }
@@ -516,7 +514,7 @@ public final class Python {
     }
 
     private PyObject refSimpleOp(PyObject x, PyObject y, String op, String opFunctionName, String ropFunctionName) {
-        PyObject operator = x.getObject(opFunctionName).orElseThrow(() ->
+        PyObject operator = x.getScope().get(opFunctionName).orElseThrow(() ->
                 newRaiseTypeError("unsupported operand type(s) for " + op + ": '"
                         + x.getType().getFullName()
                         + "' and '"
@@ -526,7 +524,7 @@ public final class Python {
         PyObject result = operator.call(x, y);
 
         if (result.isNotImplemented()) {
-            PyObject rop = y.getObjectOrThrow(ropFunctionName);
+            PyObject rop = y.getScope().getOrThrow(ropFunctionName);
             result = rop.call(y, x);
         }
 
@@ -541,19 +539,19 @@ public final class Python {
     }
 
     private PyObject getIterType(PyObject object) {
-        return object.getType().getObject(__iter__).orElseThrow(() ->
+        return object.getType().getScope().get(__iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "'" + object.getName() + "' object is not iterable"));
     }
 
     private PyObject getIterNext(PyObject iter) {
-        return iter.getType().getObject(__next__).orElseThrow(() ->
+        return iter.getType().getScope().get(__next__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
     }
 
     private Optional<PyObject> getNext(PyObject object) {
-        return object.getType().getObject(__next__);
+        return object.getType().getScope().get(__next__);
     }
 
     public boolean isInstance(PyObject instance, PyObject type) {
@@ -569,19 +567,12 @@ public final class Python {
     }
 
     public boolean isIterable(PyObject object) {
-        return object.getObject(__iter__).map(x -> true).orElse(false);
+        return object.getScope().get(__iter__).map(x -> true).orElse(false);
     }
 
     public RaiseException newRaiseException(String exceptionType) {
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
-
-        PyObject eType = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
-                newRaiseException("builtins.NameError",
-                        "'" + splitter.getName() + "' module is not found")
-
-        )).getObjectOrThrow(splitter.getSimpleName());
-
-        PyObject e = eType.call(eType, eType);
+        PyObject type = typeOrThrow(exceptionType);
+        PyObject e = type.call();
 
         return new RaiseException(e);
     }
@@ -592,14 +583,7 @@ public final class Python {
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
-        ModuleOrClassSplitter splitter = new ModuleOrClassSplitter(exceptionType);
-
-        PyObject type = moduleOrThrow(splitter.getModuleName().orElseThrow(() ->
-                newRaiseException("builtins.NameError",
-                        "'" + splitter.getName() + "' module is not found")
-
-        )).getObjectOrThrow(splitter.getSimpleName());
-
+        PyObject type = typeOrThrow(exceptionType);
         PyObject e = type.call(str(message));
 
         return new RaiseException(e, message);
@@ -609,9 +593,8 @@ public final class Python {
         if (!module.isModule()) {
             throw new CafeBabePyException("No module named '" + module.getFullName() + "'");
         }
-        String[] moduleNames = module.getModuleName().orElseThrow(() ->
-                new CafeBabePyException("moduleName is not found")
-        ).split("\\.");
+
+        String[] moduleNames = StringUtils.splitDot(module.getName());
 
         if (moduleNames.length == 1) {
             this.moduleMap.put(moduleNames[0], module);

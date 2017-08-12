@@ -16,8 +16,8 @@ import java.io.IOException;
  */
 public class InteractiveConsole {
 
-    private final String PROMPT_READLINE = ">>> ";
-    private final String PROMPT_INCOMPLETE = "... ";
+    private final static String PROMPT_READLINE = ">>> ";
+    private final static String PROMPT_INCOMPLETE = "... ";
 
     private ConsoleReader consoleReader;
 

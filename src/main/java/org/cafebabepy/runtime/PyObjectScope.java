@@ -10,18 +10,14 @@ import java.util.Optional;
  */
 public class PyObjectScope {
 
-    private PyObjectScope parent;
+    private final PyObject source;
 
     private Map<String, PyObject> objectMap;
 
     private volatile Map<String, PyObject> notAppearObjectMap;
 
-    public PyObjectScope() {
-        this(null);
-    }
-
-    public PyObjectScope(PyObjectScope parent) {
-        this.parent = parent;
+    public PyObjectScope(PyObject source) {
+        this.source = source;
     }
 
     public void put(String name, PyObject object) {
@@ -53,8 +49,8 @@ public class PyObjectScope {
         }
     }
 
-    public PyObjectScope getParentScope() {
-        return this.parent;
+    public PyObject getSource() {
+        return this.source;
     }
 
     public Map<String, PyObject> gets() {
@@ -75,11 +71,11 @@ public class PyObjectScope {
         return map;
     }
 
-    public Optional<PyObject> get(String name) {
-        return get(name, true);
+    public Optional<PyObject> getThisOnly(String name) {
+        return getThisOnly(name, true);
     }
 
-    public Optional<PyObject> get(String name, boolean appear) {
+    public Optional<PyObject> getThisOnly(String name, boolean appear) {
         if (this.objectMap != null) {
             PyObject object = this.objectMap.get(name);
             if (object != null) {
@@ -91,11 +87,62 @@ public class PyObjectScope {
             return getAppearOnly(name);
         }
 
-        if (this.parent != null) {
-            return this.parent.get(name, appear);
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> get(String name) {
+        return get(name, true);
+    }
+
+    public final Optional<PyObject> get(String name, boolean appear) {
+        Optional<PyObject> objectOpt = getThisOnly(name, appear);
+        if (objectOpt.isPresent()) {
+            return objectOpt;
+        }
+
+        if (!this.source.isType() && !this.source.isModule()) {
+            return this.source.getType().getScope().get(name, appear);
+        }
+
+        for (PyObject type : this.source.getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().getThisOnly(name, appear);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
         }
 
         return Optional.empty();
+    }
+
+    public final PyObject getOrThrow(String name) {
+        return getOrThrow(name, true);
+    }
+
+    public final PyObject getOrThrow(String name, boolean appear) {
+        Optional<PyObject> objectOpt = get(name, appear);
+        if (objectOpt.isPresent()) {
+            return objectOpt.get();
+        }
+
+        for (PyObject type : this.source.getTypes()) {
+            Optional<PyObject> typeObjectOpt = type.getScope().getThisOnly(name, appear);
+            if (typeObjectOpt.isPresent()) {
+                return typeObjectOpt.get();
+            }
+        }
+
+        if (this.source.isModule()) {
+            throw this.source.getRuntime().newRaiseException("builtins.NameError",
+                    "name '" + name + "' is not defined");
+
+        } else if (this.source.isType()) {
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "type object '" + this.source.getFullName() + "' has no attribute '" + name + "'");
+
+        } else {
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "'" + this.source.getFullName() + "' object has no attribute '" + name + "'");
+        }
     }
 
     public Optional<PyObject> getAppearOnly(String name) {
@@ -104,10 +151,6 @@ public class PyObjectScope {
             object = this.notAppearObjectMap.get(name);
         }
         if (object == null) {
-            if (this.parent != null) {
-                return this.parent.getAppearOnly(name);
-            }
-
             return Optional.empty();
         }
 
