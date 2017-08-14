@@ -183,8 +183,13 @@ public class InterpretEvaluator {
             baseList.add(base);
         });
 
+        String n = name.asJavaString();
+        if (!context.isModule()) {
+            n = context.getName() + "." + n;
+        }
+
         PyObject clazz = new PyInterpretClassObject(
-                this.runtime, context, name.asJavaString(), baseList);
+                this.runtime, context, n, baseList);
 
         context.getScope().put(name.asJavaString(), clazz);
 
