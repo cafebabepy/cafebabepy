@@ -580,7 +580,6 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             if (this.runtime.isInstance(trailer, "_ast.Call")) {
                 if (expr == null) {
                     trailer.getScope().put("func", atom);
-                    expr = trailer;
 
                 } else {
                     trailer.getScope().put("func", expr);
@@ -589,13 +588,13 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             } else if (this.runtime.isInstance(trailer, "_ast.Attribute")) {
                 if (expr == null) {
                     trailer.getScope().put("value", atom);
-                    expr = trailer;
 
                 } else {
                     trailer.getScope().put("value", expr);
-                    expr = trailer;
                 }
             }
+
+            expr = trailer;
         }
 
         return expr;
