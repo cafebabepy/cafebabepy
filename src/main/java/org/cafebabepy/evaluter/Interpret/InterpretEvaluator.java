@@ -3,9 +3,7 @@ package org.cafebabepy.evaluter.Interpret;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module._ast.PyListType;
-import org.cafebabepy.runtime.module._ast.PyNameType;
-import org.cafebabepy.runtime.module._ast.PyStarredType;
+import org.cafebabepy.runtime.module._ast.*;
 import org.cafebabepy.runtime.object.PyLexicalScopeProxyObject;
 
 import java.util.*;
@@ -79,6 +77,9 @@ public class InterpretEvaluator {
             case "Expr":
                 return evalExpr(context, node);
 
+            case "Pass":
+                return evalPass(context, node);
+
             case "Assign":
                 return evalAssign(context, node);
 
@@ -120,6 +121,9 @@ public class InterpretEvaluator {
 
             case "Str":
                 return evalStr(context, node);
+
+            case "Attribute":
+                return evalAttribute(context, node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -302,6 +306,10 @@ public class InterpretEvaluator {
         return eval(context, value);
     }
 
+    private PyObject evalPass(PyObject context, PyObject node) {
+        return this.runtime.None();
+    }
+
     private PyObject evalAssign(PyObject context, PyObject node) {
         PyObject targets = node.getScope().getOrThrow("targets");
         PyObject value = node.getScope().getOrThrow("value");
@@ -315,7 +323,6 @@ public class InterpretEvaluator {
     private void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = target.getScope().getOrThrow("id");
-
             context.getScope().put(id.asJavaString(), evalValue);
 
         } else {
@@ -337,6 +344,12 @@ public class InterpretEvaluator {
         if (targetType instanceof PyNameType) {
             PyObject id = target.getScope().getOrThrow("id");
             assignMap.put(id.asJavaString(), evalValue);
+            return;
+
+        } else if (targetType instanceof PyAttributeType) {
+            PyObject attr = target.getScope().getOrThrow("attr");
+            PyObject attributeContext = eval(context, target);
+            attributeContext.getScope().put(attr.asJavaString(), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
@@ -616,11 +629,17 @@ public class InterpretEvaluator {
 
     private PyObject evalName(PyObject context, PyObject node) {
         PyObject ctx = node.getScope().getOrThrow("ctx");
-        if (this.runtime.isInstance(ctx, "_ast.Load")) {
+
+        PyObject ctxType = ctx.getType();
+        if (ctxType instanceof PyLoadType) {
             PyObject id = node.getScope().getOrThrow("id");
             return context.getScope().getOrThrow(id.asJavaString());
+
+        } else if (ctxType instanceof PyStoreType) {
+            return context;
         }
 
+        // TODO どうする？
         return node;
     }
 
@@ -630,5 +649,24 @@ public class InterpretEvaluator {
 
     private PyObject evalStr(PyObject context, PyObject node) {
         return node.getScope().getOrThrow("s");
+    }
+
+    private PyObject evalAttribute(PyObject context, PyObject node) {
+        PyObject value = node.getScope().getOrThrow("value");
+        PyObject attr = node.getScope().getOrThrow("attr");
+        PyObject ctx = node.getScope().getOrThrow("ctx");
+
+        PyObject evalValue = eval(context, value);
+
+        PyObject ctxType = ctx.getType();
+        if (ctxType instanceof PyLoadType) {
+            return evalValue.getScope().getOrThrow(attr.asJavaString());
+
+        } else if (ctxType instanceof PyStoreType) {
+            return evalValue;
+        }
+
+        //　TODO どうする？
+        return node;
     }
 }

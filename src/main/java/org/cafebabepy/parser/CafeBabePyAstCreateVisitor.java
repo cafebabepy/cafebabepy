@@ -6,10 +6,7 @@ import org.cafebabepy.parser.antlr.PythonParser;
 import org.cafebabepy.parser.antlr.PythonParserBaseVisitor;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module._ast.PyListType;
-import org.cafebabepy.runtime.module._ast.PyNameType;
-import org.cafebabepy.runtime.module._ast.PyNumType;
-import org.cafebabepy.runtime.module._ast.PyStarredType;
+import org.cafebabepy.runtime.module._ast.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +113,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         for (int i = 0; i < count; i++) {
             PythonParser.Testlist_star_exprContext testlist_star_exprContext = testlist_star_exprContextList.get(i);
             PyObject target = visitTestlist_star_expr(testlist_star_exprContext);
-            toStore(target);
+            toStore(target, 0);
 
             targetArray[i] = target;
         }
@@ -129,23 +126,36 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         return this.runtime.newPyObject("_ast.Assign", targets, value);
     }
 
-    private void toStore(PyObject target) {
+    private void toStore(PyObject target, int attributeDepth) {
         PyObject type = target.getType();
         if (type instanceof PyStarredType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
             PyObject value = target.getScope().getOrThrow("value");
             if (this.runtime.isIterable(value)) {
-                this.runtime.iter(target, this::toStore);
+                this.runtime.iter(value, v -> toStore(v, 0));
+
+            } else {
+                toStore(value, 0);
             }
 
         } else if (type instanceof PyNameType) {
-            target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+            if (attributeDepth == 0) {
+                target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+            }
+
+        } else if (type instanceof PyAttributeType) {
+            if (attributeDepth == 0) {
+                target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+            }
+
+            PyObject value = target.getScope().getOrThrow("value");
+            toStore(value, attributeDepth + 1);
 
         } else if (type instanceof PyListType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
             PyObject elts = target.getScope().getOrThrow("elts");
 
-            this.runtime.iter(elts, this::toStore);
+            this.runtime.iter(elts, elt -> toStore(elt, 0));
 
         } else if (type instanceof PyNumType) {
             throw this.runtime.newRaiseException("builtins.SyntaxError",
@@ -575,6 +585,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 } else {
                     trailer.getScope().put("func", expr);
                 }
+
+            } else if (this.runtime.isInstance(trailer, "_ast.Attribute")) {
+                if (expr == null) {
+                    trailer.getScope().put("value", atom);
+                    expr = trailer;
+
+                } else {
+                    trailer.getScope().put("value", expr);
+                    expr = trailer;
+                }
             }
         }
 
@@ -712,6 +732,13 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitTrailer(PythonParser.TrailerContext ctx) {
+        if (ctx.NAME() != null) {
+            PyObject attr = this.runtime.str(ctx.NAME().getText());
+            PyObject load = this.runtime.newPyObject("_ast.Load");
+
+            return this.runtime.newPyObject("_ast.Attribute", this.runtime.None(), attr, load);
+        }
+
         String firstText = ctx.getChild(0).getText();
         String lastText = ctx.getChild(ctx.getChildCount() - 1).getText();
 
@@ -735,7 +762,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
         PythonParser.ArglistContext arglistContext = ctx.arglist();
         PyObject bases;
-        if(arglistContext != null) {
+        if (arglistContext != null) {
             bases = visitArglist(arglistContext);
 
         } else {

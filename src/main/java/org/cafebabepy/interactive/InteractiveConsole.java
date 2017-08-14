@@ -117,7 +117,9 @@ public class InteractiveConsole {
                     }
 
                 } catch (RaiseException e) {
-                    this.consoleReader.println(e.getException().asJavaString());
+                    PyObject exception = e.getException();
+                    this.consoleReader.println(exception.asJavaString());
+                    this.consoleReader.println(e.getMessage());
                 }
             }
 
