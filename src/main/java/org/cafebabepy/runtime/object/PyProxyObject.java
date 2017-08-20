@@ -5,11 +5,10 @@ import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
 import java.util.List;
-import java.util.Optional;
 
 public class PyProxyObject implements PyObject {
 
-    protected final PyObject source;
+    private final PyObject source;
 
     public PyProxyObject(PyObject source) {
         this.source = source;
@@ -77,6 +76,11 @@ public class PyProxyObject implements PyObject {
     @Override
     public boolean isModule() {
         return this.source.isModule();
+    }
+
+    @Override
+    public boolean isCallable() {
+        return this.source.isCallable();
     }
 
     @Override

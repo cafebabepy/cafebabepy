@@ -8,6 +8,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import static org.cafebabepy.util.ProtocolNames.__call__;
+
 /**
  * Created by yotchang4s on 2017/05/31.
  */
@@ -29,6 +31,8 @@ public class PyFunctionJavaObject extends AbstractPyObjectObject {
         if (!Modifier.isPublic(method.getModifiers())) {
             this.method.setAccessible(true);
         }
+
+        getScope().put(__call__, this);
     }
 
     @Override

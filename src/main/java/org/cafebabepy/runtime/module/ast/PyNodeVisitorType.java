@@ -31,7 +31,7 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
         PyObject astModule = this.runtime.moduleOrThrow("ast");
         PyObject iter_fields = astModule.getScope().getOrThrow("iter_fields");
 
-        PyObject list = typeOrThrow("builtins.list");
+        PyObject list = this.runtime.typeOrThrow("builtins.list");
         PyObject ast = this.runtime.typeOrThrow("_ast.AST");
 
         PyObject iter_fieldsResult = iter_fields.call(node);

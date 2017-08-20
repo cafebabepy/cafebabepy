@@ -33,7 +33,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
-        PyObject strType = typeOrThrow("builtins.str");
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
         PyObject builtinsModule = this.runtime.moduleOrThrow("builtins");
         PyObject isinstance = builtinsModule.getScope().getOrThrow("isinstance");
@@ -49,7 +49,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __setattr__)
     public void __setattr__(PyObject self, PyObject name, PyObject value) {
-        PyObject strType = typeOrThrow("builtins.str");
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
         PyObject builtinsModule = this.runtime.typeOrThrow("builtins");
         PyObject isinstance = builtinsModule.getScope().getOrThrow("isinstance");

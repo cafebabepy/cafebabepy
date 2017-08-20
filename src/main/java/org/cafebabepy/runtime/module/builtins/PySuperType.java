@@ -41,7 +41,7 @@ public class PySuperType extends AbstractCafeBabePyType {
 
     @DefineCafeBabePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
-        PyObject strType = typeOrThrow("builtins.str");
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
         if (!this.runtime.isInstance(name, strType)) {
             throw this.runtime.newRaiseTypeError(

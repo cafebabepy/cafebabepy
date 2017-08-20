@@ -54,6 +54,7 @@ public final class Python {
 
     private void initialize() {
         initializeBuiltins("org.cafebabepy.runtime.module.builtins");
+        initializeBuiltins("org.cafebabepy.runtime.module.types");
         initializeBuiltins("org.cafebabepy.runtime.module");
 
         initializeBuiltins("org.cafebabepy.runtime.module._ast");

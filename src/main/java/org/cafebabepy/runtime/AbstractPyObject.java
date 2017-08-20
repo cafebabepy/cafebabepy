@@ -81,8 +81,13 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public boolean isAppear() {
+    public final boolean isAppear() {
         return this.appear;
+    }
+
+    @Override
+    public final boolean isCallable() {
+        return getScope().containsKey(__call__);
     }
 
     @Override
@@ -128,22 +133,6 @@ public abstract class AbstractPyObject implements PyObject {
         }
 
         return true;
-    }
-
-    public final Optional<PyObject> type(String name) {
-        return this.runtime.type(name);
-    }
-
-    public final Optional<PyObject> type(String name, boolean appear) {
-        return this.runtime.type(name, appear);
-    }
-
-    public final PyObject typeOrThrow(String name) {
-        return getRuntime().typeOrThrow(name);
-    }
-
-    public final PyObject typeOrThrow(String name, boolean appear) {
-        return getRuntime().typeOrThrow(name, appear);
     }
 
     @Override

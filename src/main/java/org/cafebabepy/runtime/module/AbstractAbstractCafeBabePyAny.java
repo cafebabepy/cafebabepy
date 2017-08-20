@@ -31,6 +31,12 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
         this.initialize = InitializeStage.NONE;
     }
 
+    AbstractAbstractCafeBabePyAny(Python runtime,boolean appear) {
+        super(runtime, appear);
+
+        this.initialize = InitializeStage.NONE;
+    }
+
     @Override
     public void preInitialize() {
         if (this.initialize != InitializeStage.NONE) {

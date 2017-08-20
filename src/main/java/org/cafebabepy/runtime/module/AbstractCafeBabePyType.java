@@ -92,7 +92,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     @DefineCafeBabePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
         PyObject object = getScope().getOrThrow(__new__).call(this);
-        object.getScope().getOrThrow(__init__).call(object, args);
+        object.getScope().getOrThrow(__init__).call(args);
 
         return object;
     }

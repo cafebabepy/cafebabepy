@@ -1,8 +1,6 @@
 package org.cafebabepy.runtime;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -32,6 +30,8 @@ public interface PyObject {
     boolean isType();
 
     boolean isModule();
+
+    boolean isCallable();
 
     boolean isAppear();
 

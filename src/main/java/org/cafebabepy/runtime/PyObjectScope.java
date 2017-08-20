@@ -12,7 +12,7 @@ public class PyObjectScope {
 
     private final PyObject source;
 
-    private Map<String, PyObject> objectMap;
+    private volatile Map<String, PyObject> objectMap;
 
     private volatile Map<String, PyObject> notAppearObjectMap;
 
@@ -20,7 +20,7 @@ public class PyObjectScope {
         this.source = source;
     }
 
-    public void put(String name, PyObject object) {
+    public final void put(String name, PyObject object) {
         put(name, object, true);
     }
 
@@ -49,11 +49,11 @@ public class PyObjectScope {
         }
     }
 
-    public PyObject getSource() {
+    public final PyObject getSource() {
         return this.source;
     }
 
-    public Map<String, PyObject> gets() {
+    public final Map<String, PyObject> gets() {
         return gets(true);
     }
 
@@ -71,7 +71,7 @@ public class PyObjectScope {
         return map;
     }
 
-    public Optional<PyObject> getThisOnly(String name) {
+    public final Optional<PyObject> getThisOnly(String name) {
         return getThisOnly(name, true);
     }
 
@@ -90,18 +90,14 @@ public class PyObjectScope {
         return Optional.empty();
     }
 
-    public Optional<PyObject> get(String name) {
+    public final Optional<PyObject> get(String name) {
         return get(name, true);
     }
 
-    public final Optional<PyObject> get(String name, boolean appear) {
+    public Optional<PyObject> get(String name, boolean appear) {
         Optional<PyObject> objectOpt = getThisOnly(name, appear);
         if (objectOpt.isPresent()) {
             return objectOpt;
-        }
-
-        if (!this.source.isType() && !this.source.isModule()) {
-            return this.source.getType().getScope().get(name, appear);
         }
 
         for (PyObject type : this.source.getTypes()) {
@@ -111,6 +107,11 @@ public class PyObjectScope {
             }
         }
 
+        // FIXME 汚いよ〜
+        PyObjectScope sourceScope = this.source.getScope();
+        if(sourceScope != this) {
+            return sourceScope.get(name, appear);
+        }
         return Optional.empty();
     }
 
@@ -122,13 +123,6 @@ public class PyObjectScope {
         Optional<PyObject> objectOpt = get(name, appear);
         if (objectOpt.isPresent()) {
             return objectOpt.get();
-        }
-
-        for (PyObject type : this.source.getTypes()) {
-            Optional<PyObject> typeObjectOpt = type.getScope().getThisOnly(name, appear);
-            if (typeObjectOpt.isPresent()) {
-                return typeObjectOpt.get();
-            }
         }
 
         if (this.source.isModule()) {

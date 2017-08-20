@@ -18,12 +18,10 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private String name;
 
-    private boolean appear;
-
     private volatile List<PyObject> types;
 
     protected AbstractCafeBabePyModule(Python runtime) {
-        super(runtime);
+        super(runtime, true);
     }
 
     @Override
@@ -36,7 +34,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         if (this.types == null) {
             synchronized (this) {
                 if (this.types == null) {
-                    PyObject object = typeOrThrow("builtins.object");
+                    PyObject object = this.runtime.typeOrThrow("builtins.object");
                     this.types = Arrays.asList(this, object);
                     this.types = Collections.unmodifiableList(Collections.synchronizedList(this.types));
                 }
@@ -56,13 +54,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         }
 
         this.name = defineCafeBabePyModule.name();
-        this.appear = true;
         this.runtime.defineModule(this);
-    }
-
-    @Override
-    public boolean isAppear() {
-        return this.appear;
     }
 
     @Override
