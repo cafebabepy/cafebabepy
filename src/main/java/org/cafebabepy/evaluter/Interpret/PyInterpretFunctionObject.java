@@ -4,7 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
-import org.cafebabepy.runtime.object.PyLexicalScopeProxyObject;
+import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 

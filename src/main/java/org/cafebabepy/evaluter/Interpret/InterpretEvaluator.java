@@ -4,7 +4,7 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.*;
-import org.cafebabepy.runtime.object.PyLexicalScopeProxyObject;
+import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.*;
 

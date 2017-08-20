@@ -1,8 +1,9 @@
-package org.cafebabepy.runtime.object;
+package org.cafebabepy.runtime.object.iterator;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.builtins.PyGeneratorType;
+import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
 import java.util.Collection;
 import java.util.function.Function;

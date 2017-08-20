@@ -4,7 +4,7 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.PyLexicalScopeProxyObject;
+import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.ArrayList;
 import java.util.Collections;

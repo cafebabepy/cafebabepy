@@ -5,7 +5,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyStrObject;
+import org.cafebabepy.runtime.object.java.PyStrObject;
 
 import static org.cafebabepy.util.ProtocolNames.__add__;
 import static org.cafebabepy.util.ProtocolNames.__str__;

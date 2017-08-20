@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.object;
+package org.cafebabepy.runtime.object.proxy;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;

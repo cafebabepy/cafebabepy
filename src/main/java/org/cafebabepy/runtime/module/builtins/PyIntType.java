@@ -6,7 +6,7 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyIntObject;
+import org.cafebabepy.runtime.object.java.PyIntObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 

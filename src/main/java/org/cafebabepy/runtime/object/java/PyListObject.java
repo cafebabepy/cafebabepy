@@ -1,8 +1,10 @@
-package org.cafebabepy.runtime.object;
+package org.cafebabepy.runtime.object.java;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -11,17 +13,21 @@ import java.util.stream.Collectors;
 /**
  * Created by yotchang4s on 2017/06/19.
  */
-public class PyTupleObject extends AbstractPyObjectObject {
+public class PyListObject extends AbstractPyObjectObject {
 
     private final List<PyObject> list;
 
-    public PyTupleObject(Python runtime, PyObject... value) {
-        super(runtime, runtime.typeOrThrow("builtins.tuple"));
+    public PyListObject(Python runtime, PyObject... value) {
+        super(runtime, runtime.typeOrThrow("builtins.list"));
 
-        this.list = Collections.unmodifiableList(Arrays.asList(value));
+        this.list = new ArrayList<>(Arrays.asList(value));
     }
 
     public List<PyObject> getList() {
+        return Collections.unmodifiableList(this.list);
+    }
+
+    public List<PyObject> getRawList() {
         return this.list;
     }
 
@@ -37,6 +43,6 @@ public class PyTupleObject extends AbstractPyObjectObject {
     public String asJavaString() {
         return this.list.stream()
                 .map(PyObject::asJavaString)
-                .collect(Collectors.joining(",", "(", ")"));
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 }

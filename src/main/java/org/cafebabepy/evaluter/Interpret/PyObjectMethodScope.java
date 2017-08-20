@@ -2,7 +2,7 @@ package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
-import org.cafebabepy.runtime.object.PyMethodTypeObject;
+import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

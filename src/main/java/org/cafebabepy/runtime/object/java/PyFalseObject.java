@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.object;
+package org.cafebabepy.runtime.object.java;
 
 import org.cafebabepy.runtime.Python;
 

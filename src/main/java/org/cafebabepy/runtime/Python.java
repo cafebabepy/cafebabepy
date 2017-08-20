@@ -2,7 +2,11 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.annotation.DefineCafeBabePyModule;
 import org.cafebabepy.annotation.DefineCafeBabePyType;
-import org.cafebabepy.runtime.object.*;
+import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
+import org.cafebabepy.runtime.object.java.*;
+import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
+import org.cafebabepy.runtime.object.literal.PyNoneObject;
+import org.cafebabepy.runtime.object.literal.PyNotImplementedObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 

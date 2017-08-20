@@ -5,7 +5,7 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.PyJavaFunctionObject;
+import org.cafebabepy.runtime.object.java.PyJavaFunctionObject;
 
 import java.lang.reflect.Method;
 import java.util.*;

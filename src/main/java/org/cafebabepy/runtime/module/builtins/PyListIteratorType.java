@@ -5,8 +5,7 @@ import org.cafebabepy.annotation.DefineCafeBabePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyListIteratorObject;
-import org.cafebabepy.runtime.object.PyListObject;
+import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;
 import static org.cafebabepy.util.ProtocolNames.__next__;
