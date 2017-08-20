@@ -24,7 +24,7 @@ public class PyNoneType extends AbstractCafeBabePyType {
 
         if (this.runtime.callFunction("builtins.isinstance", self, noneType).isFalse()) {
             throw this.runtime.newRaiseTypeError(
-                    "'__eq__' requires a 'int' object but received a '" + self.getFullName() + "'");
+                    "'__bool__' requires a 'None' object but received a '" + self.getFullName() + "'");
         }
 
         return this.runtime.False();

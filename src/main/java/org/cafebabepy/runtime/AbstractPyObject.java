@@ -116,23 +116,19 @@ public abstract class AbstractPyObject implements PyObject {
         Optional<PyObject> boolOpt = getScope().get(__bool__);
         if (boolOpt.isPresent()) {
             PyObject bool = boolOpt.get();
-            PyObject result = bool.call(getType(), this);
+            PyObject result = bool.call(this);
             return result.isFalse();
         }
 
         Optional<PyObject> lenOpt = getScope().get(__len__);
         if (lenOpt.isPresent()) {
             PyObject len = lenOpt.get();
-            PyObject result = len.call(len, this);
+            PyObject result = len.call(this);
 
             return this.runtime.eq(result, this.runtime.number(0)).isTrue();
         }
 
-        if (!isType()) {
-            getType().isFalse();
-        }
-
-        return true;
+        return false;
     }
 
     @Override
