@@ -39,6 +39,8 @@ public interface PyObject {
 
     boolean isNotImplemented();
 
+    boolean isEllipsis();
+
     PyObject getStr();
 
     String asJavaString();

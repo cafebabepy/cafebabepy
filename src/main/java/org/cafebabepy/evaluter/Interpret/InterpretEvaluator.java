@@ -40,7 +40,14 @@ public class InterpretEvaluator {
     public PyObject eval(PyObject context, PyObject node) {
         if (node.isNone()) {
             return node;
+
+        } else if (node.isEllipsis()) {
+            return node;
+
+        } else if (this.runtime.isInstance(node, "builtins.bool")) {
+            return node;
         }
+
         if (this.runtime.isInstance(node, "builtins.list")) {
             PyObject[] end = new PyObject[1];
             this.runtime.iter(node, n -> end[0] = eval(context, n));

@@ -80,6 +80,11 @@ class PyInterpretClassObject extends AbstractPyObject {
     }
 
     @Override
+    public boolean isEllipsis() {
+        return false;
+    }
+
+    @Override
     public String asJavaString() {
         return "<class '" + getFullName() + "'>";
     }

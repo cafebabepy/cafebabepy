@@ -71,6 +71,11 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     }
 
     @Override
+    public boolean isEllipsis() {
+        return false;
+    }
+
+    @Override
     public String asJavaString() {
         if (this.string == null) {
             synchronized (this) {

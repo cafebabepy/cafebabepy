@@ -602,13 +602,29 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitAtom(PythonParser.AtomContext ctx) {
-        TerminalNode name = ctx.NAME();
-        if (name != null) {
-            PyObject id = this.runtime.str(name.getText());
+        TerminalNode nameNode = ctx.NAME();
+        if (nameNode != null) {
+            PyObject id = this.runtime.str(nameNode.getText());
             // Default
             PyObject load = this.runtime.newPyObject("_ast.Load");
 
             return this.runtime.newPyObject("_ast.Name", id, load);
+        }
+        TerminalNode trueNode = ctx.TRUE();
+        if(trueNode != null) {
+            return this.runtime.True();
+        }
+        TerminalNode falseNode = ctx.FALSE();
+        if(falseNode != null) {
+            return this.runtime.False();
+        }
+        TerminalNode noneNode = ctx.NONE();
+        if(noneNode != null) {
+            return this.runtime.None();
+        }
+        TerminalNode ellipsisNode  = ctx.ELLIPSIS();
+        if(ellipsisNode != null) {
+            return this.runtime.Ellipsis();
         }
         List<PythonParser.StrContext> strContextList = ctx.str();
         if (!strContextList.isEmpty()) {

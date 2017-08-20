@@ -39,6 +39,8 @@ public final class Python {
 
     private PyBoolObject falseObject;
 
+    private PyEllipsisObject ellipsisObject;
+
     private PyNotImplementedObject notImplementedTypeObject;
 
     private Python() {
@@ -164,6 +166,7 @@ public final class Python {
         this.trueObject = new PyTrueObject(this);
         this.falseObject = new PyFalseObject(this);
         this.notImplementedTypeObject = new PyNotImplementedObject(this);
+        this.ellipsisObject = new PyEllipsisObject(this);
     }
 
     public PyStrObject str(String value) {
@@ -230,6 +233,10 @@ public final class Python {
 
     public PyObject None() {
         return this.noneObject;
+    }
+
+    public PyObject Ellipsis() {
+        return this.ellipsisObject;
     }
 
     public PyObject True() {

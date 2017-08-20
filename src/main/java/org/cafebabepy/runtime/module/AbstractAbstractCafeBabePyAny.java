@@ -68,6 +68,11 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     }
 
     @Override
+    public final boolean isEllipsis() {
+        return false;
+    }
+
+    @Override
     public List<PyObject> getBases() {
         if (this.bases == null) {
             synchronized (this) {

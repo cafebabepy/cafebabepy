@@ -99,6 +99,11 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
+    public boolean isEllipsis() {
+        return false;
+    }
+
+    @Override
     public PyObject getStr() {
         return this.source.getStr();
     }
