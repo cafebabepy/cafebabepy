@@ -13,7 +13,7 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
 /**
  * Created by yotchang4s on 2017/05/31.
  */
-public class PyFunctionJavaObject extends AbstractPyObjectObject {
+public class PyJavaFunctionObject extends AbstractPyObjectObject {
 
     private final PyObject targetType;
 
@@ -21,7 +21,7 @@ public class PyFunctionJavaObject extends AbstractPyObjectObject {
 
     private final Method method;
 
-    public PyFunctionJavaObject(Python runtime, PyObject targetType, String name, Method method) {
+    public PyJavaFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
         super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
 
         this.targetType = targetType;

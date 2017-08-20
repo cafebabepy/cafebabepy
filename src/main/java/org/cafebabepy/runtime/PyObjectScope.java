@@ -107,9 +107,9 @@ public class PyObjectScope {
             }
         }
 
-        // FIXME 汚いよ〜
+        // not self
         PyObjectScope sourceScope = this.source.getScope();
-        if(sourceScope != this) {
+        if (sourceScope != this) {
             return sourceScope.get(name, appear);
         }
         return Optional.empty();
@@ -126,16 +126,17 @@ public class PyObjectScope {
         }
 
         if (this.source.isModule()) {
-            throw this.source.getRuntime().newRaiseException("builtins.NameError",
-                    "name '" + name + "' is not defined");
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "module '" + this.source.getName() + "' has no attribute '" + name + "'");
 
         } else if (this.source.isType()) {
             throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '" + this.source.getFullName() + "' has no attribute '" + name + "'");
+                    "type object '" + this.source.getName() + "' has no attribute '" + name + "'");
 
         } else {
             throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + this.source.getFullName() + "' object has no attribute '" + name + "'");
+                    "'" + this.source.getName() + "' object has no attribute '" + name + "'");
+
         }
     }
 

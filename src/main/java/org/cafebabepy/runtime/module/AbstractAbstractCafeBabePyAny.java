@@ -5,7 +5,7 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.PyFunctionJavaObject;
+import org.cafebabepy.runtime.object.PyJavaFunctionObject;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -31,7 +31,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
         this.initialize = InitializeStage.NONE;
     }
 
-    AbstractAbstractCafeBabePyAny(Python runtime,boolean appear) {
+    AbstractAbstractCafeBabePyAny(Python runtime, boolean appear) {
         super(runtime, appear);
 
         this.initialize = InitializeStage.NONE;
@@ -55,6 +55,16 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
         this.initialize = InitializeStage.POST;
         defineClassMembers();
+    }
+
+    @Override
+    public final boolean isNone() {
+        return false;
+    }
+
+    @Override
+    public final boolean isNotImplemented() {
+        return false;
     }
 
     @Override
@@ -120,7 +130,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                         "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
             }
 
-            PyFunctionJavaObject f = new PyFunctionJavaObject(
+            PyJavaFunctionObject f = new PyJavaFunctionObject(
                     getRuntime(),
                     this,
                     defineCafeBabePyFunction.name(),
@@ -134,15 +144,5 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
             defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
         }
-    }
-
-    @Override
-    public final boolean isNone() {
-        return false;
-    }
-
-    @Override
-    public final boolean isNotImplemented() {
-        return false;
     }
 }

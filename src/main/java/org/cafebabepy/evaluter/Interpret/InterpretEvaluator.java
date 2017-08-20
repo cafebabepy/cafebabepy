@@ -638,7 +638,12 @@ public class InterpretEvaluator {
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
             PyObject id = node.getScope().getOrThrow("id");
-            return context.getScope().getOrThrow(id.asJavaString());
+            String name = id.asJavaString();
+
+            return context.getScope().get(name).orElseThrow(() ->
+                    this.runtime.newRaiseException("builtins.NameError",
+                            "name '" + name + "' is not defined")
+            );
 
         } else if (ctxType instanceof PyStoreType) {
             return context;
