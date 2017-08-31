@@ -1,4 +1,4 @@
-package org.cafebabepy.evaluter.Interpret;
+package org.cafebabepy.runtime.object.proxy;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
@@ -11,12 +11,12 @@ import java.util.Optional;
 /**
  * Created by yotchang4s on 2017/05/24.
  */
-public class PyObjectMethodScope extends PyObjectScope {
+public class PyMethodObjectScope extends PyObjectScope {
 
     private volatile Map<String, PyObject> methodMap;
     private volatile Map<String, PyObject> notAppearMethodMap;
 
-    public PyObjectMethodScope(PyObject source) {
+    public PyMethodObjectScope(PyObject source) {
         super(source);
     }
 

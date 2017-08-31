@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -13,14 +13,14 @@ import static org.cafebabepy.util.ProtocolNames.*;
 /**
  * Created by yotchang4s on 2017/06/03.
  */
-@DefineCafeBabePyType(name = "builtins.range")
+@DefinePyType(name = "builtins.range")
 public class PyRangeType extends AbstractCafeBabePyType {
 
     public PyRangeType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __init__)
+    @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
         if (args.length == 0) {
             throw this.runtime.newRaiseTypeError("range expected 1 arguments, got 0");
@@ -77,7 +77,7 @@ public class PyRangeType extends AbstractCafeBabePyType {
         throw this.runtime.newRaiseTypeError("__index__ returned non-int (type " + intObject.getFullName() + ")");
     }
 
-    @DefineCafeBabePyFunction(name = __iter__)
+    @DefinePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
         if (!this.runtime.isInstance(self, this)) {
             throw this.runtime.newRaiseTypeError(

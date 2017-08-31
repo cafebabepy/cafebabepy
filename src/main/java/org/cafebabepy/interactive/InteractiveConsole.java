@@ -111,7 +111,7 @@ public class InteractiveConsole {
                 PyObject result;
 
                 try {
-                    result = evaluator.eval(ast);
+                    result = evaluator.evalMainModule(ast);
                     if (!result.isNone()) {
                         this.consoleReader.println(result.asJavaString());
                     }

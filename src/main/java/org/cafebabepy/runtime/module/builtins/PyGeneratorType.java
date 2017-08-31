@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -13,14 +13,14 @@ import static org.cafebabepy.util.ProtocolNames.__next__;
 /**
  * Created by yotchang4s on 2017/06/07.
  */
-@DefineCafeBabePyType(name = "builtins.generator", appear = false)
+@DefinePyType(name = "builtins.generator", appear = false)
 public class PyGeneratorType extends AbstractCafeBabePyType {
 
     public PyGeneratorType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __iter__)
+    @DefinePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
         if (!(self instanceof PyGeneratorObject)) {
             throw this.runtime.newRaiseTypeError(
@@ -32,7 +32,7 @@ public class PyGeneratorType extends AbstractCafeBabePyType {
         return this;
     }
 
-    @DefineCafeBabePyFunction(name = __next__)
+    @DefinePyFunction(name = __next__)
     public PyObject __next__(PyObject self) {
         if (!(self instanceof PyGeneratorObject)) {
             throw this.runtime.newRaiseTypeError(

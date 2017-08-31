@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -33,25 +33,25 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     public void defineClass() {
         Class<?> clazz = getClass();
 
-        DefineCafeBabePyType defineCafeBabePyType = clazz.getAnnotation(DefineCafeBabePyType.class);
-        if (defineCafeBabePyType == null) {
+        DefinePyType definePyType = clazz.getAnnotation(DefinePyType.class);
+        if (definePyType == null) {
             throw new CafeBabePyException(
-                    "DefineCafeBabePyModule annotation is not defined " + clazz.getName());
+                    "DefinePyModule annotation is not defined " + clazz.getName());
         }
 
-        this.baseNames = defineCafeBabePyType.parent();
+        this.baseNames = definePyType.parent();
 
-        String[] splitStr = StringUtils.splitLastDot(defineCafeBabePyType.name());
+        String[] splitStr = StringUtils.splitLastDot(definePyType.name());
 
         if (StringUtils.isEmpty(splitStr[0])) {
             throw new CafeBabePyException("name '"
-                    + defineCafeBabePyType.name()
+                    + definePyType.name()
                     + "' is not found module");
         }
 
         this.module = this.runtime.moduleOrThrow(splitStr[0]);
         this.name = splitStr[1];
-        this.module.getScope().put(this.name, this, defineCafeBabePyType.appear());
+        this.module.getScope().put(this.name, this, definePyType.appear());
     }
 
     @Override
@@ -89,7 +89,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         return getCallable().call(args);
     }
 
-    @DefineCafeBabePyFunction(name = __call__)
+    @DefinePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
         PyObject object = getScope().getOrThrow(__new__).call(this);
         object.getScope().getOrThrow(__init__).call(args);

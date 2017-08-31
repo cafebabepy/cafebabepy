@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -14,14 +14,14 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefineCafeBabePyType(name = "builtins.super")
+@DefinePyType(name = "builtins.super")
 public class PySuperType extends AbstractCafeBabePyType {
 
     public PySuperType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __init__)
+    @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
         if (args.length > 1) {
             throw this.runtime.newRaiseTypeError(
@@ -39,7 +39,7 @@ public class PySuperType extends AbstractCafeBabePyType {
         }
     }
 
-    @DefineCafeBabePyFunction(name = __getattribute__)
+    @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 

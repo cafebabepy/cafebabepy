@@ -90,6 +90,19 @@ public class PyObjectScope {
         return Optional.empty();
     }
 
+    public final PyObject getThisOnlyOrThrow(String name) {
+        return getThisOnlyOrThrow(name, true);
+    }
+
+    public final PyObject getThisOnlyOrThrow(String name, boolean appear) {
+        Optional<PyObject> objectOpt = getThisOnly(name, appear);
+        if (objectOpt.isPresent()) {
+            return objectOpt.get();
+        }
+
+        throw newNotFoundException(this.source, name);
+    }
+
     public final Optional<PyObject> get(String name) {
         return get(name, true);
     }
@@ -125,19 +138,7 @@ public class PyObjectScope {
             return objectOpt.get();
         }
 
-        if (this.source.isModule()) {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "module '" + this.source.getName() + "' has no attribute '" + name + "'");
-
-        } else if (this.source.isType()) {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '" + this.source.getName() + "' has no attribute '" + name + "'");
-
-        } else {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + this.source.getName() + "' object has no attribute '" + name + "'");
-
-        }
+        throw newNotFoundException(this.source, name);
     }
 
     public Optional<PyObject> getAppearOnly(String name) {
@@ -167,5 +168,21 @@ public class PyObjectScope {
         }
 
         return false;
+    }
+
+    private RaiseException newNotFoundException(PyObject source, String name) {
+        if (this.source.isModule()) {
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "module '" + this.source.getName() + "' has no attribute '" + name + "'");
+
+        } else if (this.source.isType()) {
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "type object '" + this.source.getName() + "' has no attribute '" + name + "'");
+
+        } else {
+            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "'" + this.source.getName() + "' object has no attribute '" + name + "'");
+
+        }
     }
 }

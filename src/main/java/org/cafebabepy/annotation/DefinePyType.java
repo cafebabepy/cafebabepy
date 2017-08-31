@@ -9,8 +9,12 @@ import java.lang.annotation.Target;
  * Created by yotchang4s on 2017/05/12.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface DefineCafeBabePyFunction {
+@Target(ElementType.TYPE)
+public @interface DefinePyType {
 
     String name();
+
+    String[] parent() default {"builtins.object"};
+
+    boolean appear() default true;
 }

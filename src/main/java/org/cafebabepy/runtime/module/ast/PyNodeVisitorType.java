@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.ast;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -9,14 +9,14 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 /**
  * Created by yotchang4s on 2017/06/07.
  */
-@DefineCafeBabePyType(name = "ast.NodeVisitor")
+@DefinePyType(name = "ast.NodeVisitor")
 public class PyNodeVisitorType extends AbstractCafeBabePyType {
 
     public PyNodeVisitorType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = "visit")
+    @DefinePyFunction(name = "visit")
     public PyObject visit(PyObject self, PyObject node) {
         String method = "visit_" + node.getName();
         PyObject visitor = self.getScope().get(method).orElse(getScope().getOrThrow("generic_visit"));
@@ -24,7 +24,7 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
         return visitor.call(self, node);
     }
 
-    @DefineCafeBabePyFunction(name = "generic_visit")
+    @DefinePyFunction(name = "generic_visit")
     public void generic_visit(PyObject self, PyObject node) {
         PyObject visit = self.getType().getScope().getOrThrow("visit");
 

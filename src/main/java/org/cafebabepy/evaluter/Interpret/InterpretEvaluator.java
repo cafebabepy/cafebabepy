@@ -21,7 +21,7 @@ public class InterpretEvaluator {
         this.runtime = runtime;
     }
 
-    public PyObject eval(PyObject node) {
+    public PyObject evalMainModule(PyObject node) {
         PyObject context = this.runtime.moduleOrThrow("__main__");
         return eval(context, node);
 
@@ -152,7 +152,7 @@ public class InterpretEvaluator {
         PyObject[] result = new PyObject[1];
         result[0] = this.runtime.None();
         this.runtime.iter(body, b -> {
-            result[0] = eval(body);
+            result[0] = eval(context, body);
         });
 
         return result[0];

@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime.module;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
+import org.cafebabepy.annotation.DefinePyFunction;
 import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
@@ -81,7 +81,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                     List<PyObject> bases = new ArrayList<>(baseNames.length);
 
                     for (String baseName : getBaseNames()) {
-                        PyObject base = this.runtime.type(baseName).orElseThrow(() ->
+                        PyObject base = this.runtime.type(baseName, false).orElseThrow(() ->
                                 new CafeBabePyException(
                                         "type '" + getName() + "' parent '" + baseName + "' is not found")
                         );
@@ -125,20 +125,20 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                 continue;
             }
 
-            DefineCafeBabePyFunction defineCafeBabePyFunction = method.getAnnotation(DefineCafeBabePyFunction.class);
-            if (defineCafeBabePyFunction == null) {
+            DefinePyFunction definePyFunction = method.getAnnotation(DefinePyFunction.class);
+            if (definePyFunction == null) {
                 continue;
             }
 
-            if (defineClassMemberNamesSet.contains(defineCafeBabePyFunction.name())) {
+            if (defineClassMemberNamesSet.contains(definePyFunction.name())) {
                 throw new CafeBabePyException(
-                        "Duplicate '" + defineCafeBabePyFunction.name() + "' function");
+                        "Duplicate '" + definePyFunction.name() + "' function");
             }
 
             PyJavaFunctionObject f = new PyJavaFunctionObject(
                     getRuntime(),
                     this,
-                    defineCafeBabePyFunction.name(),
+                    definePyFunction.name(),
                     method);
 
             if (__call__.equals(f.getName())) {
@@ -147,7 +147,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
             getScope().put(f.getName(), f);
 
-            defineClassMemberNamesSet.add(defineCafeBabePyFunction.name());
+            defineClassMemberNamesSet.add(definePyFunction.name());
         }
     }
 }

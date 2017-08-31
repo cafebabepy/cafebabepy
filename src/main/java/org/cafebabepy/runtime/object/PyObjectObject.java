@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime.object;
 
-import org.cafebabepy.evaluter.Interpret.PyObjectMethodScope;
+import org.cafebabepy.runtime.object.proxy.PyMethodObjectScope;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
@@ -10,7 +10,7 @@ import org.cafebabepy.runtime.Python;
  */
 public class PyObjectObject extends AbstractPyObjectObject {
 
-    private volatile PyObjectMethodScope methodScope;
+    private volatile PyMethodObjectScope methodScope;
 
     public PyObjectObject(Python runtime, PyObject type) {
         super(runtime, type);
@@ -21,7 +21,7 @@ public class PyObjectObject extends AbstractPyObjectObject {
         if (this.methodScope == null) {
             synchronized (this) {
                 if (this.methodScope == null) {
-                    this.methodScope = new PyObjectMethodScope(this);
+                    this.methodScope = new PyMethodObjectScope(this);
                 }
             }
         }

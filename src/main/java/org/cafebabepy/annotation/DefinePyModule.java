@@ -10,12 +10,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface DefineCafeBabePyType {
+public @interface DefinePyModule {
 
-    // TODO 複数指定できるようにする
     String name();
-
-    String[] parent() default {"builtins.object"};
-
-    boolean appear() default true;
 }

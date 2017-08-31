@@ -7,10 +7,10 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.ValueError", parent = {"builtins.Exception"})
-public class PyValueErrorType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.IndentationError", parent = {"builtins.SyntaxError"})
+public class PyIndentationErrorType extends AbstractCafeBabePyType {
 
-    public PyValueErrorType(Python runtime) {
+    public PyIndentationErrorType(Python runtime) {
         super(runtime);
     }
 }

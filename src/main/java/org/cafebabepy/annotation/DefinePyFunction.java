@@ -9,8 +9,8 @@ import java.lang.annotation.Target;
  * Created by yotchang4s on 2017/05/12.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DefineCafeBabePyModule {
+@Target(ElementType.METHOD)
+public @interface DefinePyFunction {
 
     String name();
 }

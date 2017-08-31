@@ -98,7 +98,7 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
 
                 } else if (paramClasses.length != args.length) {
                     throw this.runtime.newRaiseException("builtins.TypeError",
-                            targetType.getName() + "() takes at most "
+                            this.name + "() takes at most "
                                     + paramClasses.length + " arguments (" + args.length + " given)");
 
                 } else {

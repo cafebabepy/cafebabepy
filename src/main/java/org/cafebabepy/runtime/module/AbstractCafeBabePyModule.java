@@ -1,24 +1,18 @@
 package org.cafebabepy.runtime.module;
 
-import org.cafebabepy.annotation.DefineCafeBabePyModule;
+import org.cafebabepy.annotation.DefinePyModule;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by yotchang4s on 2017/05/30.
  */
 public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
 
-    private final static String[] BASE_NAMES = {"builtins.object"};
+    private final static String[] BASE_NAMES = {"builtins.module"};
 
     private String name;
-
-    private volatile List<PyObject> types;
 
     protected AbstractCafeBabePyModule(Python runtime) {
         super(runtime, true);
@@ -30,30 +24,16 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public List<PyObject> getTypes() {
-        if (this.types == null) {
-            synchronized (this) {
-                if (this.types == null) {
-                    PyObject object = this.runtime.typeOrThrow("builtins.object");
-                    this.types = Arrays.asList(this, object);
-                    this.types = Collections.unmodifiableList(Collections.synchronizedList(this.types));
-                }
-            }
-        }
-        return this.types;
-    }
-
-    @Override
     public void defineClass() {
         Class<?> clazz = getClass();
 
-        DefineCafeBabePyModule defineCafeBabePyModule = clazz.getAnnotation(DefineCafeBabePyModule.class);
-        if (defineCafeBabePyModule == null) {
+        DefinePyModule definePyModule = clazz.getAnnotation(DefinePyModule.class);
+        if (definePyModule == null) {
             throw new CafeBabePyException(
-                    "DefineCafeBabePyModule or DefineCafeBabePyModule annotation is not defined " + clazz.getName());
+                    "DefinePyModule or DefinePyModule annotation is not defined " + clazz.getName());
         }
 
-        this.name = defineCafeBabePyModule.name();
+        this.name = definePyModule.name();
         this.runtime.defineModule(this);
     }
 

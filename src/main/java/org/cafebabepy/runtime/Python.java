@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.annotation.DefineCafeBabePyModule;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyModule;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
@@ -29,8 +29,6 @@ public final class Python {
     public static final String VERSION = "3.6.2.0";
 
     public static final String APPLICATION_NAME = "cafebabepy";
-
-    public static final String MAIN_MODULE_NAME = "__main__";
 
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
@@ -91,8 +89,8 @@ public final class Python {
 
         PyObject module = null;
         for (Class<?> c : builtinsClasses) {
-            DefineCafeBabePyModule defineCafeBabePyModule = c.getAnnotation(DefineCafeBabePyModule.class);
-            if (defineCafeBabePyModule == null || !PyObject.class.isAssignableFrom(c)) {
+            DefinePyModule definePyModule = c.getAnnotation(DefinePyModule.class);
+            if (definePyModule == null || !PyObject.class.isAssignableFrom(c)) {
                 continue;
             }
 
@@ -109,7 +107,7 @@ public final class Python {
 
             }
 
-            module = createType(clazz, defineCafeBabePyModule.name());
+            module = createType(clazz, definePyModule.name());
             module.preInitialize();
         }
 
@@ -121,21 +119,21 @@ public final class Python {
         Set<String> checkDuplicateTypes = new HashSet<>();
 
         for (Class<?> c : builtinsClasses) {
-            DefineCafeBabePyType defineCafeBabePyType = c.getAnnotation(DefineCafeBabePyType.class);
-            if (defineCafeBabePyType == null || !PyObject.class.isAssignableFrom(c)) {
+            DefinePyType definePyType = c.getAnnotation(DefinePyType.class);
+            if (definePyType == null || !PyObject.class.isAssignableFrom(c)) {
                 continue;
             }
 
             Class<PyObject> clazz = (Class<PyObject>) c;
 
-            PyObject type = createType(clazz, defineCafeBabePyType.name());
+            PyObject type = createType(clazz, definePyType.name());
             type.preInitialize();
 
-            if (checkDuplicateTypes.contains(defineCafeBabePyType.name())) {
-                throw new CafeBabePyException("Duplicate type '" + defineCafeBabePyType.name() + "'");
+            if (checkDuplicateTypes.contains(definePyType.name())) {
+                throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
             types.add(type);
-            checkDuplicateTypes.add(defineCafeBabePyType.name());
+            checkDuplicateTypes.add(definePyType.name());
         }
 
         module.postInitialize();
@@ -277,7 +275,7 @@ public final class Python {
         } else {
             return moduleOrThrow(splitLastDot[0])
                     .getScope()
-                    .getOrThrow(splitLastDot[1], appear);
+                    .getThisOnlyOrThrow(splitLastDot[1], appear);
         }
     }
 
@@ -294,7 +292,7 @@ public final class Python {
         } else {
             return module(splitDot[0]).
                     map(PyObject::getScope)
-                    .flatMap(scope -> scope.get(splitDot[1], appear));
+                    .flatMap(scope -> scope.getThisOnly(splitDot[1], appear));
         }
     }
 
@@ -416,6 +414,36 @@ public final class Python {
         List<PyObject> list = listObject.getRawList();
         for (int i = 0; i < list.size(); i++) {
             action.accept(list.get(i));
+        }
+    }
+
+    public PyObject getattr(PyObject object, String name) {
+        try {
+            return object.getScope().getOrThrow(name);
+
+        } catch (RaiseException e) {
+            Optional<PyObject> getattrOpt = object.getType().getScope().get(__getattr__);
+            if (getattrOpt.isPresent()) {
+                PyObject getattr = getattrOpt.get();
+                return getattr.call(object, str(name));
+
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public boolean hasattr(PyObject object, String name) {
+        try {
+            getattr(object, name);
+            return true;
+
+        } catch (RaiseException e) {
+            if (isInstance(e.getException(), "builtins.AttributeError")) {
+                return false;
+            }
+
+            throw e;
         }
     }
 

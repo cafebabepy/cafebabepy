@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.ast;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyModule;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyModule;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
@@ -12,14 +12,14 @@ import java.util.Map;
 /**
  * Created by yotchang4s on 2017/06/04.
  */
-@DefineCafeBabePyModule(name = "ast")
+@DefinePyModule(name = "ast")
 public class PyAstModule extends AbstractCafeBabePyModule {
 
     public PyAstModule(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = "iter_fields")
+    @DefinePyFunction(name = "iter_fields")
     public PyObject iter_fields(PyObject node) {
         Map<String, PyObject> objectMap = node.getScope().gets();
         Iterator<Map.Entry<String, PyObject>> objectIter = objectMap.entrySet().iterator();

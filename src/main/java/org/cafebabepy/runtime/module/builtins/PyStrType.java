@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -13,14 +13,14 @@ import static org.cafebabepy.util.ProtocolNames.__str__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefineCafeBabePyType(name = "builtins.str")
+@DefinePyType(name = "builtins.str")
 public final class PyStrType extends AbstractCafeBabePyType {
 
     public PyStrType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __str__)
+    @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
@@ -31,7 +31,7 @@ public final class PyStrType extends AbstractCafeBabePyType {
         return self;
     }
 
-    @DefineCafeBabePyFunction(name = __add__)
+    @DefinePyFunction(name = __add__)
     public PyObject __add__(PyObject self, PyObject other) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 

@@ -71,7 +71,7 @@ public class Main {
         PyObject ast = parser.parse(input);
 
         InterpretEvaluator evaluter = new InterpretEvaluator(runtime);
-        evaluter.eval(ast);
+        evaluter.evalMainModule(ast);
 
         long runTime = System.currentTimeMillis() - time;
 

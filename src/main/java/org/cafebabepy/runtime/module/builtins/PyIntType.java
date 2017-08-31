@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefineCafeBabePyFunction;
-import org.cafebabepy.annotation.DefineCafeBabePyType;
+import org.cafebabepy.annotation.DefinePyFunction;
+import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -13,14 +13,14 @@ import static org.cafebabepy.util.ProtocolNames.*;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefineCafeBabePyType(name = "builtins.int")
+@DefinePyType(name = "builtins.int")
 public final class PyIntType extends AbstractCafeBabePyType {
 
     public PyIntType(Python runtime) {
         super(runtime);
     }
 
-    @DefineCafeBabePyFunction(name = __int__)
+    @DefinePyFunction(name = __int__)
     public PyObject __int__(PyObject self) {
         PyObject intType = this.runtime.typeOrThrow("builtins.int");
 
@@ -32,7 +32,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return self;
     }
 
-    @DefineCafeBabePyFunction(name = __eq__)
+    @DefinePyFunction(name = __eq__)
     public PyObject __eq__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -42,7 +42,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).eq((PyIntObject) other);
     }
 
-    @DefineCafeBabePyFunction(name = __add__)
+    @DefinePyFunction(name = __add__)
     public PyObject __add__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -52,7 +52,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).add((PyIntObject) other);
     }
 
-    @DefineCafeBabePyFunction(name = __radd__)
+    @DefinePyFunction(name = __radd__)
     public PyObject __radd__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -62,7 +62,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).add((PyIntObject) self);
     }
 
-    @DefineCafeBabePyFunction(name = __sub__)
+    @DefinePyFunction(name = __sub__)
     public PyObject __sub__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -72,7 +72,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).sub((PyIntObject) other);
     }
 
-    @DefineCafeBabePyFunction(name = __rsub__)
+    @DefinePyFunction(name = __rsub__)
     public PyObject __rsub__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -82,7 +82,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).sub((PyIntObject) self);
     }
 
-    @DefineCafeBabePyFunction(name = __mod__)
+    @DefinePyFunction(name = __mod__)
     public PyObject __mod__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -92,7 +92,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).mod((PyIntObject) other);
     }
 
-    @DefineCafeBabePyFunction(name = __rmod__)
+    @DefinePyFunction(name = __rmod__)
     public PyObject __rmod__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -102,7 +102,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).mod((PyIntObject) self);
     }
 
-    @DefineCafeBabePyFunction(name = __mul__)
+    @DefinePyFunction(name = __mul__)
     public PyObject __mul__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -112,7 +112,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).mul((PyIntObject) other);
     }
 
-    @DefineCafeBabePyFunction(name = __rmul__)
+    @DefinePyFunction(name = __rmul__)
     public PyObject __rmul__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -122,7 +122,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).mul((PyIntObject) self);
     }
 
-    @DefineCafeBabePyFunction(name = __lt__)
+    @DefinePyFunction(name = __lt__)
     public PyObject __lt__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -132,7 +132,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).lt(((PyIntObject) other));
     }
 
-    @DefineCafeBabePyFunction(name = __rlt__)
+    @DefinePyFunction(name = __rlt__)
     public PyObject __rlt__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -142,7 +142,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).lt(((PyIntObject) self));
     }
 
-    @DefineCafeBabePyFunction(name = __le__)
+    @DefinePyFunction(name = __le__)
     public PyObject __le__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -152,7 +152,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).le(((PyIntObject) other));
     }
 
-    @DefineCafeBabePyFunction(name = __rle__)
+    @DefinePyFunction(name = __rle__)
     public PyObject __rle__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -162,7 +162,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).le(((PyIntObject) self));
     }
 
-    @DefineCafeBabePyFunction(name = __gt__)
+    @DefinePyFunction(name = __gt__)
     public PyObject __gt__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -172,7 +172,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).gt(((PyIntObject) other));
     }
 
-    @DefineCafeBabePyFunction(name = __rgt__)
+    @DefinePyFunction(name = __rgt__)
     public PyObject __rgt__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -182,7 +182,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).gt(((PyIntObject) self));
     }
 
-    @DefineCafeBabePyFunction(name = __ge__)
+    @DefinePyFunction(name = __ge__)
     public PyObject __ge__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -192,7 +192,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).ge(((PyIntObject) other));
     }
 
-    @DefineCafeBabePyFunction(name = __rge__)
+    @DefinePyFunction(name = __rge__)
     public PyObject __rge__(PyObject self, PyObject other) {
         PyObject result = check(self, other);
         if (result != null) {
@@ -202,7 +202,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).ge(((PyIntObject) self));
     }
 
-    @DefineCafeBabePyFunction(name = __neg__)
+    @DefinePyFunction(name = __neg__)
     public PyObject __neg__(PyObject self) {
         PyObject result = check(self);
         if (result != null) {
@@ -212,7 +212,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).neg();
     }
 
-    @DefineCafeBabePyFunction(name = __pos__)
+    @DefinePyFunction(name = __pos__)
     public PyObject __pos__(PyObject self) {
         PyObject result = check(self);
         if (result != null) {
@@ -222,7 +222,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).pos();
     }
 
-    @DefineCafeBabePyFunction(name = __invert__)
+    @DefinePyFunction(name = __invert__)
     public PyObject __invert__(PyObject self) {
         PyObject result = check(self);
         if (result != null) {
@@ -232,7 +232,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).invert();
     }
 
-    @DefineCafeBabePyFunction(name = __bool__)
+    @DefinePyFunction(name = __bool__)
     public PyObject __bool__(PyObject self) {
         PyObject result = check(self);
         if (result != null) {
