@@ -561,7 +561,7 @@ public final class Python {
                         + y.getType().getFullName()
                         + "'")
         );
-        PyObject result = operator.call(x, y);
+        PyObject result = operator.call(y);
 
         if (result.isNotImplemented()) {
             PyObject rop = y.getScope().getOrThrow(ropFunctionName);
