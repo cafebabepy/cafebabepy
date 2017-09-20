@@ -15,9 +15,4 @@ public class PyFalseObject extends PyBoolObject {
     public boolean isFalse() {
         return true;
     }
-
-    @Override
-    public String asJavaString() {
-        return "False";
-    }
 }

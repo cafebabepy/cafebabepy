@@ -75,7 +75,15 @@ public class PyIntObject extends AbstractPyObjectObject {
     }
 
     @Override
-    public String asJavaString() {
-        return String.valueOf(this.value);
+    @SuppressWarnings("unchecked")
+    public <T> T toJava(Class<T> clazz) {
+        if (int.class.isAssignableFrom(clazz) || Integer.class.isAssignableFrom(clazz)) {
+            return (T) Integer.valueOf(this.value);
+
+        } else if (String.class.isAssignableFrom(clazz)) {
+            return (T)String.valueOf(this.value);
+        }
+
+        return super.toJava(clazz);
     }
 }

@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 
 import static org.cafebabepy.util.ProtocolNames.__bool__;
+import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -28,5 +29,15 @@ public class PyNoneType extends AbstractCafeBabePyType {
         }
 
         return this.runtime.False();
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (self.getType() instanceof PyNoneType) {
+            return this.runtime.str("None");
+
+        } else {
+            return self.getScope().getOrThrow(__str__).call();
+        }
     }
 }

@@ -5,9 +5,13 @@ import org.cafebabepy.annotation.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.java.PyIntObject;
 import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
+import org.cafebabepy.runtime.object.java.PyIntObject;
 import org.cafebabepy.runtime.object.java.PyListObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -62,5 +66,18 @@ public class PyListType extends AbstractCafeBabePyType {
         }
 
         return new PyListIteratorObject(this.runtime, (PyListObject) self);
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        List<String> jlist = new ArrayList<>();
+        this.runtime.iter(self, v -> {
+            String jv = v.toJava(String.class);
+            jlist.add(jv);
+        });
+
+        String jstr = jlist.stream().collect(Collectors.joining(", ", "[", "]"));
+
+        return this.runtime.str(jstr);
     }
 }

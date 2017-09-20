@@ -242,6 +242,12 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).bool();
     }
 
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        check(self);
+        return this.runtime.str(self.toJava(String.class));
+    }
+
     private PyObject check(PyObject o) {
         PyObject intType = this.runtime.typeOrThrow("builtins.int");
 

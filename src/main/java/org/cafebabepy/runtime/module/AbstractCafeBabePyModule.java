@@ -38,11 +38,6 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public String asJavaString() {
-        return "<module '" + getFullName() + "' (built-in)>";
-    }
-
-    @Override
     public PyObject call(PyObject... args) {
         throw getRuntime().newRaiseTypeError("'" + getName() + "' object is not callable");
     }

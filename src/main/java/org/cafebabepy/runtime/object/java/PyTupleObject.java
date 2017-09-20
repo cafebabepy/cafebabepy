@@ -34,11 +34,4 @@ public class PyTupleObject extends AbstractPyObjectObject {
     public PyObject getLen() {
         return this.runtime.number(list.size());
     }
-
-    @Override
-    public String asJavaString() {
-        return this.list.stream()
-                .map(PyObject::asJavaString)
-                .collect(Collectors.joining(",", "(", ")"));
-    }
 }

@@ -6,6 +6,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.object.PyObjectObject;
+import org.cafebabepy.util.StringUtils;
 
 import java.util.Optional;
 
@@ -35,7 +36,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
-        PyObject v = self.getScope().getOrThrow(name.asJavaString());
+        PyObject v = self.getScope().getOrThrow(name.toJava(String.class));
 
         Optional<PyObject> getOpt = v.getScope().get(__get__);
         if (getOpt.isPresent()) {
@@ -57,12 +58,41 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             );
         }
 
-        self.getScope().put(name.asJavaString(), value);
+        self.getScope().put(name.toJava(String.class), value);
     }
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        return this.runtime.str(self.asJavaString());
+        if (self.isType()) {
+            String str;
+
+            String[] fullName = StringUtils.splitLastDot(self.getFullName());
+            if ("builtins".equals(fullName[0])) {
+                str = "<class '" + fullName[1] + "'>";
+
+            } else {
+                str = "<class '" + self.getFullName() + "'>";
+            }
+
+            return this.runtime.str(str);
+
+        } else if (self.isModule()) {
+            String str;
+
+            String moduleName = self.getFullName();
+            if ("builtins".equals(moduleName)) {
+                str = "<module '" + moduleName + "' (built-in)>";
+            } else {
+                // FIXME fromをどうする？
+                str = "<module '" + moduleName + "' from '" + "???" + "'>";
+            }
+
+            return this.runtime.str(str);
+        }
+
+        int hashCode = System.identityHashCode(self);
+
+        return this.runtime.str("<" + self.getFullName() + " object at 0x" + Integer.toHexString(hashCode) + ">");
     }
 
     @DefinePyFunction(name = __eq__)

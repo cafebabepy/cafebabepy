@@ -171,6 +171,21 @@ public final class Python {
         this.ellipsisObject = new PyEllipsisObject(this);
     }
 
+    public PyObject str(PyObject value) {
+        if (value.getType() instanceof PyStrObject) {
+            return value;
+        }
+
+        if (value.isType()) {
+            PyObject strFunc = typeOrThrow("builtins.object").getScope().getOrThrow(__str__);
+            return strFunc.call(value);
+
+        } else {
+            PyObject strMethod = value.getScope().getOrThrow(__str__);
+            return strMethod.call();
+        }
+    }
+
     public PyStrObject str(String value) {
         PyStrObject object = new PyStrObject(this, value);
         object.preInitialize();

@@ -41,15 +41,13 @@ public interface PyObject {
 
     boolean isEllipsis();
 
-    PyObject getStr();
-
-    String asJavaString();
-
     boolean isException();
 
     boolean isTrue();
 
     boolean isFalse();
+
+    <T> T toJava(Class<T> clazz);
 
     PyObject getCallable();
 

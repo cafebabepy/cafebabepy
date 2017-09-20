@@ -54,7 +54,7 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
     // FIXME Same CPython
     @DefinePyFunction(name = "print")
     public PyObject print(PyObject objects) {
-        System.out.println(objects.asJavaString());
+        System.out.println(objects.toJava(String.class));
 
         return this.runtime.None();
     }

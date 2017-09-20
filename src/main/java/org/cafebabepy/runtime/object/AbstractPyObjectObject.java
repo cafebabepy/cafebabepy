@@ -86,18 +86,6 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     }
 
     @Override
-    public String asJavaString() {
-        if (this.string == null) {
-            synchronized (this) {
-                int hashCode = System.identityHashCode(this);
-                this.string = "<" + getFullName() + " object at 0x" + Integer.toHexString(hashCode) + ">";
-            }
-        }
-
-        return this.string;
-    }
-
-    @Override
     public PyObject call(PyObject... args) {
         return getCallable().call(this, args);
     }

@@ -16,9 +16,4 @@ public class PyNotImplementedObject extends AbstractPyObjectObject {
     public boolean isNotImplemented() {
         return true;
     }
-
-    @Override
-    public String asJavaString() {
-        return "NotImplemented";
-    }
 }

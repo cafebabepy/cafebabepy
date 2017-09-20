@@ -16,9 +16,4 @@ public class PyNoneObject extends AbstractPyObjectObject {
     public boolean isNone() {
         return true;
     }
-
-    @Override
-    public String asJavaString() {
-        return "None";
-    }
 }

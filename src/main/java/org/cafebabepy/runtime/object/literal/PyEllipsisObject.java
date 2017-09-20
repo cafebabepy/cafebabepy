@@ -16,9 +16,4 @@ public class PyEllipsisObject extends AbstractPyObjectObject {
     public boolean isEllipsis() {
         return true;
     }
-
-    @Override
-    public String asJavaString() {
-        return "Ellipsis";
-    }
 }

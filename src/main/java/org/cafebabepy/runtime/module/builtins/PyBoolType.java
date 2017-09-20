@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 
 import static org.cafebabepy.util.ProtocolNames.__bool__;
+import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
  * Created by yotchang4s on 2017/06/07.
@@ -20,11 +21,26 @@ public class PyBoolType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __bool__)
     public PyObject __bool__(PyObject self) {
-        if(self.isFalse()) {
+        if (self.isFalse()) {
             return this.runtime.False();
 
         } else {
             return this.runtime.True();
+        }
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (self.getType() instanceof PyBoolType) {
+            if (self.isTrue()) {
+                return this.runtime.str("True");
+            } else {
+
+                return this.runtime.str("False");
+            }
+
+        } else {
+            return self.getScope().getOrThrow(__str__).call();
         }
     }
 }

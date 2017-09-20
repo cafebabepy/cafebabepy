@@ -99,7 +99,7 @@ public class InteractiveConsole {
 
                 } catch (RaiseException e) {
                     e.printStackTrace();
-                    this.consoleReader.println(e.getException().asJavaString());
+                    this.consoleReader.println(e.getException().toJava(String.class));
                     this.status = Status.READLINE;
                     buffer.setLength(0);
                     continue;
@@ -113,12 +113,12 @@ public class InteractiveConsole {
                 try {
                     result = evaluator.evalMainModule(ast);
                     if (!result.isNone()) {
-                        this.consoleReader.println(result.asJavaString());
+                        this.consoleReader.println(result.toJava(String.class));
                     }
 
                 } catch (RaiseException e) {
                     PyObject exception = e.getException();
-                    this.consoleReader.println(exception.asJavaString());
+                    this.consoleReader.println(exception.toJava(String.class));
                     this.consoleReader.println(e.getMessage());
                 }
             }

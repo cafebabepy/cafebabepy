@@ -21,7 +21,12 @@ public class PyStrObject extends AbstractPyObjectObject {
     }
 
     @Override
-    public String asJavaString() {
-        return this.value;
+    @SuppressWarnings("unchecked")
+    public <T> T toJava(Class<T> clazz) {
+        if (String.class.isAssignableFrom(clazz)) {
+            return (T) this.value;
+        }
+
+        return super.toJava(clazz);
     }
 }

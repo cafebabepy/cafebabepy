@@ -168,7 +168,7 @@ public class InterpretEvaluator {
         PyObject function = new PyInterpretFunctionObject(
                 this.runtime, this, context, args, body);
 
-        context.getScope().put(name.asJavaString(), function);
+        context.getScope().put(name.toJava(String.class), function);
 
         return this.runtime.None();
     }
@@ -183,14 +183,14 @@ public class InterpretEvaluator {
         List<PyObject> baseList = new ArrayList<>();
         Set<String> duplicateCheckSet = new LinkedHashSet<>();
         this.runtime.iter(bases, base -> {
-            boolean exists = !duplicateCheckSet.add(base.asJavaString());
+            boolean exists = !duplicateCheckSet.add(base.toJava(String.class));
             if (exists) {
                 throw this.runtime.newRaiseTypeError("duplicate base class " + base.getName());
             }
             baseList.add(base);
         });
 
-        String n = name.asJavaString();
+        String n = name.toJava(String.class);
         if (!context.isModule()) {
             n = context.getName() + "." + n;
         }
@@ -198,7 +198,7 @@ public class InterpretEvaluator {
         PyObject clazz = new PyInterpretClassObject(
                 this.runtime, context, n, baseList);
 
-        context.getScope().put(name.asJavaString(), clazz);
+        context.getScope().put(name.toJava(String.class), clazz);
 
         eval(clazz, body);
 
@@ -335,7 +335,7 @@ public class InterpretEvaluator {
     private void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = target.getScope().getOrThrow("id");
-            context.getScope().put(id.asJavaString(), evalValue);
+            context.getScope().put(id.toJava(String.class), evalValue);
 
         } else {
             LinkedHashMap<String, PyObject> assignMap = new LinkedHashMap<>();
@@ -355,13 +355,13 @@ public class InterpretEvaluator {
 
         if (targetType instanceof PyNameType) {
             PyObject id = target.getScope().getOrThrow("id");
-            assignMap.put(id.asJavaString(), evalValue);
+            assignMap.put(id.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
             PyObject attr = target.getScope().getOrThrow("attr");
             PyObject attributeContext = eval(context, target);
-            attributeContext.getScope().put(attr.asJavaString(), evalValue);
+            attributeContext.getScope().put(attr.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
@@ -459,7 +459,7 @@ public class InterpretEvaluator {
             PyObject id = target.getScope().getOrThrow("id");
             PyObject evalValue = eval(context, value);
 
-            context.getScope().put(id.asJavaString(), evalValue);
+            context.getScope().put(id.toJava(String.class), evalValue);
         }
 
         return this.runtime.None();
@@ -645,7 +645,7 @@ public class InterpretEvaluator {
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
             PyObject id = node.getScope().getOrThrow("id");
-            String name = id.asJavaString();
+            String name = id.toJava(String.class);
 
             return context.getScope().get(name).orElseThrow(() ->
                     this.runtime.newRaiseException("builtins.NameError",
@@ -677,7 +677,7 @@ public class InterpretEvaluator {
 
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
-            return evalValue.getScope().getOrThrow(attr.asJavaString());
+            return evalValue.getScope().getOrThrow(attr.toJava(String.class));
 
         } else if (ctxType instanceof PyStoreType) {
             return evalValue;

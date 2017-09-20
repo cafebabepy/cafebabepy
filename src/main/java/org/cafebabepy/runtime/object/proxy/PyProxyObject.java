@@ -104,16 +104,6 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public PyObject getStr() {
-        return this.source.getStr();
-    }
-
-    @Override
-    public String asJavaString() {
-        return this.source.asJavaString();
-    }
-
-    @Override
     public boolean isException() {
         return this.source.isException();
     }
@@ -126,6 +116,11 @@ public class PyProxyObject implements PyObject {
     @Override
     public boolean isFalse() {
         return this.source.isFalse();
+    }
+
+    @Override
+    public <T> T toJava(Class<T> clazz) {
+        return this.source.toJava(clazz);
     }
 
     @Override
