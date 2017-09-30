@@ -18,7 +18,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
     private PyObject body;
 
     PyInterpretFunctionObject(Python runtime, InterpretEvaluator evaluator, PyObject context, PyObject args, PyObject body) {
-        super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
+        super(runtime);
 
         this.evaluator = evaluator;
         this.context = context;
@@ -26,6 +26,11 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
         this.body = body;
 
         getScope().put(__call__, this);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.FunctionType");
     }
 
     @Override

@@ -167,7 +167,7 @@ public final class Python {
         this.noneObject = new PyNoneObject(this);
         this.trueObject = new PyTrueObject(this);
         this.falseObject = new PyFalseObject(this);
-        this.notImplementedTypeObject = new PyNotImplementedObject(this);
+        this.notImplementedObject = new PyNotImplementedObject(this);
         this.ellipsisObject = new PyEllipsisObject(this);
     }
 
@@ -264,8 +264,8 @@ public final class Python {
         return this.falseObject;
     }
 
-    public PyObject NotImplementedType() {
-        return this.notImplementedTypeObject;
+    public PyObject NotImplemented() {
+        return this.notImplementedObject;
     }
 
     public PyObject moduleOrThrow(String name) {
