@@ -12,16 +12,16 @@ import static org.cafebabepy.util.ProtocolNames.__str__;
  * Created by yotchang4s on 2017/05/13.
  */
 // TODO builtins????
-@DefinePyType(name = "builtins.NotImplemented", appear = false)
-public class PyNotImplementedType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.NotImplementedType", appear = false)
+public class PyNotImplementedTypeType extends AbstractCafeBabePyType {
 
-    public PyNotImplementedType(Python runtime) {
+    public PyNotImplementedTypeType(Python runtime) {
         super(runtime);
     }
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        if (self.getType() instanceof PyNotImplementedType) {
+        if (self.getType() instanceof PyNotImplementedTypeType) {
             return this.runtime.str("NotImplemented");
 
         } else {

@@ -97,11 +97,11 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __eq__)
     public PyObject __eq__(PyObject self, PyObject other) {
-        return this.runtime.NotImplementedType();
+        return this.runtime.NotImplemented();
     }
 
     @DefinePyFunction(name = __ne__)
     public PyObject __ne__(PyObject self, PyObject other) {
-        return this.runtime.NotImplementedType();
+        return this.runtime.NotImplemented();
     }
 }

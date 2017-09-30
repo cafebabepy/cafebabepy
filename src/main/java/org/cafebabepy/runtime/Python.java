@@ -43,7 +43,7 @@ public final class Python {
 
     private PyEllipsisObject ellipsisObject;
 
-    private PyNotImplementedObject notImplementedTypeObject;
+    private PyNotImplementedObject notImplementedObject;
 
     private Python() {
         this.moduleMap = new ConcurrentHashMap<>();

@@ -12,20 +12,20 @@ import static org.cafebabepy.util.ProtocolNames.__str__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.None", appear = false)
-public class PyNoneType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.NoneType", appear = false)
+public class PyNoneTypeType extends AbstractCafeBabePyType {
 
-    public PyNoneType(Python runtime) {
+    public PyNoneTypeType(Python runtime) {
         super(runtime);
     }
 
     @DefinePyFunction(name = __bool__)
     public PyObject __bool__(PyObject self) {
-        PyObject noneType = this.runtime.typeOrThrow("builtins.None", false);
+        PyObject noneType = this.runtime.typeOrThrow("builtins.NoneType", false);
 
         if (this.runtime.callFunction("builtins.isinstance", self, noneType).isFalse()) {
             throw this.runtime.newRaiseTypeError(
-                    "'__bool__' requires a 'None' object but received a '" + self.getFullName() + "'");
+                    "'__bool__' requires a 'NoneType' object but received a '" + self.getFullName() + "'");
         }
 
         return this.runtime.False();
@@ -33,7 +33,7 @@ public class PyNoneType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        if (self.getType() instanceof PyNoneType) {
+        if (self.getType() instanceof PyNoneTypeType) {
             return this.runtime.str("None");
 
         } else {

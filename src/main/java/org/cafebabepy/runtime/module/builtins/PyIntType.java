@@ -270,7 +270,7 @@ public final class PyIntType extends AbstractCafeBabePyType {
                     "descriptor '__int__' requires a 'int' object but received a '" + o1.getFullName() + "'");
 
         } else if (!this.runtime.isInstance(o2, intType)) {
-            return this.runtime.NotImplementedType();
+            return this.runtime.NotImplemented();
 
         } else if (!(o1 instanceof PyIntObject) || !(o2 instanceof PyIntObject)) {
             throw new CafeBabePyException("int '" + o2.getFullName() + "' object is not PyIntObject");
