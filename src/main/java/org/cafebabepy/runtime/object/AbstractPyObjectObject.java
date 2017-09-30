@@ -13,20 +13,11 @@ import java.util.List;
  */
 public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
-    protected final PyObject type;
-
-    private volatile String string;
-
     private PyObjectScope scope;
 
-    protected AbstractPyObjectObject(Python runtime, PyObject type) {
+    protected AbstractPyObjectObject(Python runtime) {
         super(runtime, true);
 
-        if (!type.isType()) {
-            this.runtime.newRaiseTypeError("'" + type.getFullName() + "' is not type");
-        }
-
-        this.type = type;
         this.scope = new PyMethodObjectScope(this);
     }
 

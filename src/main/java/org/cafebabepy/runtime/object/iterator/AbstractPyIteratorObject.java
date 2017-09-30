@@ -12,15 +12,13 @@ import java.util.Iterator;
 /**
  * Created by yotchang4s on 2017/06/22.
  */
-class AbstractPyIteratorObject extends AbstractPyObjectObject {
+abstract class AbstractPyIteratorObject extends AbstractPyObjectObject {
 
     private final Collection<PyObject> collection;
     private final Iterator<PyObject> iterator;
 
-    AbstractPyIteratorObject(Python runtime,
-                             PyObject type,
-                             Collection<PyObject> collection) {
-        super(runtime, type);
+    AbstractPyIteratorObject(Python runtime, Collection<PyObject> collection) {
+        super(runtime);
 
         this.collection = Collections.unmodifiableCollection(new ArrayList<>(collection));
         this.iterator = collection.iterator();

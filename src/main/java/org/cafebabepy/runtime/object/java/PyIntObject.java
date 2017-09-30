@@ -13,7 +13,7 @@ public class PyIntObject extends AbstractPyObjectObject {
     private final int value;
 
     public PyIntObject(Python runtime, int value) {
-        super(runtime, runtime.typeOrThrow("builtins.int"));
+        super(runtime);
 
         this.value = value;
     }
@@ -72,6 +72,11 @@ public class PyIntObject extends AbstractPyObjectObject {
 
     public PyObject neg() {
         return this.runtime.number(-this.value);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.int");
     }
 
     @Override

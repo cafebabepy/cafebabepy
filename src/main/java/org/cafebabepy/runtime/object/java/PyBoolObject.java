@@ -9,7 +9,12 @@ import org.cafebabepy.runtime.object.AbstractPyObjectObject;
  */
 public abstract class PyBoolObject extends AbstractPyObjectObject {
 
-    PyBoolObject(Python runtime, PyObject type) {
-        super(runtime, type);
+    PyBoolObject(Python runtime) {
+        super(runtime);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.bool");
     }
 }

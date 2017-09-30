@@ -16,6 +16,11 @@ public class PyTupleIteratorObject extends AbstractPyIteratorObject {
     }
 
     public PyTupleIteratorObject(Python runtime, Collection<PyObject> collection) {
-        super(runtime, runtime.typeOrThrow("builtins.tuple_iterator", false), collection);
+        super(runtime, collection);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.tuple_iterator", false);
     }
 }

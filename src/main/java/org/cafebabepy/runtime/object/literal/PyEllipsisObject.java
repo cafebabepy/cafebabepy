@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime.object.literal;
 
+import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
@@ -9,7 +10,12 @@ import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 public class PyEllipsisObject extends AbstractPyObjectObject {
 
     public PyEllipsisObject(Python runtime) {
-        super(runtime, runtime.typeOrThrow("builtins.Ellipsis"));
+        super(runtime);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.Ellipsis");
     }
 
     @Override

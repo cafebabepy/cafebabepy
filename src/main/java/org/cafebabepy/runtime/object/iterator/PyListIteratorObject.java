@@ -16,6 +16,11 @@ public class PyListIteratorObject extends AbstractPyIteratorObject {
     }
 
     public PyListIteratorObject(Python runtime, Collection<PyObject> collection) {
-        super(runtime, runtime.typeOrThrow("builtins.list_iterator", false), collection);
+        super(runtime, collection);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.list_iterator", false);
     }
 }

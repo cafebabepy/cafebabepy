@@ -17,7 +17,7 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
     private final PyObjectScope scope;
 
     public PyMethodTypeObject(Python runtime, PyObject source, PyObject function) {
-        super(runtime, runtime.typeOrThrow("types.MethodType"));
+        super(runtime);
 
         this.source = source;
         this.function = function;
@@ -28,6 +28,11 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
     @Override
     public PyObject call(PyObject... args) {
         return this.function.call(this.source, args);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("types.MethodType");
     }
 
     @Override

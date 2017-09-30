@@ -18,13 +18,18 @@ public class PyGeneratorObject extends AbstractPyObjectObject {
     private final Function<YieldStopper, PyObject> iter;
 
     public PyGeneratorObject(Python runtime, Function<YieldStopper, PyObject> iter) {
-        super(runtime, runtime.typeOrThrow("builtins.generator", false));
+        super(runtime);
 
         this.iter = iter;
     }
 
     public final PyObject next() {
         return this.iter.apply(YIELD_STOPPER);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.generator", false);
     }
 
     public final static class YieldStopper {

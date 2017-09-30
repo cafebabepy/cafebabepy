@@ -16,7 +16,7 @@ public class PyRangeIteratorObject extends AbstractPyObjectObject {
     private int i;
 
     public PyRangeIteratorObject(Python runtime, int start, int stop, int step) {
-        super(runtime, runtime.typeOrThrow("builtins.range_iterator", false));
+        super(runtime);
 
         this.start = start;
         this.stop = stop;
@@ -46,5 +46,10 @@ public class PyRangeIteratorObject extends AbstractPyObjectObject {
         } else {
             throw this.runtime.newRaiseException("builtins.StopIteration");
         }
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.range_iterator", false);
     }
 }

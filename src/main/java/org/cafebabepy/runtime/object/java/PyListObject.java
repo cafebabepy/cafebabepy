@@ -18,7 +18,7 @@ public class PyListObject extends AbstractPyObjectObject {
     private final List<PyObject> list;
 
     public PyListObject(Python runtime, PyObject... value) {
-        super(runtime, runtime.typeOrThrow("builtins.list"));
+        super(runtime);
 
         this.list = new ArrayList<>(Arrays.asList(value));
     }
@@ -37,5 +37,10 @@ public class PyListObject extends AbstractPyObjectObject {
 
     public PyObject getLen() {
         return this.runtime.number(list.size());
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.list");
     }
 }

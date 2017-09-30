@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime.object.java;
 
+import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
@@ -11,13 +12,18 @@ public class PyStrObject extends AbstractPyObjectObject {
     private final String value;
 
     public PyStrObject(Python runtime, String value) {
-        super(runtime, runtime.typeOrThrow("builtins.str"));
+        super(runtime);
 
         this.value = value;
     }
 
     public PyStrObject add(PyStrObject str) {
         return this.runtime.str(this.value + str.value);
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.str");
     }
 
     @Override

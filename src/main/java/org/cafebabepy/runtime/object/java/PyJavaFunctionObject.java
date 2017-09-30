@@ -23,7 +23,7 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
     private final Method method;
 
     public PyJavaFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
-        super(runtime, runtime.typeOrThrow("builtins.FunctionType"));
+        super(runtime);
 
         this.targetType = targetType;
         this.name = name;
@@ -142,6 +142,11 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
 
             throw new CafeBabePyException(targetException);
         }
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.FunctionType");
     }
 
     @Override

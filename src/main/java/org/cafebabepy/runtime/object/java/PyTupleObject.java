@@ -18,7 +18,7 @@ public class PyTupleObject extends AbstractPyObjectObject {
     private final List<PyObject> list;
 
     public PyTupleObject(Python runtime, PyObject... value) {
-        super(runtime, runtime.typeOrThrow("builtins.tuple"));
+        super(runtime);
 
         this.list = Collections.unmodifiableList(Arrays.asList(value));
     }
@@ -33,5 +33,10 @@ public class PyTupleObject extends AbstractPyObjectObject {
 
     public PyObject getLen() {
         return this.runtime.number(list.size());
+    }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("builtins.tuple");
     }
 }
