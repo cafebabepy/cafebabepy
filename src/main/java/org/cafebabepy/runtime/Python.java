@@ -301,6 +301,10 @@ public final class Python {
         return this.objectObject;
     }
 
+    public PyObject Type() {
+        return this.typeObject;
+    }
+
     public PyObject None() {
         return this.noneObject;
     }
