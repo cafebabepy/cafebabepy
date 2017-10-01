@@ -2,6 +2,13 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.annotation.DefinePyModule;
 import org.cafebabepy.annotation.DefinePyType;
+import org.cafebabepy.runtime.module.PyMainModule;
+import org.cafebabepy.runtime.module._ast.PyAstModule;
+import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;
+import org.cafebabepy.runtime.module.builtins.PyObjectType;
+import org.cafebabepy.runtime.module.builtins.PyTypeType;
+import org.cafebabepy.runtime.module.types.PyMethodTypeType;
+import org.cafebabepy.runtime.module.types.PyTypesModule;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
@@ -35,6 +42,8 @@ public final class Python {
 
     private PyObject objectObject;
 
+    private PyObject typeObject;
+
     private PyNoneObject noneObject;
 
     private PyBoolObject trueObject;
@@ -57,11 +66,11 @@ public final class Python {
     }
 
     private void initialize() {
-        initializeBuiltins("org.cafebabepy.runtime.module.builtins");
-        initializeBuiltins("org.cafebabepy.runtime.module.types");
-        initializeBuiltins("org.cafebabepy.runtime.module");
+        initializeBootstrap();
 
-        initializeBuiltins("org.cafebabepy.runtime.module._ast");
+        initializeModuleAndTypes(PyTypesModule.class);
+        initializeModuleAndTypes(PyMainModule.class);
+        initializeModuleAndTypes(PyAstModule.class);
 
         initializeObjects();
 
@@ -75,44 +84,79 @@ public final class Python {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void initializeBuiltins(String packageName) {
-        Set<Class<?>> builtinsClasses;
+    private void initializeBootstrap() {
+        Class<PyBuiltinsModule> builtinsModuleClass = PyBuiltinsModule.class;
+        DefinePyModule defineBuiltinsModule = builtinsModuleClass.getAnnotation(DefinePyModule.class);
+        if (defineBuiltinsModule == null) {
+            throw new CafeBabePyException("'" + builtinsModuleClass.getName() + "' module is not found");
+        }
+        PyObject builtinsModule = createType(builtinsModuleClass, defineBuiltinsModule.name());
 
-        // FIXME 本当は form builtins import * の形にしたい
+        Class<PyObjectType> objectClass = PyObjectType.class;
+        DefinePyType defineObjectType = objectClass.getAnnotation(DefinePyType.class);
+        if (defineObjectType == null) {
+            throw new CafeBabePyException("'" + objectClass.getName() + "' type is not found");
+        }
+        PyObject objectType = createType(objectClass, defineObjectType.name());
+
+        Class<PyTypeType> typeClass = PyTypeType.class;
+        DefinePyType defineTypeType = typeClass.getAnnotation(DefinePyType.class);
+        if (defineTypeType == null) {
+            throw new CafeBabePyException("'" + typeClass.getName() + "' type is not found");
+        }
+        PyObject typeType = createType(typeClass, defineTypeType.name());
+
+        Class<PyTypesModule> typesModuleClass = PyTypesModule.class;
+        DefinePyModule defineTypesModule = typesModuleClass.getAnnotation(DefinePyModule.class);
+        if (defineTypesModule == null) {
+            throw new CafeBabePyException("'" + typesModuleClass.getName() + "' module is not found");
+        }
+        PyObject typesModule = createType(typesModuleClass, defineTypesModule.name());
+
+
+        Class<PyMethodTypeType> methodTypeClass = PyMethodTypeType.class;
+        DefinePyType defineMethodTypeType = methodTypeClass.getAnnotation(DefinePyType.class);
+        if (defineMethodTypeType == null) {
+            throw new CafeBabePyException("'" + methodTypeClass.getName() + "' type is not found");
+        }
+        PyObject methodTypeType = createType(methodTypeClass, defineMethodTypeType.name());
+
+        builtinsModule.preInitialize();
+        objectType.preInitialize();
+        typeType.preInitialize();
+        typesModule.preInitialize();
+        methodTypeType.preInitialize();
+
+        typeType.postInitialize();
+        objectType.postInitialize();
+        builtinsModule.postInitialize();
+        typesModule.postInitialize();
+        methodTypeType.postInitialize();
+
+        initializeTypes(builtinsModuleClass, PyTypeType.class);
+        initializeTypes(typesModuleClass, PyMethodTypeType.class);
+    }
+
+    private void initializeModuleAndTypes(Class<? extends PyObject> moduleClass) {
+
+        DefinePyModule definePyModule = moduleClass.getAnnotation(DefinePyModule.class);
+        if (definePyModule == null) {
+            throw new CafeBabePyException("'" + moduleClass.getName() + "' module is not found");
+        }
+
+        PyObject module = createType(moduleClass, definePyModule.name());
+        module.preInitialize();
+        initializeTypes(moduleClass);
+        module.postInitialize();
+    }
+
+    private void initializeTypes(Class<? extends PyObject> module, Class<? extends PyObject>... ignores) {
+        Set<Class<?>> builtinsClasses;
         try {
-            builtinsClasses = ReflectionUtils.getClasses(packageName);
+            builtinsClasses = ReflectionUtils.getClasses(module.getPackage().getName());
 
         } catch (IOException e) {
-            throw new CafeBabePyException("Fail initialize package '" + packageName + "'");
-        }
-
-        PyObject module = null;
-        for (Class<?> c : builtinsClasses) {
-            DefinePyModule definePyModule = c.getAnnotation(DefinePyModule.class);
-            if (definePyModule == null || !PyObject.class.isAssignableFrom(c)) {
-                continue;
-            }
-
-            Class<PyObject> clazz = (Class<PyObject>) c;
-
-            // Check duplicate module
-            if (module != null) {
-                throw new CafeBabePyException(
-                        "Duplicate module '"
-                                + clazz.getName()
-                                + "' and '"
-                                + module.getClass().getName()
-                                + "'");
-
-            }
-
-            module = createType(clazz, definePyModule.name());
-            module.preInitialize();
-        }
-
-        if (module == null) {
-            throw new CafeBabePyException("'" + packageName + "' module not found");
+            throw new CafeBabePyException("Fail initialize package '" + module.getPackage().getName() + "'");
         }
 
         Set<PyObject> types = new HashSet<>();
@@ -123,6 +167,11 @@ public final class Python {
             if (definePyType == null || !PyObject.class.isAssignableFrom(c)) {
                 continue;
             }
+            for (Class<? extends PyObject> ignore : ignores) {
+                if (c.equals(ignore)) {
+                    continue;
+                }
+            }
 
             Class<PyObject> clazz = (Class<PyObject>) c;
 
@@ -132,20 +181,20 @@ public final class Python {
             if (checkDuplicateTypes.contains(definePyType.name())) {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
+
             types.add(type);
+
             checkDuplicateTypes.add(definePyType.name());
         }
-
-        module.postInitialize();
 
         for (PyObject type : types) {
             type.postInitialize();
         }
     }
 
-    private PyObject createType(Class<PyObject> clazz, String typeFullName) {
+    private PyObject createType(Class<? extends PyObject> clazz, String typeFullName) {
         try {
-            Constructor<PyObject> constructor = clazz.getConstructor(Python.class);
+            Constructor<? extends PyObject> constructor = clazz.getConstructor(Python.class);
             constructor.setAccessible(true);
 
             return constructor.newInstance(this);
@@ -160,15 +209,19 @@ public final class Python {
     }
 
     private void initializeObjects() {
-        this.objectObject = type("builtins.object")
-                .map(c -> c.call())
-                .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
-
         this.noneObject = new PyNoneObject(this);
         this.trueObject = new PyTrueObject(this);
         this.falseObject = new PyFalseObject(this);
         this.notImplementedObject = new PyNotImplementedObject(this);
         this.ellipsisObject = new PyEllipsisObject(this);
+
+        this.objectObject = type("builtins.object")
+                .map(c -> c.call())
+                .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
+
+        this.typeObject = type("builtins.type")
+                .map(c -> c.call())
+                .orElseThrow(() -> new CafeBabePyException("'type' is not found"));
     }
 
     public PyObject str(PyObject value) {
