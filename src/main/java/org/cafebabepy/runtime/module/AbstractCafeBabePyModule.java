@@ -19,7 +19,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    String[] getBaseNames() {
+    final String[] getBaseNames() {
         return BASE_NAMES;
     }
 
@@ -38,32 +38,32 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public PyObject call(PyObject... args) {
-        throw getRuntime().newRaiseTypeError("'" + getName() + "' object is not callable");
-    }
-
-    @Override
     public PyObject getType() {
         return this.runtime.typeOrThrow("builtins.module", false);
     }
 
     @Override
-    public PyObject getModule() {
+    public final PyObject getModule() {
         return this;
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return this.name;
     }
 
     @Override
-    public boolean isType() {
+    public final boolean isType() {
         return false;
     }
 
     @Override
-    public boolean isModule() {
+    public final boolean isModule() {
         return true;
+    }
+
+    @Override
+    public final PyObject call(PyObject... args) {
+        throw getRuntime().newRaiseTypeError("'" + getFullName() + "' object is not callable");
     }
 }

@@ -25,7 +25,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    String[] getBaseNames() {
+    final String[] getBaseNames() {
         return this.baseNames;
     }
 
@@ -55,7 +55,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public PyObject getType() {
+    public final PyObject getType() {
         return this.runtime.typeOrThrow("builtins.type");
     }
 
@@ -70,12 +70,12 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public boolean isType() {
+    public final boolean isType() {
         return true;
     }
 
     @Override
-    public boolean isModule() {
+    public final boolean isModule() {
         return false;
     }
 
@@ -83,7 +83,6 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     public PyObject call(PyObject... args) {
         return getCallable().call(args);
     }
-
     @DefinePyFunction(name = __call__)
     public PyObject __call__(PyObject... args) {
         PyObject object = getScope().getOrThrow(__new__).call(this);

@@ -27,6 +27,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         if (!cls.isType()) {
             throw this.runtime.newRaiseTypeError("object.__new__(X): X is not a type object (" + cls.getFullName() + ")");
         }
+
         return new PyObjectObject(this.runtime, cls);
     }
 

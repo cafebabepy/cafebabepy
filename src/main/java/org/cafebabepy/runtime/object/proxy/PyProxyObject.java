@@ -139,47 +139,72 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2) {
         return this.source.call(arg1, arg2);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3) {
         return this.source.call(arg1, arg2, arg3);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3, PyObject arg4) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4) {
         return this.source.call(arg1, arg2, arg3, arg4);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3, PyObject arg4, PyObject arg5) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4,
+                         PyObject arg5) {
         return this.source.call(arg1, arg2, arg3, arg4, arg5);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject... args) {
+    public PyObject call(PyObject arg1,
+                         PyObject... args) {
         return this.source.call(arg1, args);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject... args) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject... args) {
         return this.source.call(arg1, arg2, args);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3, PyObject... args) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject... args) {
         return this.source.call(arg1, arg2, arg3, args);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3, PyObject arg4, PyObject... args) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4,
+                         PyObject... args) {
         return this.source.call(arg1, arg2, arg3, arg4, args);
     }
 
     @Override
-    public PyObject call(PyObject arg1, PyObject arg2, PyObject arg3, PyObject arg4, PyObject arg5, PyObject... args) {
+    public PyObject call(PyObject arg1,
+                         PyObject arg2,
+                         PyObject arg3,
+                         PyObject arg4,
+                         PyObject arg5,
+                         PyObject... args) {
         return this.source.call(arg1, arg2, arg3, arg4, arg5, args);
     }
 
