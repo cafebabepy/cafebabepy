@@ -54,7 +54,7 @@ public class PySuperType extends AbstractCafeBabePyType {
                         "'" + self.getFullName() + "' object has no attribute '_proxy_object'"));
 
         PyObject selfProxy;
-        List<PyObject> types = object.getTypes();
+        List<PyObject> types = object.getType().getTypes();
         if (types.size() == 1) {
             selfProxy = types.get(0);
 
