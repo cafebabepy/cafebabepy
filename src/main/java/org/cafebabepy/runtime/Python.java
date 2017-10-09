@@ -40,10 +40,6 @@ public final class Python {
     // FIXME sys.modulesに持って行きたい
     private Map<String, PyObject> moduleMap;
 
-    private PyObject objectObject;
-
-    private PyObject typeObject;
-
     private PyNoneObject noneObject;
 
     private PyBoolObject trueObject;
@@ -214,14 +210,6 @@ public final class Python {
         this.falseObject = new PyFalseObject(this);
         this.notImplementedObject = new PyNotImplementedObject(this);
         this.ellipsisObject = new PyEllipsisObject(this);
-
-        this.objectObject = type("builtins.object")
-                .map(c -> c.call())
-                .orElseThrow(() -> new CafeBabePyException("'object' is not found"));
-
-        this.typeObject = type("builtins.type")
-                .map(c -> c.call())
-                .orElseThrow(() -> new CafeBabePyException("'type' is not found"));
     }
 
     public PyObject str(PyObject value) {
@@ -295,14 +283,6 @@ public final class Python {
         object.postInitialize();
 
         return object;
-    }
-
-    public PyObject Object() {
-        return this.objectObject;
-    }
-
-    public PyObject Type() {
-        return this.typeObject;
     }
 
     public PyObject None() {

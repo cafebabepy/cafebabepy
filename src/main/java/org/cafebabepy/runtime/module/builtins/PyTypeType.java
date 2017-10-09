@@ -27,7 +27,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject key) {
-        PyObject getattribute = this.runtime.Object().getScope().getOrThrow(__getattribute__);
+        PyObject getattribute = this.runtime.typeOrThrow("builtins.object").getScope().getOrThrow(__getattribute__);
         PyObject v = getattribute.call(self, key);
 
         Optional<PyObject> getOpt = v.getScope().get(__get__);
