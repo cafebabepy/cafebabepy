@@ -8,6 +8,8 @@ import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
@@ -132,7 +134,10 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
             // FIXME CPython message???
             throw new CafeBabePyException("Not accessible method "
                     + this.method.getDeclaringClass().getName()
-                    + "#" + method.getName(), e);
+                    + "#" + this.method.getName()
+                    + Arrays.stream(this.method.getParameterTypes())
+                    .map(Class::getName)
+                    .collect(Collectors.joining(", ", " (", ")")), e);
 
         } catch (InvocationTargetException e) {
             Throwable targetException = e.getTargetException();
