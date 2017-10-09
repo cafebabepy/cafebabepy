@@ -21,7 +21,7 @@ public class PyNotImplementedTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        if (self.getType() instanceof PyNotImplementedTypeType) {
+        if (this.runtime.isInstance(self, "builtins.NotImplementedType")) {
             return this.runtime.str("NotImplemented");
 
         } else {
