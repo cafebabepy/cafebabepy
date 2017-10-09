@@ -100,7 +100,7 @@ public class PyObjectScope {
             return objectOpt.get();
         }
 
-        throw newNotFoundException(this.source, name);
+        throw newNotFoundException(getSource(), name);
     }
 
     public final Optional<PyObject> get(String name) {
@@ -113,18 +113,29 @@ public class PyObjectScope {
             return objectOpt;
         }
 
-        for (PyObject type : this.source.getTypes()) {
+        // sub tree
+        for (PyObject type : getSource().getTypes()) {
             Optional<PyObject> typeObject = type.getScope().getThisOnly(name, appear);
             if (typeObject.isPresent()) {
                 return typeObject;
             }
         }
 
-        // not self
-        PyObjectScope sourceScope = this.source.getScope();
-        if (sourceScope != this) {
+        // type
+        if(!getSource().getRuntime().isInstance(getSource(), "builtins.type")) {
+            Optional<PyObject> typeObject =
+                    getSource().getRuntime().typeOrThrow("builtins.type").getScope().get(name, appear);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        // parent context
+        PyObjectScope sourceScope = getSource().getScope();
+        if (sourceScope != this) { // not self
             return sourceScope.get(name, appear);
         }
+
         return Optional.empty();
     }
 
@@ -138,7 +149,7 @@ public class PyObjectScope {
             return objectOpt.get();
         }
 
-        throw newNotFoundException(this.source, name);
+        throw newNotFoundException(getSource(), name);
     }
 
     public Optional<PyObject> getAppearOnly(String name) {
@@ -161,7 +172,7 @@ public class PyObjectScope {
         if (this.objectMap != null && this.objectMap.containsKey(name)) {
             return true;
         }
-        if (appear) {
+        if (!appear) {
             if (this.notAppearObjectMap != null && this.notAppearObjectMap.containsKey(name)) {
                 return true;
             }
@@ -171,17 +182,17 @@ public class PyObjectScope {
     }
 
     private RaiseException newNotFoundException(PyObject source, String name) {
-        if (this.source.isModule()) {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "module '" + this.source.getName() + "' has no attribute '" + name + "'");
+        if (source.isModule()) {
+            throw source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "module '" + source.getName() + "' has no attribute '" + name + "'");
 
-        } else if (this.source.isType()) {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '" + this.source.getName() + "' has no attribute '" + name + "'");
+        } else if (source.isType()) {
+            throw source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "type object '" + source.getName() + "' has no attribute '" + name + "'");
 
         } else {
-            throw this.source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + this.source.getName() + "' object has no attribute '" + name + "'");
+            throw source.getRuntime().newRaiseException("builtins.AttributeError",
+                    "'" + source.getName() + "' object has no attribute '" + name + "'");
 
         }
     }

@@ -80,6 +80,7 @@ public final class Python {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void initializeBootstrap() {
         Class<PyBuiltinsModule> builtinsModuleClass = PyBuiltinsModule.class;
         DefinePyModule defineBuiltinsModule = builtinsModuleClass.getAnnotation(DefinePyModule.class);
@@ -133,8 +134,8 @@ public final class Python {
         initializeTypes(typesModuleClass, PyMethodTypeType.class);
     }
 
+    @SuppressWarnings("unchecked")
     private void initializeModuleAndTypes(Class<? extends PyObject> moduleClass) {
-
         DefinePyModule definePyModule = moduleClass.getAnnotation(DefinePyModule.class);
         if (definePyModule == null) {
             throw new CafeBabePyException("'" + moduleClass.getName() + "' module is not found");
@@ -146,6 +147,7 @@ public final class Python {
         module.postInitialize();
     }
 
+    @SuppressWarnings("unchecked")
     private void initializeTypes(Class<? extends PyObject> module, Class<? extends PyObject>... ignores) {
         Set<Class<?>> builtinsClasses;
         try {
@@ -213,7 +215,7 @@ public final class Python {
     }
 
     public PyObject str(PyObject value) {
-        if (value.getType() instanceof PyStrObject) {
+        if (value instanceof PyStrObject) {
             return value;
         }
 
@@ -322,13 +324,12 @@ public final class Python {
         String[] splitLastDot = StringUtils.splitLastDot(name);
 
         if (StringUtils.isEmpty(splitLastDot[0])) {
-            return moduleOrThrow(splitLastDot[1]);
-
-        } else {
-            return moduleOrThrow(splitLastDot[0])
-                    .getScope()
-                    .getThisOnlyOrThrow(splitLastDot[1], appear);
+            throw new CafeBabePyException("'" + name + "' is not type");
         }
+
+        return moduleOrThrow(splitLastDot[0])
+                .getScope()
+                .getThisOnlyOrThrow(splitLastDot[1], appear);
     }
 
     public Optional<PyObject> type(String name) {
@@ -339,13 +340,13 @@ public final class Python {
         String[] splitDot = StringUtils.splitLastDot(name);
 
         if (StringUtils.isEmpty(splitDot[0])) {
-            return module(splitDot[1]);
+            throw new CafeBabePyException("'" + name + "' is not type");
 
-        } else {
-            return module(splitDot[0]).
-                    map(PyObject::getScope)
-                    .flatMap(scope -> scope.getThisOnly(splitDot[1], appear));
         }
+
+        return module(splitDot[0])
+                .map(PyObject::getScope)
+                .flatMap(scope -> scope.getThisOnly(splitDot[1], appear));
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
@@ -363,11 +364,11 @@ public final class Python {
                     "name '" + splitLastDot[1] + "'is not defined");
         }
 
-        PyObject object = moduleOrThrow(splitLastDot[0])
+        PyObject function = moduleOrThrow(splitLastDot[0])
                 .getScope()
                 .getOrThrow(splitLastDot[1]);
 
-        return object.call(args);
+        return function.call(args);
     }
 
     public void iterIndex(PyObject object, BiConsumer<PyObject, Integer> action) {
@@ -662,21 +663,18 @@ public final class Python {
         return object.getScope().get(__iter__).map(x -> true).orElse(false);
     }
 
+    public RaiseException newRaiseTypeError(String message) {
+        return newRaiseException("builtins.TypeError", message);
+    }
+
     public RaiseException newRaiseException(String exceptionType) {
-        PyObject type = typeOrThrow(exceptionType);
-        PyObject e = type.call();
+        PyObject e = newPyObject(exceptionType);
 
         return new RaiseException(e);
     }
 
-    public RaiseException newRaiseTypeError(String message) {
-        PyObject typeErrorType = typeOrThrow("builtins.TypeError");
-        return new RaiseException(typeErrorType, message);
-    }
-
     public RaiseException newRaiseException(String exceptionType, String message) {
-        PyObject type = typeOrThrow(exceptionType);
-        PyObject e = type.call(str(message));
+        PyObject e = newPyObject(exceptionType, str(message));
 
         return new RaiseException(e, message);
     }
