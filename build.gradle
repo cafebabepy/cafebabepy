@@ -82,6 +82,10 @@ compileJava {
     source antlr.destinationDir, sourceSets.main.java
 }
 
+run {
+    standardInput = System.in
+}
+
 clean {
     delete antlr.destinationDir
 }
