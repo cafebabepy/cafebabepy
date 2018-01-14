@@ -160,6 +160,7 @@ public final class Python {
         Set<PyObject> types = new HashSet<>();
         Set<String> checkDuplicateTypes = new HashSet<>();
 
+        BuiltinsClass:
         for (Class<?> c : builtinsClasses) {
             DefinePyType definePyType = c.getAnnotation(DefinePyType.class);
             if (definePyType == null || !PyObject.class.isAssignableFrom(c)) {
@@ -167,7 +168,7 @@ public final class Python {
             }
             for (Class<? extends PyObject> ignore : ignores) {
                 if (c.equals(ignore)) {
-                    continue;
+                    continue BuiltinsClass;
                 }
             }
 
