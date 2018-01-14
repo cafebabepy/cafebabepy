@@ -14,7 +14,7 @@ project.ext {
 }
 
 ext.versions = [
-        gradle: '3.5'
+        gradle: '4.4.1'
 ]
 
 ext.antlr = [
