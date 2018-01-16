@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime;
 
-import org.cafebabepy.annotation.DefinePyModule;
-import org.cafebabepy.annotation.DefinePyType;
+import org.cafebabepy.runtime.module.DefinePyModule;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.module.PyMainModule;
 import org.cafebabepy.runtime.module._ast.PyAstModule;
 import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;

@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime.module.sys;
 
-import org.cafebabepy.annotation.DefinePyModule;
+import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
 

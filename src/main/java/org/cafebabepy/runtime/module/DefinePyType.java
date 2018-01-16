@@ -1,4 +1,4 @@
-package org.cafebabepy.annotation;
+package org.cafebabepy.runtime.module;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,7 +10,11 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface DefinePyModule {
+public @interface DefinePyType {
 
     String name();
+
+    String[] parent() default {"builtins.object"};
+
+    boolean appear() default true;
 }

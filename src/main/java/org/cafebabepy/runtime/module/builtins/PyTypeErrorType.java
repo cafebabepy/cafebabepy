@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.annotation.DefinePyType;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 

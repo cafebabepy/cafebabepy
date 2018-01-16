@@ -1,6 +1,5 @@
 package org.cafebabepy.runtime.module;
 
-import org.cafebabepy.annotation.DefinePyFunction;
 import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;

@@ -1,6 +1,5 @@
 package org.cafebabepy.runtime.module;
 
-import org.cafebabepy.annotation.DefinePyModule;
 import org.cafebabepy.runtime.Python;
 
 import static org.cafebabepy.util.ProtocolNames.__main__;

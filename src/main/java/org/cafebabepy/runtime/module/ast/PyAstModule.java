@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.module.ast;
 
-import org.cafebabepy.annotation.DefinePyFunction;
-import org.cafebabepy.annotation.DefinePyModule;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
