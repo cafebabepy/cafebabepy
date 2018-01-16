@@ -1,5 +1,7 @@
 package org.cafebabepy.runtime;
 
+import org.cafebabepy.evaluter.Interpret.InterpretEvaluator;
+import org.cafebabepy.parser.NormalParser;
 import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.module.PyMainModule;
@@ -52,6 +54,16 @@ public final class Python {
 
     private Python() {
         this.moduleMap = new ConcurrentHashMap<>();
+    }
+
+    public static PyObject eval(String input) {
+        Python runtime = Python.createRuntime();
+
+        NormalParser parser = new NormalParser(runtime);
+        PyObject ast = parser.parse(input);
+
+        InterpretEvaluator evaluter = new InterpretEvaluator(runtime);
+        return evaluter.evalMainModule(ast);
     }
 
     public static Python createRuntime() {
