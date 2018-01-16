@@ -227,6 +227,7 @@ fragment COMMENT
 fragment ID_START
  : [a-z]
  | [A-Z]
+ | '_'
  ;
 
 fragment ID_CONTINUE
