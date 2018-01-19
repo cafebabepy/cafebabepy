@@ -611,19 +611,19 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             return this.runtime.newPyObject("_ast.Name", id, load);
         }
         TerminalNode trueNode = ctx.TRUE();
-        if(trueNode != null) {
+        if (trueNode != null) {
             return this.runtime.True();
         }
         TerminalNode falseNode = ctx.FALSE();
-        if(falseNode != null) {
+        if (falseNode != null) {
             return this.runtime.False();
         }
         TerminalNode noneNode = ctx.NONE();
-        if(noneNode != null) {
+        if (noneNode != null) {
             return this.runtime.None();
         }
-        TerminalNode ellipsisNode  = ctx.ELLIPSIS();
-        if(ellipsisNode != null) {
+        TerminalNode ellipsisNode = ctx.ELLIPSIS();
+        if (ellipsisNode != null) {
             return this.runtime.Ellipsis();
         }
         List<PythonParser.StrContext> strContextList = ctx.str();
@@ -880,6 +880,14 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitStr(PythonParser.StrContext ctx) {
-        return this.runtime.str(ctx.getText());
+        String rawString = ctx.getText();
+        int firstQuoteIndex = rawString.indexOf('\'');
+        if (firstQuoteIndex == -1) {
+            firstQuoteIndex = rawString.indexOf('"');
+        }
+
+        // TODO prefix
+
+        return this.runtime.str(rawString.substring(firstQuoteIndex + 1, rawString.length() - 1));
     }
 }

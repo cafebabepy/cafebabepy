@@ -92,9 +92,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public <T> T toJava(Class<T> clazz) {
-        PyObject str = this.runtime.str(this);
-
-        return str.toJava(clazz);
+        return this.runtime.str(this).toJava(clazz);
     }
 
     @Override
