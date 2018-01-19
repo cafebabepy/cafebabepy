@@ -17,6 +17,10 @@ public class PyStrObject extends AbstractPyObjectObject {
         this.value = value;
     }
 
+    public String getValue() {
+        return this.value;
+    }
+
     public PyStrObject add(PyStrObject str) {
         return this.runtime.str(this.value + str.value);
     }
@@ -34,5 +38,10 @@ public class PyStrObject extends AbstractPyObjectObject {
         }
 
         return super.toJava(clazz);
+    }
+
+    @Override
+    public String toString() {
+        return "'" + this.value + "'";
     }
 }

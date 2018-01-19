@@ -8,6 +8,7 @@ import org.cafebabepy.parser.InteractiveParser;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
+import org.cafebabepy.runtime.object.java.PyStrObject;
 
 import java.io.IOException;
 
@@ -113,7 +114,12 @@ public class InteractiveConsole {
                 try {
                     result = evaluator.evalMainModule(ast);
                     if (!result.isNone()) {
-                        this.consoleReader.println(result.toJava(String.class));
+                        if (result instanceof PyStrObject) {
+                            this.consoleReader.println(result.toString());
+
+                        } else {
+                            this.consoleReader.println(result.toJava(String.class));
+                        }
                     }
 
                 } catch (RaiseException e) {
