@@ -42,6 +42,16 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).eq((PyIntObject) other);
     }
 
+    @DefinePyFunction(name = __ne__)
+    public PyObject __ne__(PyObject self, PyObject other) {
+        PyObject result = check(self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) self).ne((PyIntObject) other);
+    }
+
     @DefinePyFunction(name = __add__)
     public PyObject __add__(PyObject self, PyObject other) {
         PyObject result = check(self, other);

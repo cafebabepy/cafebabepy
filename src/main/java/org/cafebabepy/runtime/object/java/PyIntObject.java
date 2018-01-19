@@ -26,6 +26,10 @@ public class PyIntObject extends AbstractPyObjectObject {
         return this.runtime.bool(this.value == other.value);
     }
 
+    public PyBoolObject ne(PyIntObject other) {
+        return this.runtime.bool(this.value != other.value);
+    }
+
     public PyIntObject add(PyIntObject other) {
         return this.runtime.number(this.value + other.value);
     }
