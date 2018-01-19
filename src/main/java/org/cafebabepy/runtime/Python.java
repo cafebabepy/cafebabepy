@@ -631,7 +631,7 @@ public final class Python {
 
         if (result.isNotImplemented()) {
             PyObject rop = y.getScope().getOrThrow(ropFunctionName);
-            result = rop.call(y, x);
+            result = rop.call(x);
         }
 
         return result;
