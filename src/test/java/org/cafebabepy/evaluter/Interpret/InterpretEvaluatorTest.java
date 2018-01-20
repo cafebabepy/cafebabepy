@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InterpretEvaluatorTest {
 
@@ -79,6 +80,22 @@ public class InterpretEvaluatorTest {
                     + "  print('babe')", result -> {
                 assertEquals(result, "babe" + System.lineSeparator());
             });
+        }
+    }
+
+    @Nested
+    class Class {
+        @Test
+        void define() {
+            PyObject result = Python.eval(""
+                    + "class T:\n"
+                    + "  pass\n"
+                    + "T");
+
+            assertEquals(result.getName(), "T");
+
+            Python runtime = result.getRuntime();
+            assertTrue(runtime.eq(result.getType(), runtime.typeOrThrow("builtins.type")).isTrue());
         }
     }
 
