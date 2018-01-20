@@ -124,11 +124,6 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public PyObject getCallable() {
-        return this.source.getCallable();
-    }
-
-    @Override
     public PyObject call() {
         return this.source.call();
     }

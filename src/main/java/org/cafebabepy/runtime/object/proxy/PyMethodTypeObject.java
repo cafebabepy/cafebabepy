@@ -5,6 +5,8 @@ import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
+import static org.cafebabepy.util.ProtocolNames.__call__;
+
 /**
  * Created by yotchang4s on 2017/06/23.
  */
@@ -23,6 +25,16 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
         this.function = function;
 
         this.scope = new PyObjectScope(function);
+
+        getScope().put(__call__, this);
+    }
+
+    public PyObject getSource() {
+        return this.source;
+    }
+
+    public PyObject getFunction() {
+        return this.function;
     }
 
     @Override

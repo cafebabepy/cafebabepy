@@ -2,10 +2,10 @@ package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.object.proxy.PyMethodObjectScope;
 import org.cafebabepy.util.StringUtils;
-
-import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/30.
@@ -18,8 +18,23 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     private String[] baseNames;
 
+    private volatile PyObjectScope scope;
+
     protected AbstractCafeBabePyType(Python runtime) {
         super(runtime);
+    }
+
+    @Override
+    public PyObjectScope getScope() {
+        if (this.scope == null) {
+            synchronized (this) {
+                if(this.scope == null) {
+                    this.scope = new PyMethodObjectScope(this);
+                }
+            }
+        }
+
+        return this.scope;
     }
 
     @Override
@@ -80,12 +95,5 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     @Override
     public PyObject call(PyObject... args) {
         return getCallable().call(args);
-    }
-    @DefinePyFunction(name = __call__)
-    public PyObject __call__(PyObject... args) {
-        PyObject object = getScope().getOrThrow(__new__).call(this);
-        object.getScope().getOrThrow(__init__).call(args);
-
-        return object;
     }
 }

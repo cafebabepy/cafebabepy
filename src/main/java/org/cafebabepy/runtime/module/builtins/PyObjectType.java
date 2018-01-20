@@ -1,11 +1,10 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.PyObjectObject;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.util.StringUtils;
 
 import java.util.Optional;
@@ -20,18 +19,6 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     public PyObjectType(Python runtime) {
         super(runtime);
-    }
-
-    @DefinePyFunction(name = __new__)
-    public PyObject __new__(PyObject cls) {
-        if (!cls.isType()) {
-            throw this.runtime.newRaiseTypeError(
-                    "object.__new__(X): X is not a type object ("
-                            + cls.getFullName()
-                            + ")");
-        }
-
-        return new PyObjectObject(this.runtime, cls);
     }
 
     @DefinePyFunction(name = __init__)
@@ -101,7 +88,12 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __eq__)
     public PyObject __eq__(PyObject self, PyObject other) {
-        return this.runtime.NotImplemented();
+        if (self == other) {
+            return this.runtime.True();
+
+        } else {
+            return this.runtime.NotImplemented();
+        }
     }
 
     @DefinePyFunction(name = __ne__)

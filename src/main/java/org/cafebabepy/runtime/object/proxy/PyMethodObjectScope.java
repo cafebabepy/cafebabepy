@@ -2,7 +2,6 @@ package org.cafebabepy.runtime.object.proxy;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
-import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,9 +25,19 @@ public class PyMethodObjectScope extends PyObjectScope {
         if (!objectOpt.isPresent()) {
             return Optional.empty();
         }
+
         PyObject object = objectOpt.get();
         if (object.isCallable()) {
             synchronized (this) {
+                if (object.getRuntime().isInstance(object, "types.MethodType")) {
+                    if (object instanceof PyMethodTypeObject) {
+                        object = ((PyMethodTypeObject) object).getFunction();
+
+                    } else {
+                        // Direct add types.MethodType to scope
+                    }
+
+                }
                 if (appear) {
                     if (this.methodMap == null) {
                         this.methodMap = new LinkedHashMap<>();

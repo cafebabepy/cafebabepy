@@ -49,8 +49,6 @@ public interface PyObject {
 
     <T> T toJava(Class<T> clazz);
 
-    PyObject getCallable();
-
     PyObject call();
 
     PyObject call(PyObject arg1);

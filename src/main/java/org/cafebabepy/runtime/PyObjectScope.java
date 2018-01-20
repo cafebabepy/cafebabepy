@@ -122,7 +122,7 @@ public class PyObjectScope {
         }
 
         // type
-        if(!getSource().getRuntime().isInstance(getSource(), "builtins.type")) {
+        if (getSource().getRuntime().isInstance(getSource(), "builtins.type")) {
             Optional<PyObject> typeObject =
                     getSource().getRuntime().typeOrThrow("builtins.type").getScope().get(name, appear);
             if (typeObject.isPresent()) {

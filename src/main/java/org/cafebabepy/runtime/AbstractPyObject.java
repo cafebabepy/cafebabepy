@@ -131,19 +131,10 @@ public abstract class AbstractPyObject implements PyObject {
         return false;
     }
 
-    @Override
     public final PyObject getCallable() {
-        PyObject callable = null;
-        for (PyObject type : getTypes()) {
-            Optional<PyObject> callableOpt = type.getScope().get(__call__);
-            if (callableOpt.isPresent()) {
-                callable = callableOpt.get();
-                break;
-            }
-        }
-
-        if (callable != null) {
-            return callable;
+        Optional<PyObject> callableOpt = getScope().get(__call__);
+        if (callableOpt.isPresent()) {
+            return callableOpt.get();
         }
 
         // FIXME getName()が必ずobjectになる

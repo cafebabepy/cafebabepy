@@ -5,6 +5,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
+import org.cafebabepy.runtime.object.proxy.PyMethodObjectScope;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,8 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     private final List<PyObject> bases;
 
+    private volatile PyObjectScope scope;
+
     PyInterpretClassObject(Python runtime, PyObject context, String name, List<PyObject> bases) {
         super(runtime, true);
 
@@ -29,6 +32,7 @@ class PyInterpretClassObject extends AbstractPyObject {
 
         List<PyObject> mutableBases = new ArrayList<>(bases);
         if (mutableBases.isEmpty()) {
+            mutableBases.add(runtime.typeOrThrow("builtins.type"));
             mutableBases.add(runtime.typeOrThrow("builtins.object"));
         }
         this.bases = Collections.unmodifiableList(mutableBases);
@@ -36,12 +40,19 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObjectScope getScope() {
-        return this.context.getScope();
+        if (this.scope == null) {
+            synchronized (this) {
+                if (this.scope == null) {
+                    this.scope = new PyMethodObjectScope(this.context);
+                }
+            }
+        }
+        return this.scope;
     }
 
     @Override
     public PyObject getType() {
-        return this;
+        return this.runtime.typeOrThrow("builtins.type");
     }
 
     @Override
