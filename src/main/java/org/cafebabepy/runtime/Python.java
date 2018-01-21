@@ -232,7 +232,7 @@ public final class Python {
             return value;
         }
 
-        return value.getScope().getOrThrow(__str__).call();
+        return getattr(value, __str__).call();
     }
 
     public PyStrObject str(String value) {
@@ -333,9 +333,14 @@ public final class Python {
             throw new CafeBabePyException("'" + name + "' is not type");
         }
 
-        return moduleOrThrow(splitLastDot[0])
-                .getScope()
-                .getThisOnlyOrThrow(splitLastDot[1], appear);
+        PyObject module = moduleOrThrow(splitLastDot[0]);
+        Optional<PyObject> typeOpt = module.getScope().getThisOnly(splitLastDot[1], appear);
+        if (typeOpt.isPresent()) {
+            return typeOpt.get();
+        }
+
+        throw newRaiseException("builtins.AttributeError",
+                "module '" + module.getName() + "' has no attribute '" + name + "'");
     }
 
     public Optional<PyObject> type(String name) {
@@ -370,9 +375,8 @@ public final class Python {
                     "name '" + splitLastDot[1] + "'is not defined");
         }
 
-        PyObject function = moduleOrThrow(splitLastDot[0])
-                .getScope()
-                .getOrThrow(splitLastDot[1]);
+        PyObject module = moduleOrThrow(splitLastDot[0]);
+        PyObject function = getattr(module, splitLastDot[1]);
 
         return function.call(args);
     }
@@ -477,18 +481,23 @@ public final class Python {
     }
 
     public PyObject getattr(PyObject object, String name) {
-        try {
-            return object.getScope().getOrThrow(name);
+        Optional<PyObject> resultOpt = object.getScope().get(name);
+        if (resultOpt.isPresent()) {
+            return resultOpt.get();
+        }
 
-        } catch (RaiseException e) {
-            Optional<PyObject> getattrOpt = object.getType().getScope().get(__getattr__);
-            if (getattrOpt.isPresent()) {
-                PyObject getattr = getattrOpt.get();
-                return getattr.call(object, str(name));
+        if (object.isModule()) {
+            throw newRaiseException("builtins.AttributeError",
+                    "module '" + object.getName() + "' has no attribute '" + name + "'");
 
-            } else {
-                throw e;
-            }
+        } else if (object.isType()) {
+            throw newRaiseException("builtins.AttributeError",
+                    "type object '" + object.getName() + "' has no attribute '" + name + "'");
+
+        } else {
+            throw newRaiseException("builtins.AttributeError",
+                    "'" + object.getName() + "' object has no attribute '" + name + "'");
+
         }
     }
 
@@ -623,7 +632,7 @@ public final class Python {
         PyObject result = operator.call(y);
 
         if (result.isNotImplemented()) {
-            PyObject rop = y.getScope().getOrThrow(ropFunctionName);
+            PyObject rop = getattr(y, ropFunctionName);
             result = rop.call(x);
         }
 

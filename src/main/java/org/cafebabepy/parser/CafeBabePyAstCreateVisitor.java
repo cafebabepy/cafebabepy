@@ -130,7 +130,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject type = target.getType();
         if (type instanceof PyStarredType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
-            PyObject value = target.getScope().getOrThrow("value");
+            PyObject value = this.runtime.getattr(target, "value");
             if (this.runtime.isIterable(value)) {
                 this.runtime.iter(value, v -> toStore(v, 0));
 
@@ -148,12 +148,12 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
             }
 
-            PyObject value = target.getScope().getOrThrow("value");
+            PyObject value = this.runtime.getattr(target, "value");
             toStore(value, attributeDepth + 1);
 
         } else if (type instanceof PyListType) {
             target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
-            PyObject elts = target.getScope().getOrThrow("elts");
+            PyObject elts = this.runtime.getattr(target, "elts");
 
             this.runtime.iter(elts, elt -> toStore(elt, 0));
 

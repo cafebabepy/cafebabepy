@@ -40,7 +40,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
 
         this.args.getScope().get("args").ifPresent(argslist ->
                 this.runtime.iterIndex(argslist, (a, i) -> {
-                    PyObject arg = a.getScope().getOrThrow("arg");
+                    PyObject arg = this.runtime.getattr(a, "arg");
                     scope.put(arg.toJava(String.class), args[i]);
                 })
         );

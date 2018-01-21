@@ -97,8 +97,8 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        PyObject object = getScope().getOrThrow(__new__).call(this);
-        object.getScope().getOrThrow(__init__).call(args);
+        PyObject object = this.runtime.getattr(this, __new__).call(this);
+        this.runtime.getattr(object, __init__).call(args);
 
         return object;
     }

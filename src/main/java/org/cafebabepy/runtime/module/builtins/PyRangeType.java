@@ -1,12 +1,12 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
-import org.cafebabepy.runtime.object.java.PyIntObject;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.iterator.PyRangeIteratorObject;
+import org.cafebabepy.runtime.object.java.PyIntObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -86,9 +86,9 @@ public class PyRangeType extends AbstractCafeBabePyType {
                             + "'");
         }
 
-        PyObject start = self.getScope().getOrThrow("start");
-        PyObject stop = self.getScope().getOrThrow("stop");
-        PyObject step = self.getScope().getOrThrow("step");
+        PyObject start = this.runtime.getattr(self, "start");
+        PyObject stop = this.runtime.getattr(self, "stop");
+        PyObject step = this.runtime.getattr(self, "step");
 
         int startInt = ((PyIntObject) start).getIntValue();
         int stopInt = ((PyIntObject) stop).getIntValue();

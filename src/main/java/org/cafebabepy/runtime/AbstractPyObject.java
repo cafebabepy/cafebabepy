@@ -97,13 +97,9 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final boolean isException() {
-        // FIXME 親がBaseExceptionかどうかを判定する
-        PyObject module = this.runtime.typeOrThrow("builtins");
-        PyObject call = module.getScope().getOrThrow("issubclass");
+        PyObject baseExceptionType = this.runtime.typeOrThrow("builtins.BaseException");
 
-        PyObject baseExceptionType = module.getScope().getOrThrow("BaseException");
-
-        return call.call(getType(), baseExceptionType).isTrue();
+        return this.runtime.isSubClass(getType(), baseExceptionType);
     }
 
     @Override
@@ -131,7 +127,7 @@ public abstract class AbstractPyObject implements PyObject {
         return false;
     }
 
-    public final PyObject getCallable() {
+    protected final PyObject getCallable() {
         Optional<PyObject> callableOpt = getScope().get(__call__);
         if (callableOpt.isPresent()) {
             return callableOpt.get();

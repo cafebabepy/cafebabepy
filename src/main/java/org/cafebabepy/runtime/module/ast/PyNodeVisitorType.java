@@ -1,10 +1,10 @@
 package org.cafebabepy.runtime.module.ast;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 
 /**
  * Created by yotchang4s on 2017/06/07.
@@ -19,17 +19,17 @@ public class PyNodeVisitorType extends AbstractCafeBabePyType {
     @DefinePyFunction(name = "visit")
     public PyObject visit(PyObject self, PyObject node) {
         String method = "visit_" + node.getName();
-        PyObject visitor = self.getScope().get(method).orElse(getScope().getOrThrow("generic_visit"));
+        PyObject visitor = self.getScope().get(method).orElse(this.runtime.getattr(this, "generic_visit"));
 
         return visitor.call(self, node);
     }
 
     @DefinePyFunction(name = "generic_visit")
     public void generic_visit(PyObject self, PyObject node) {
-        PyObject visit = self.getType().getScope().getOrThrow("visit");
+        PyObject visit = this.runtime.getattr(self, "visit");
 
         PyObject astModule = this.runtime.moduleOrThrow("ast");
-        PyObject iter_fields = astModule.getScope().getOrThrow("iter_fields");
+        PyObject iter_fields = this.runtime.getattr(astModule, "iter_fields");
 
         PyObject list = this.runtime.typeOrThrow("builtins.list");
         PyObject ast = this.runtime.typeOrThrow("_ast.AST");

@@ -90,19 +90,6 @@ public class PyObjectScope {
         return Optional.empty();
     }
 
-    public final PyObject getThisOnlyOrThrow(String name) {
-        return getThisOnlyOrThrow(name, true);
-    }
-
-    public final PyObject getThisOnlyOrThrow(String name, boolean appear) {
-        Optional<PyObject> objectOpt = getThisOnly(name, appear);
-        if (objectOpt.isPresent()) {
-            return objectOpt.get();
-        }
-
-        throw newNotFoundException(getSource(), name);
-    }
-
     public final Optional<PyObject> get(String name) {
         return get(name, true);
     }
@@ -163,19 +150,6 @@ public class PyObjectScope {
         return Optional.empty();
     }
 
-    public final PyObject getOrThrow(String name) {
-        return getOrThrow(name, true);
-    }
-
-    public final PyObject getOrThrow(String name, boolean appear) {
-        Optional<PyObject> objectOpt = get(name, appear);
-        if (objectOpt.isPresent()) {
-            return objectOpt.get();
-        }
-
-        throw newNotFoundException(getSource(), name);
-    }
-
     public Optional<PyObject> getAppearOnly(String name) {
         PyObject object = null;
         if (this.notAppearObjectMap != null) {
@@ -203,21 +177,5 @@ public class PyObjectScope {
         }
 
         return false;
-    }
-
-    private RaiseException newNotFoundException(PyObject source, String name) {
-        if (source.isModule()) {
-            throw source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "module '" + source.getName() + "' has no attribute '" + name + "'");
-
-        } else if (source.isType()) {
-            throw source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "type object '" + source.getName() + "' has no attribute '" + name + "'");
-
-        } else {
-            throw source.getRuntime().newRaiseException("builtins.AttributeError",
-                    "'" + source.getName() + "' object has no attribute '" + name + "'");
-
-        }
     }
 }

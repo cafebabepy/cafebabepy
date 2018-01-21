@@ -21,8 +21,8 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __call__)
     public PyObject __call__(PyObject self, PyObject... args) {
-        PyObject object = self.getScope().getOrThrow(__new__).call();
-        object.getScope().getOrThrow(__init__).call(args);
+        PyObject object = this.runtime.getattr(self, __new__).call();
+        this.runtime.getattr(object, __init__).call(args);
 
         return object;
     }

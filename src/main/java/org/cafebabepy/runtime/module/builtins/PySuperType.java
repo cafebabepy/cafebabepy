@@ -1,10 +1,10 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 
 import java.util.List;
 
@@ -62,6 +62,6 @@ public class PySuperType extends AbstractCafeBabePyType {
             selfProxy = types.get(1);
         }
 
-        return selfProxy.getScope().getOrThrow(name.toJava(String.class));
+        return this.runtime.getattr(selfProxy, name.toJava(String.class));
     }
 }
