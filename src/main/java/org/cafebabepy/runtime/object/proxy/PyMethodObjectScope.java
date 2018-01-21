@@ -21,13 +21,29 @@ public class PyMethodObjectScope extends PyObjectScope {
 
     @Override
     public Optional<PyObject> get(String name, boolean appear) {
-        Optional<PyObject> objectOpt = super.get(name, appear);
+        Optional<PyObject> thisOnlyOpt = super.getThisOnly(name, appear);
+        if (thisOnlyOpt.isPresent()) {
+            return thisOnlyOpt;
+        }
+
+        Optional<PyObject> objectOpt;
+
+        objectOpt = super.getFromTypes(name, appear);
         if (!objectOpt.isPresent()) {
-            return Optional.empty();
+            objectOpt = super.getFromType(name, appear);
+            if (!objectOpt.isPresent()) {
+                objectOpt = super.getFromParent(name, appear);
+                if (!objectOpt.isPresent()) {
+                    return Optional.empty();
+                }
+            }
         }
 
         PyObject object = objectOpt.get();
-        if (object.isCallable()) {
+        if (!object.isCallable()) {
+            return objectOpt;
+
+        } else {
             synchronized (this) {
                 if (object.getRuntime().isInstance(object, "types.MethodType")) {
                     if (object instanceof PyMethodTypeObject) {
@@ -66,7 +82,5 @@ public class PyMethodObjectScope extends PyObjectScope {
                 }
             }
         }
-
-        return objectOpt;
     }
 }

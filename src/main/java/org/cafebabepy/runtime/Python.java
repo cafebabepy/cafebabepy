@@ -232,14 +232,7 @@ public final class Python {
             return value;
         }
 
-        if (value.isType()) {
-            PyObject strFunc = typeOrThrow("builtins.object").getScope().getOrThrow(__str__);
-            return strFunc.call(value);
-
-        } else {
-            PyObject strMethod = value.getScope().getOrThrow(__str__);
-            return strMethod.call();
-        }
+        return value.getScope().getOrThrow(__str__).call();
     }
 
     public PyStrObject str(String value) {

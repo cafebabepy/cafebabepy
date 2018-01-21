@@ -108,12 +108,30 @@ public class PyObjectScope {
     }
 
     public Optional<PyObject> get(String name, boolean appear) {
-        Optional<PyObject> objectOpt = getThisOnly(name, appear);
-        if (objectOpt.isPresent()) {
-            return objectOpt;
+        Optional<PyObject> thisOnlyOpt = getThisOnly(name, appear);
+        if (thisOnlyOpt.isPresent()) {
+            return thisOnlyOpt;
         }
 
-        // sub tree
+        Optional<PyObject> typesOpt = getFromTypes(name, appear);
+        if (typesOpt.isPresent()) {
+            return typesOpt;
+        }
+
+        Optional<PyObject> typeOpt = getFromType(name, appear);
+        if (typeOpt.isPresent()) {
+            return typeOpt;
+        }
+
+        Optional<PyObject> parentOpt = getFromParent(name, appear);
+        if (parentOpt.isPresent()) {
+            return parentOpt;
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromTypes(String name, boolean appear) {
         for (PyObject type : getSource().getTypes()) {
             Optional<PyObject> typeObject = type.getScope().getThisOnly(name, appear);
             if (typeObject.isPresent()) {
@@ -121,7 +139,10 @@ public class PyObjectScope {
             }
         }
 
-        // type
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromType(String name, boolean appear) {
         if (getSource().getRuntime().isInstance(getSource(), "builtins.type")) {
             Optional<PyObject> typeObject =
                     getSource().getRuntime().typeOrThrow("builtins.type").getScope().get(name, appear);
@@ -130,7 +151,10 @@ public class PyObjectScope {
             }
         }
 
-        // parent context
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromParent(String name, boolean appear) {
         PyObjectScope sourceScope = getSource().getScope();
         if (sourceScope != this) { // not self
             return sourceScope.get(name, appear);
