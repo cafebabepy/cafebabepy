@@ -10,7 +10,7 @@ public class PyLexicalScopeProxyObject extends PyProxyObject {
     public PyLexicalScopeProxyObject(PyObject source) {
         super(source);
 
-        this.scope = new PyObjectScope(source);
+        this.scope = new PyObjectScope(source.getScope());
     }
 
     @Override

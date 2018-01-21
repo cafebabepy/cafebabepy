@@ -645,7 +645,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(node, "id");
             String name = id.toJava(String.class);
 
-            return context.getScope().get(name).orElseThrow(() ->
+            return this.runtime.getattrOptional(context, name).orElseThrow(() ->
                     this.runtime.newRaiseException("builtins.NameError",
                             "name '" + name + "' is not defined")
             );

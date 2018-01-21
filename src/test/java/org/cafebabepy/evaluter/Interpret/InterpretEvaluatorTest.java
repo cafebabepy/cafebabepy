@@ -86,7 +86,7 @@ public class InterpretEvaluatorTest {
     @Nested
     class Class {
         @Test
-        void define() {
+        void defineClass() {
             PyObject result = Python.eval(""
                     + "class T:\n"
                     + "  pass\n"
@@ -95,7 +95,36 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "T");
 
             Python runtime = result.getRuntime();
-            assertTrue(runtime.eq(result.getType(), runtime.typeOrThrow("builtins.type")).isTrue());
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.type"));
+        }
+
+        @Test
+        void defineMethodClass() {
+            PyObject result = Python.eval(""
+                    + "class T:\n"
+                    + "  def a(self):\n"
+                    + "    pass\n"
+                    + "T.a");
+
+            assertEquals(result.getName(), "function");
+
+            Python runtime = result.getRuntime();
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType"));
+        }
+
+        @Test
+        void defineMethodObject() {
+            PyObject result = Python.eval(""
+                    + "class T:\n"
+                    + "  def a(self):\n"
+                    + "    pass\n"
+                    + "t = T()\n"
+                    + "t.a");
+
+            assertEquals(result.getName(), "method");
+
+            Python runtime = result.getRuntime();
+            assertEquals(result.getType(), runtime.typeOrThrow("types.MethodType"));
         }
     }
 

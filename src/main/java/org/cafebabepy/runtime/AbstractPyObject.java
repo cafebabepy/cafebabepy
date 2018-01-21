@@ -54,7 +54,7 @@ public abstract class AbstractPyObject implements PyObject {
         if (this.scope == null) {
             synchronized (this) {
                 if (this.scope == null) {
-                    this.scope = new PyObjectScope(this);
+                    this.scope = new PyObjectScope();
                 }
             }
         }
@@ -109,14 +109,14 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public boolean isFalse() {
-        Optional<PyObject> boolOpt = getScope().get(__bool__);
+        Optional<PyObject> boolOpt = this.runtime.getattrOptional(this, __bool__);
         if (boolOpt.isPresent()) {
             PyObject bool = boolOpt.get();
             PyObject result = bool.call(this);
             return result.isFalse();
         }
 
-        Optional<PyObject> lenOpt = getScope().get(__len__);
+        Optional<PyObject> lenOpt = this.runtime.getattrOptional(this, __len__);
         if (lenOpt.isPresent()) {
             PyObject len = lenOpt.get();
             PyObject result = len.call(this);
@@ -128,7 +128,7 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     protected final PyObject getCallable() {
-        Optional<PyObject> callableOpt = getScope().get(__call__);
+        Optional<PyObject> callableOpt = this.runtime.getattrOptional(this, __call__);
         if (callableOpt.isPresent()) {
             return callableOpt.get();
         }

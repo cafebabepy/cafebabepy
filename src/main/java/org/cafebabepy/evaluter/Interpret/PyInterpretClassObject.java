@@ -5,7 +5,6 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
-import org.cafebabepy.runtime.object.proxy.PyMethodObjectScope;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +42,7 @@ class PyInterpretClassObject extends AbstractPyObject {
         if (this.scope == null) {
             synchronized (this) {
                 if (this.scope == null) {
-                    this.scope = new PyMethodObjectScope(this.context);
+                    this.scope = new PyObjectScope(this.context.getScope());
                 }
             }
         }
@@ -97,7 +96,7 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        PyObject object = this.runtime.getattr(this, __new__).call(this);
+        PyObject object = this.runtime.getattr(this, __new__).call();
         this.runtime.getattr(object, __init__).call(args);
 
         return object;

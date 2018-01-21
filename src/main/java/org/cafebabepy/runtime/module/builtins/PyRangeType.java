@@ -64,7 +64,7 @@ public class PyRangeType extends AbstractCafeBabePyType {
         if (object instanceof PyIntObject) {
             return object;
         }
-        PyObject indexMethod = object.getScope().get(__index__).orElseThrow(() ->
+        PyObject indexMethod = this.runtime.getattrOptional(object, __index__).orElseThrow(() ->
                 this.runtime.newRaiseTypeError(
                         "'" + object.getFullName() + "' object cannot be interpreted as an integer")
         );

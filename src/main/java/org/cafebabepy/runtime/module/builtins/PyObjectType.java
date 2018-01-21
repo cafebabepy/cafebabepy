@@ -29,7 +29,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     public PyObject __getattribute__(PyObject self, PyObject name) {
         PyObject v = this.runtime.getattr(self, name.toJava(String.class));
 
-        Optional<PyObject> getOpt = v.getScope().get(__get__);
+        Optional<PyObject> getOpt = this.runtime.getattrOptional(v, __get__);
         if (getOpt.isPresent()) {
             PyObject get = getOpt.get();
             return get.call(v, v.getType());
@@ -43,7 +43,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     public void __setattr__(PyObject self, PyObject name, PyObject value) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
-        if (this.runtime.callFunction("builtins.isinstance", self, strType).isFalse()) {
+        if (!this.runtime.isInstance(self, strType)) {
             throw this.runtime.newRaiseTypeError(
                     "attribute name must be string, not '" + name.getFullName() + "'"
             );

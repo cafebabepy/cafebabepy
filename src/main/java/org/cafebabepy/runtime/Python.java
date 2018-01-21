@@ -16,6 +16,7 @@ import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
 import org.cafebabepy.runtime.object.literal.PyNoneObject;
 import org.cafebabepy.runtime.object.literal.PyNotImplementedObject;
+import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
@@ -334,7 +335,7 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        Optional<PyObject> typeOpt = module.getScope().getThisOnly(splitLastDot[1], appear);
+        Optional<PyObject> typeOpt = module.getScope().get(splitLastDot[1], appear);
         if (typeOpt.isPresent()) {
             return typeOpt.get();
         }
@@ -357,7 +358,7 @@ public final class Python {
 
         return module(splitDot[0])
                 .map(PyObject::getScope)
-                .flatMap(scope -> scope.getThisOnly(splitDot[1], appear));
+                .flatMap(scope -> scope.get(splitDot[1], appear));
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
@@ -368,7 +369,7 @@ public final class Python {
         return typeOrThrow(typeName, appear).call(args);
     }
 
-    public PyObject callFunction(String name, PyObject... args) {
+    private PyObject callFunction(String name, PyObject... args) {
         String[] splitLastDot = StringUtils.splitLastDot(name);
         if (StringUtils.isEmpty(splitLastDot[0])) {
             throw newRaiseException("builtins.NameError",
@@ -376,7 +377,9 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        PyObject function = getattr(module, splitLastDot[1]);
+        PyObject function = module.getScope().get(splitLastDot[1]).orElseThrow(() ->
+                newRaiseException(
+                        "builtins.AttributeError", "module '" + module.getFullName() + "' has no attribute '" + splitLastDot[1] + "'"));
 
         return function.call(args);
     }
@@ -480,8 +483,97 @@ public final class Python {
         }
     }
 
-    public PyObject getattr(PyObject object, String name) {
+    //private volatile Map<String, PyObject> methodMap;
+
+    public Optional<PyObject> getattrOptional(PyObject object, String name) {
         Optional<PyObject> resultOpt = object.getScope().get(name);
+        if (resultOpt.isPresent()) {
+            return resultOpt;
+        }
+
+        resultOpt = getFromTypes(object, name);
+        if (!resultOpt.isPresent()) {
+            resultOpt = getFromType(object, name);
+            if (!resultOpt.isPresent()) {
+                resultOpt = getFromParent(object, name);
+                if (!resultOpt.isPresent()) {
+                    return Optional.empty();
+                }
+            }
+        }
+
+        PyObject result = resultOpt.get();
+        if (!result.isCallable() || object.isModule()) {
+            return resultOpt;
+
+        } else {
+            synchronized (this) {
+
+                if (isInstance(result, "types.MethodType")) {
+                    if (result instanceof PyMethodTypeObject) {
+                        result = ((PyMethodTypeObject) result).getFunction();
+
+                    } else {
+                        // Direct add types.MethodType to scope
+                    }
+                }
+
+                //if (this.methodMap == null) {
+                //    this.methodMap = new LinkedHashMap<>();
+                //}
+
+                //PyObject method = this.methodMap.get(name);
+                PyObject method = null;
+                if (method == null) {
+                    method = new PyMethodTypeObject(this, object, result);
+                    //this.methodMap.put(name, method);
+                }
+
+                return Optional.of(method);
+            }
+        }
+    }
+
+    public Optional<PyObject> getFromType(PyObject object, String name) {
+        if (isInstance(object, "builtins.type")) {
+            Optional<PyObject> typeObject = typeOrThrow("builtins.type").getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromTypes(PyObject object, String name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromParent(PyObject object, String name) {
+        Optional<PyObjectScope> parentOpt = object.getScope().getParent();
+        while (parentOpt.isPresent()) {
+            PyObjectScope parent = parentOpt.get();
+            Optional<PyObject> result = parent.get(name);
+
+            if (result.isPresent()) {
+                return result;
+            }
+
+            parentOpt = parent.getParent();
+        }
+
+        return Optional.empty();
+    }
+
+    public PyObject getattr(PyObject object, String name) {
+        Optional<PyObject> resultOpt = getattrOptional(object, name);
         if (resultOpt.isPresent()) {
             return resultOpt.get();
         }
@@ -497,7 +589,6 @@ public final class Python {
         } else {
             throw newRaiseException("builtins.AttributeError",
                     "'" + object.getName() + "' object has no attribute '" + name + "'");
-
         }
     }
 
@@ -622,7 +713,7 @@ public final class Python {
     }
 
     private PyObject refSimpleOp(PyObject x, PyObject y, String op, String opFunctionName, String ropFunctionName) {
-        PyObject operator = x.getScope().get(opFunctionName).orElseThrow(() ->
+        PyObject operator = getattrOptional(x, opFunctionName).orElseThrow(() ->
                 newRaiseTypeError("unsupported operand type(s) for " + op + ": '"
                         + x.getType().getFullName()
                         + "' and '"
@@ -647,19 +738,19 @@ public final class Python {
     }
 
     private PyObject getIterType(PyObject object) {
-        return object.getType().getScope().get(__iter__).orElseThrow(() ->
+        return getattrOptional(object, __iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "'" + object.getName() + "' object is not iterable"));
     }
 
     private PyObject getIterNext(PyObject iter) {
-        return iter.getType().getScope().get(__next__).orElseThrow(() ->
+        return getattrOptional(iter, __next__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
                         "iter() returned non-iterator of type '" + iter.getType().getName() + "'"));
     }
 
     private Optional<PyObject> getNext(PyObject object) {
-        return object.getType().getScope().get(__next__);
+        return getattrOptional(object, __next__);
     }
 
     public boolean isInstance(PyObject instance, PyObject type) {
@@ -675,7 +766,7 @@ public final class Python {
     }
 
     public boolean isIterable(PyObject object) {
-        return object.getScope().get(__iter__).map(x -> true).orElse(false);
+        return getattrOptional(object, __iter__).isPresent();
     }
 
     public RaiseException newRaiseTypeError(String message) {

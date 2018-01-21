@@ -2,9 +2,7 @@ package org.cafebabepy.runtime.object;
 
 import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.proxy.PyMethodObjectScope;
 
 import java.util.List;
 
@@ -13,17 +11,8 @@ import java.util.List;
  */
 public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
-    private PyObjectScope scope;
-
     protected AbstractPyObjectObject(Python runtime) {
         super(runtime, true);
-
-        this.scope = new PyMethodObjectScope(this);
-    }
-
-    @Override
-    public PyObjectScope getScope() {
-        return this.scope;
     }
 
     @Override

@@ -38,7 +38,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
         PyObject lexicalContext = new PyLexicalScopeProxyObject(this.context);
         PyObjectScope scope = lexicalContext.getScope();
 
-        this.args.getScope().get("args").ifPresent(argslist ->
+        this.runtime.getattrOptional(this.args, "args").ifPresent(argslist ->
                 this.runtime.iterIndex(argslist, (a, i) -> {
                     PyObject arg = this.runtime.getattr(a, "arg");
                     scope.put(arg.toJava(String.class), args[i]);

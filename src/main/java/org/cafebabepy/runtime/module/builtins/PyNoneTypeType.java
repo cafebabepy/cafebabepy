@@ -23,7 +23,7 @@ public class PyNoneTypeType extends AbstractCafeBabePyType {
     public PyObject __bool__(PyObject self) {
         PyObject noneType = this.runtime.typeOrThrow("builtins.NoneType", false);
 
-        if (this.runtime.callFunction("builtins.isinstance", self, noneType).isFalse()) {
+        if (this.runtime.isInstance(self, noneType)) {
             throw this.runtime.newRaiseTypeError(
                     "'__bool__' requires a 'NoneType' object but received a '" + self.getFullName() + "'");
         }
