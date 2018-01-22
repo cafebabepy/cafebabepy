@@ -11,7 +11,6 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InterpretEvaluatorTest {
 
@@ -125,6 +124,18 @@ public class InterpretEvaluatorTest {
 
             Python runtime = result.getRuntime();
             assertEquals(result.getType(), runtime.typeOrThrow("types.MethodType"));
+        }
+
+        @Test
+        void callMethod() throws IOException {
+            evalStdOutToResult(""
+                    + "class T:\n"
+                    + "  def a(self, arg):\n"
+                    + "    print(arg)\n"
+                    + "t = T()\n"
+                    + "t.a('cafebabepy')", result -> {
+                assertEquals(result, "cafebabepy\n");
+            });
         }
     }
 

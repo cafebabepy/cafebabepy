@@ -491,6 +491,8 @@ public final class Python {
             return resultOpt;
         }
 
+        boolean isParent = false;
+
         resultOpt = getFromTypes(object, name);
         if (!resultOpt.isPresent()) {
             resultOpt = getFromType(object, name);
@@ -498,12 +500,14 @@ public final class Python {
                 resultOpt = getFromParent(object, name);
                 if (!resultOpt.isPresent()) {
                     return Optional.empty();
+                } else {
+                    isParent = true;
                 }
             }
         }
 
         PyObject result = resultOpt.get();
-        if (!result.isCallable() || object.isModule()) {
+        if (!result.isCallable() || isParent) {
             return resultOpt;
 
         } else {
