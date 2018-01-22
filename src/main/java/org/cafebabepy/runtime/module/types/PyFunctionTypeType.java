@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.module.builtins;
+package org.cafebabepy.runtime.module.types;
 
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__get__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.FunctionType")
+@DefinePyType(name = "types.FunctionType")
 public class PyFunctionTypeType extends AbstractCafeBabePyType {
 
     public PyFunctionTypeType(Python runtime) {

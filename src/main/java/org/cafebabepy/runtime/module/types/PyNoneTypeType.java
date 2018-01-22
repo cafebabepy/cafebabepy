@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.module.builtins;
+package org.cafebabepy.runtime.module.types;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -12,7 +12,7 @@ import static org.cafebabepy.util.ProtocolNames.__str__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.NoneType", appear = false)
+@DefinePyType(name = "types.NoneType", appear = false)
 public class PyNoneTypeType extends AbstractCafeBabePyType {
 
     public PyNoneTypeType(Python runtime) {

@@ -62,7 +62,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
                 str = "<class '" + fullName[1] + "'>";
 
             } else {
-                str = "<class '" + self.getFullName() + "'>";
+                str = "<class '" + fullName[0] + "." + fullName[1] + "'>";
             }
 
             return this.runtime.str(str);
@@ -79,11 +79,20 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             }
 
             return this.runtime.str(str);
+        } else {
+            String hashCode = Integer.toHexString(System.identityHashCode(self));
+
+            String str;
+
+            String[] fullName = StringUtils.splitLastDot(self.getFullName());
+            if ("builtins".equals(fullName[0])) {
+                str = "<" + fullName[1] + " object at 0x" + hashCode + ">";
+            } else {
+                str = "<" + fullName[0] + "." + fullName[1] + " object at 0x" + hashCode + ">";
+            }
+
+            return this.runtime.str(str);
         }
-
-        int hashCode = System.identityHashCode(self);
-
-        return this.runtime.str("<" + self.getFullName() + " object at 0x" + Integer.toHexString(hashCode) + ">");
     }
 
     @DefinePyFunction(name = __eq__)
