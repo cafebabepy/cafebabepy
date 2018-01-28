@@ -16,7 +16,6 @@ import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
 import org.cafebabepy.runtime.object.literal.PyNoneObject;
 import org.cafebabepy.runtime.object.literal.PyNotImplementedObject;
-import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
@@ -486,100 +485,35 @@ public final class Python {
     //private volatile Map<String, PyObject> methodMap;
 
     public Optional<PyObject> getattrOptional(PyObject object, String name) {
-        Optional<PyObject> resultOpt = object.getScope().get(name);
-        if (resultOpt.isPresent()) {
-            return resultOpt;
-        }
+        try {
+            return Optional.of(getattr(object, name));
 
-        boolean isParent = false;
-
-        resultOpt = getFromTypes(object, name);
-        if (!resultOpt.isPresent()) {
-            resultOpt = getFromType(object, name);
-            if (!resultOpt.isPresent()) {
-                resultOpt = getFromParent(object, name);
-                if (!resultOpt.isPresent()) {
-                    return Optional.empty();
-                } else {
-                    isParent = true;
-                }
-            }
-        }
-
-        PyObject result = resultOpt.get();
-        if (!result.isCallable() || isParent) {
-            return resultOpt;
-
-        } else {
-            synchronized (this) {
-
-                if (isInstance(result, "types.MethodType")) {
-                    if (result instanceof PyMethodTypeObject) {
-                        result = ((PyMethodTypeObject) result).getFunction();
-
-                    } else {
-                        // Direct add types.MethodType to scope
-                    }
-                }
-
-                //if (this.methodMap == null) {
-                //    this.methodMap = new LinkedHashMap<>();
-                //}
-
-                //PyObject method = this.methodMap.get(name);
-                PyObject method = null;
-                if (method == null) {
-                    method = new PyMethodTypeObject(this, object, result);
-                    //this.methodMap.put(name, method);
-                }
-
-                return Optional.of(method);
-            }
-        }
-    }
-
-    public Optional<PyObject> getFromType(PyObject object, String name) {
-        if (isInstance(object, "builtins.type")) {
-            Optional<PyObject> typeObject = typeOrThrow("builtins.type").getScope().get(name);
-            if (typeObject.isPresent()) {
-                return typeObject;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    public Optional<PyObject> getFromTypes(PyObject object, String name) {
-        for (PyObject type : object.getTypes()) {
-            Optional<PyObject> typeObject = type.getScope().get(name);
-            if (typeObject.isPresent()) {
-                return typeObject;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    public Optional<PyObject> getFromParent(PyObject object, String name) {
-        Optional<PyObjectScope> parentOpt = object.getScope().getParent();
-        while (parentOpt.isPresent()) {
-            PyObjectScope parent = parentOpt.get();
-            Optional<PyObject> result = parent.get(name);
-
-            if (result.isPresent()) {
-                return result;
+        } catch (RaiseException e) {
+            if (isInstance(e.getException(), "builtins.AttributeError")) {
+                return Optional.empty();
             }
 
-            parentOpt = parent.getParent();
+            throw e;
         }
 
-        return Optional.empty();
     }
 
     public PyObject getattr(PyObject object, String name) {
-        Optional<PyObject> resultOpt = getattrOptional(object, name);
-        if (resultOpt.isPresent()) {
-            return resultOpt.get();
+        Optional<PyObject> getattributeOpt = object.getScope().get(__getattribute__);
+        if (getattributeOpt.isPresent()) {
+            return getattributeOpt.get().call(object, str(name));
+        }
+
+        Optional<PyObject> getattributeTypeOpt = object.getType().getScope().get(__getattribute__);
+        if (getattributeTypeOpt.isPresent()) {
+            return getattributeTypeOpt.get().call(object, str(name));
+        }
+
+        for (PyObject typesType : object.getType().getTypes()) {
+            Optional<PyObject> getattributeTypesTypeOpt = typesType.getScope().get(__getattribute__);
+            if (getattributeTypesTypeOpt.isPresent()) {
+                return getattributeTypesTypeOpt.get().call(object, str(name));
+            }
         }
 
         if (object.isModule()) {

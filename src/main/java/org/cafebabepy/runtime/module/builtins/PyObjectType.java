@@ -1,10 +1,12 @@
 package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 import org.cafebabepy.util.StringUtils;
 
 import java.util.Optional;
@@ -27,15 +29,61 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
-        PyObject v = this.runtime.getattr(self, name.toJava(String.class));
+        String n = name.toJava(String.class);
 
-        Optional<PyObject> getOpt = this.runtime.getattrOptional(v, __get__);
-        if (getOpt.isPresent()) {
-            PyObject get = getOpt.get();
-            return get.call(v, v.getType());
+        Optional<PyObject> resultOpt = self.getScope().get(n);
+        if (resultOpt.isPresent()) {
+            return resultOpt.get();
+        }
+
+        boolean isParent = false;
+
+        resultOpt = getFromTypes(self, n);
+        if (!resultOpt.isPresent()) {
+            resultOpt = getFromType(self, n);
+            if (!resultOpt.isPresent()) {
+                resultOpt = getFromParent(self, n);
+                if (!resultOpt.isPresent()) {
+                    if (self.isModule()) {
+                        throw this.runtime.newRaiseException("builtins.AttributeError",
+                                "module '" + self.getName() + "' has no attribute '" + name + "'");
+
+                    } else if (self.isType()) {
+                        throw this.runtime.newRaiseException("builtins.AttributeError",
+                                "type object '" + self.getName() + "' has no attribute '" + name + "'");
+
+                    } else {
+                        throw this.runtime.newRaiseException("builtins.AttributeError",
+                                "'" + self.getName() + "' object has no attribute '" + name + "'");
+                    }
+
+                } else {
+                    // Module
+                    isParent = true;
+                }
+            }
+        }
+
+        PyObject result = resultOpt.get();
+        if (!result.isCallable() || isParent) {
+            return result;
 
         } else {
-            return v;
+            synchronized (this) {
+                //if (this.methodMap == null) {
+                //    this.methodMap = new LinkedHashMap<>();
+                //}
+
+                //PyObject method = this.methodMap.get(name);
+                PyObject method = null;
+                if (method == null) {
+                    //method = newPyObject("types.MethodType", result, object);
+                    method = new PyMethodTypeObject(this.runtime, self, result);
+                    //this.methodMap.put(name, method);
+                }
+
+                return method;
+            }
         }
     }
 
@@ -108,5 +156,43 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     @DefinePyFunction(name = __ne__)
     public PyObject __ne__(PyObject self, PyObject other) {
         return this.runtime.NotImplemented();
+    }
+
+    public Optional<PyObject> getFromType(PyObject object, String name) {
+        if (this.runtime.isInstance(object, "builtins.type")) {
+            Optional<PyObject> typeObject = this.runtime.typeOrThrow("builtins.type").getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromTypes(PyObject object, String name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> getFromParent(PyObject object, String name) {
+        Optional<PyObjectScope> parentOpt = object.getScope().getParent();
+        while (parentOpt.isPresent()) {
+            PyObjectScope parent = parentOpt.get();
+            Optional<PyObject> result = parent.get(name);
+
+            if (result.isPresent()) {
+                return result;
+            }
+
+            parentOpt = parent.getParent();
+        }
+
+        return Optional.empty();
     }
 }
