@@ -5,6 +5,8 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.util.StringUtils;
 
+import static org.cafebabepy.util.ProtocolNames.__call__;
+
 /**
  * Created by yotchang4s on 2017/05/30.
  */
@@ -77,6 +79,8 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @Override
     public PyObject call(PyObject... args) {
-        return getCallable().call(args);
+        return this.runtime.typeOrThrow("builtins.type").getScope().get(__call__).orElseThrow(() ->
+                new CafeBabePyException("type " + __call__ + " is not foud")
+        ).call(this, args);
     }
 }

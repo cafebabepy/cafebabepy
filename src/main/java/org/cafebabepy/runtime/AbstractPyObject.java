@@ -127,16 +127,6 @@ public abstract class AbstractPyObject implements PyObject {
         return false;
     }
 
-    protected final PyObject getCallable() {
-        Optional<PyObject> callableOpt = this.runtime.getattrOptional(this, __call__);
-        if (callableOpt.isPresent()) {
-            return callableOpt.get();
-        }
-
-        // FIXME getName()が必ずobjectになる
-        throw this.runtime.newRaiseTypeError("'" + getName() + "' object is not callable");
-    }
-
     @Override
     public PyObject call() {
         PyObject[] objects = new PyObject[0];
