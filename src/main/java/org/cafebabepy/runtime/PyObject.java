@@ -23,9 +23,7 @@ public interface PyObject {
 
     String getFullName();
 
-    void preInitialize();
-
-    void postInitialize();
+    void initialize();
 
     boolean isType();
 

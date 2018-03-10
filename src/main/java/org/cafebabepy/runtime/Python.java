@@ -130,17 +130,11 @@ public final class Python {
         }
         PyObject methodTypeType = createType(methodTypeClass, defineMethodTypeType.name());
 
-        builtinsModule.preInitialize();
-        objectType.preInitialize();
-        typeType.preInitialize();
-        typesModule.preInitialize();
-        methodTypeType.preInitialize();
-
-        typeType.postInitialize();
-        objectType.postInitialize();
-        builtinsModule.postInitialize();
-        typesModule.postInitialize();
-        methodTypeType.postInitialize();
+        builtinsModule.initialize();
+        objectType.initialize();
+        typeType.initialize();
+        typesModule.initialize();
+        methodTypeType.initialize();
 
         initializeTypes(builtinsModuleClass, PyTypeType.class);
         initializeTypes(typesModuleClass, PyMethodTypeType.class);
@@ -154,9 +148,8 @@ public final class Python {
         }
 
         PyObject module = createType(moduleClass, definePyModule.name());
-        module.preInitialize();
+        module.initialize();
         initializeTypes(moduleClass);
-        module.postInitialize();
     }
 
     @SuppressWarnings("unchecked")
@@ -187,7 +180,7 @@ public final class Python {
             Class<PyObject> clazz = (Class<PyObject>) c;
 
             PyObject type = createType(clazz, definePyType.name());
-            type.preInitialize();
+            type.initialize();
 
             if (checkDuplicateTypes.contains(definePyType.name())) {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
@@ -196,10 +189,6 @@ public final class Python {
             types.add(type);
 
             checkDuplicateTypes.add(definePyType.name());
-        }
-
-        for (PyObject type : types) {
-            type.postInitialize();
         }
     }
 
@@ -237,16 +226,14 @@ public final class Python {
 
     public PyStrObject str(String value) {
         PyStrObject object = new PyStrObject(this, value);
-        object.preInitialize();
-        object.postInitialize();
+        object.initialize();
 
         return object;
     }
 
     public PyIntObject number(int value) {
         PyIntObject object = new PyIntObject(this, value);
-        object.preInitialize();
-        object.postInitialize();
+        object.initialize();
 
         return object;
     }
@@ -260,8 +247,7 @@ public final class Python {
 
     public PyObject tuple(PyObject... value) {
         PyTupleObject object = new PyTupleObject(this, value);
-        object.preInitialize();
-        object.postInitialize();
+        object.initialize();
 
         return object;
     }
@@ -275,8 +261,7 @@ public final class Python {
 
     public PyObject list(PyObject... value) {
         PyListObject object = new PyListObject(this, value);
-        object.preInitialize();
-        object.postInitialize();
+        object.initialize();
 
         return object;
     }
@@ -287,8 +272,7 @@ public final class Python {
 
     public PyGeneratorObject generator(Function<PyGeneratorObject.YieldStopper, PyObject> iter) {
         PyGeneratorObject object = new PyGeneratorObject(this, iter);
-        object.preInitialize();
-        object.postInitialize();
+        object.initialize();
 
         return object;
     }

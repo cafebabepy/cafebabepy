@@ -30,7 +30,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.FunctionType");
+        return this.runtime.typeOrThrow("types.FunctionType");
     }
 
     @Override

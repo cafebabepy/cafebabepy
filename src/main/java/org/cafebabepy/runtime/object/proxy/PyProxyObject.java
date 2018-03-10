@@ -59,13 +59,8 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public void preInitialize() {
-        this.source.preInitialize();
-    }
-
-    @Override
-    public void postInitialize() {
-        this.source.postInitialize();
+    public void initialize() {
+        this.source.initialize();
     }
 
     @Override

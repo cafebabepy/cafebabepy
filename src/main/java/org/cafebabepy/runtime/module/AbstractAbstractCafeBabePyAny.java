@@ -16,43 +16,19 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
  */
 abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
-    private enum InitializeStage {
-        NONE, PRE, POST
-    }
-
     private volatile List<PyObject> bases;
-
-    private InitializeStage initialize;
 
     AbstractAbstractCafeBabePyAny(Python runtime) {
         super(runtime);
-
-        this.initialize = InitializeStage.NONE;
     }
 
     AbstractAbstractCafeBabePyAny(Python runtime, boolean appear) {
         super(runtime, appear);
-
-        this.initialize = InitializeStage.NONE;
     }
 
     @Override
-    public void preInitialize() {
-        if (this.initialize != InitializeStage.NONE) {
-            return;
-        }
-
-        this.initialize = InitializeStage.PRE;
+    public void initialize() {
         defineClass();
-    }
-
-    @Override
-    public void postInitialize() {
-        if (this.initialize != InitializeStage.PRE) {
-            return;
-        }
-
-        this.initialize = InitializeStage.POST;
         defineClassMembers();
     }
 
@@ -102,10 +78,6 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
     private void defineClassMembers() {
         Class<?> clazz = getClass();
-
-        this.runtime.type("builtins.object")
-                .orElseThrow(() -> new CafeBabePyException("'builtins.object' is not found"))
-                .getScope();
 
         for (Class<?> c = clazz.getSuperclass(); c != Object.class; c = c.getSuperclass()) {
             defineClassMember(c);

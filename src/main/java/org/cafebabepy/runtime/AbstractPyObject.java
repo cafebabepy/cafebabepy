@@ -73,11 +73,7 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
-    public void preInitialize() {
-    }
-
-    @Override
-    public void postInitialize() {
+    public void initialize() {
     }
 
     @Override

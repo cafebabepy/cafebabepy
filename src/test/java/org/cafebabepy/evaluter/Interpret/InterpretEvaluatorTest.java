@@ -108,7 +108,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "function");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType"));
+            assertEquals(result.getType(), runtime.typeOrThrow("types.FunctionType"));
         }
 
         @Test
@@ -134,7 +134,7 @@ public class InterpretEvaluatorTest {
                     + "    print(arg)\n"
                     + "t = T()\n"
                     + "t.a('cafebabepy')", result -> {
-                assertEquals(result, "cafebabepy\n");
+                assertEquals(result, "cafebabepy" + System.lineSeparator());
             });
         }
     }
