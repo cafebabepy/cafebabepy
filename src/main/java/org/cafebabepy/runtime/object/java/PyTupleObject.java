@@ -3,12 +3,10 @@ package org.cafebabepy.runtime.object.java;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
-import org.cafebabepy.runtime.object.java.PyIntObject;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by yotchang4s on 2017/06/19.

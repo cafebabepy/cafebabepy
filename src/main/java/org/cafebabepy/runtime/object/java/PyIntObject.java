@@ -90,9 +90,14 @@ public class PyIntObject extends AbstractPyObjectObject {
             return (T) Integer.valueOf(this.value);
 
         } else if (String.class.isAssignableFrom(clazz)) {
-            return (T)String.valueOf(this.value);
+            return (T) String.valueOf(this.value);
         }
 
         return super.toJava(clazz);
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(this.value);
     }
 }

@@ -162,7 +162,6 @@ public final class Python {
             throw new CafeBabePyException("Fail initialize package '" + module.getPackage().getName() + "'");
         }
 
-        Set<PyObject> types = new HashSet<>();
         Set<String> checkDuplicateTypes = new HashSet<>();
 
         BuiltinsClass:
@@ -185,8 +184,6 @@ public final class Python {
             if (checkDuplicateTypes.contains(definePyType.name())) {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
-
-            types.add(type);
 
             checkDuplicateTypes.add(definePyType.name());
         }
@@ -261,6 +258,13 @@ public final class Python {
 
     public PyObject list(PyObject... value) {
         PyListObject object = new PyListObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
+    public PyObject dict(LinkedHashMap<PyObject, PyObject> map) {
+        PyDictObject object = new PyDictObject(this, map);
         object.initialize();
 
         return object;
@@ -526,6 +530,10 @@ public final class Python {
 
             throw e;
         }
+    }
+
+    public PyObject hash(PyObject object) {
+        return getattr(object, __hash__).call();
     }
 
     public PyObject eq(PyObject x, PyObject y) {

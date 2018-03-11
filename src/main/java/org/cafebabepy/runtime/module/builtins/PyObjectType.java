@@ -158,8 +158,13 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         return this.runtime.NotImplemented();
     }
 
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        return this.runtime.number(System.identityHashCode(self));
+    }
+
     public Optional<PyObject> getFromType(PyObject object, String name) {
-        if (this.runtime.isInstance(object, "builtins.type")) {
+        if (object.isType()) {
             Optional<PyObject> typeObject = this.runtime.typeOrThrow("builtins.type").getScope().get(name);
             if (typeObject.isPresent()) {
                 return typeObject;

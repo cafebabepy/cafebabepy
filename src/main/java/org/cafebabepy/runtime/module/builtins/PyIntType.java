@@ -1,11 +1,11 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyIntObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;

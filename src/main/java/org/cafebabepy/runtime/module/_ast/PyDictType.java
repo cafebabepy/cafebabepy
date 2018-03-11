@@ -11,10 +11,10 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2017/05/29.
  */
-@DefinePyType(name = "_ast.For", parent = {"_ast.stmt"})
-public class PyForType extends AbstractCafeBabePyType {
+@DefinePyType(name = "_ast.Dict", parent = {"_ast.expr"})
+public class PyDictType extends AbstractCafeBabePyType {
 
-    public PyForType(Python runtime) {
+    public PyDictType(Python runtime) {
         super(runtime);
     }
 
@@ -24,9 +24,7 @@ public class PyForType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("target", args[0]);
-        self.getScope().put("iter", args[1]);
-        self.getScope().put("body", args[2]);
-        self.getScope().put("orelse", args[3]);
+        self.getScope().put("keys", args[0]);
+        self.getScope().put("values", args[1]);
     }
 }

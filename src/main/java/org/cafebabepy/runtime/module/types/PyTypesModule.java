@@ -1,8 +1,8 @@
 package org.cafebabepy.runtime.module.types;
 
-import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
+import org.cafebabepy.runtime.module.DefinePyModule;
 
 /**
  * Created by yotchang4s on 2017/05/12.

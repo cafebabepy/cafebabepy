@@ -219,8 +219,8 @@ public class CafeBabePyLexer extends PythonLexer {
                 la = this._input.LA(1);
 
             } else {
-                if(this.newLineBuilder.length() > 0 && this.lineJoining > 0) {
-                    this.lineJoining=0;
+                if (this.newLineBuilder.length() > 0 && this.lineJoining > 0) {
+                    this.lineJoining = 0;
                 }
                 return la;
             }

@@ -661,6 +661,14 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             // tuple or ()
             return visitTuple(ctx.testlist_comp());
+
+        } else if ("{".equals(open)) {
+            if (!"}".equals(close)) {
+                throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
+            }
+
+            // dict or set
+            return visitDictOrSet(ctx.dictorsetmaker());
         }
 
         return super.visitAtom(ctx);
@@ -693,6 +701,60 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             PyObject load = this.runtime.newPyObject("_ast.Load");
             return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(), load);
         }
+    }
+
+    private PyObject visitDictOrSet(PythonParser.DictorsetmakerContext dictorsetmakerContext) {
+        if (dictorsetmakerContext != null) {
+            if (dictorsetmakerContext.comp_for() == null) {
+                //if (dictorsetmakerContext.COLON().isEmpty()) {
+                // set
+                //} else {
+                // dict
+                PyObject dict;
+
+                List<PyObject> keys = new ArrayList<>();
+                List<PyObject> values = new ArrayList<>();
+
+                boolean doubleStar = false;
+                PyObject test = null;
+                int count = dictorsetmakerContext.getChildCount();
+                for (int i = 0; i < count; i++) {
+                    ParseTree c = dictorsetmakerContext.getChild(i);
+                    if ("**".equals(c.getText())) {
+                        doubleStar = true;
+
+                    } else {
+                        if (doubleStar) {
+                            keys.add(this.runtime.None());
+                            values.add(c.accept(this));
+
+                        } else {
+                            PyObject element = c.accept(this);
+                            if (element != null) {
+                                if (test == null) {
+                                    test = element;
+
+                                } else {
+                                    keys.add(test);
+                                    values.add(element);
+
+                                    test = null;
+                                }
+                            }
+                        }
+                        doubleStar = false;
+                    }
+                }
+
+                return this.runtime.newPyObject("_ast.Dict", this.runtime.list(keys), this.runtime.list(values));
+                //}
+            }
+
+            //} else {
+            //    return this.runtime.newPyObject("_ast.Dict");
+            //}
+        }
+        return this.runtime.newPyObject("_ast.Dict", this.runtime.list(), this.runtime.list());
     }
 
     private PyObject visitAtomToTestlist_comp(PyObject testList_Comp,

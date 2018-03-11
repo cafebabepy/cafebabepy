@@ -1,13 +1,13 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyModule;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by yotchang4s on 2017/05/12.
@@ -36,16 +36,20 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
                     "issubclass() arg 2 must be a type or tuple of types");
         }
 
-        Set<PyObject> objectTypeSet = new HashSet<>();
-        objectTypeSet.addAll(clazz.getTypes());
+        List<PyObject> types = new ArrayList<>();
+        types.addAll(clazz.getTypes());
 
+        /*
         // FIXME 再帰的にtupleを見る
         if (classInfo instanceof PyTupleType) {
-            this.runtime.iter(classInfo, objectTypeSet::add);
+            this.runtime.iter(classInfo, types::add);
         }
+        */
 
-        if (objectTypeSet.contains(classInfo)) {
-            return this.runtime.True();
+        for (PyObject type : types) {
+            if (type == classInfo) {
+                return this.runtime.True();
+            }
         }
 
         return this.runtime.False();

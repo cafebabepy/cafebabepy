@@ -1,8 +1,8 @@
 package org.cafebabepy.runtime.module._ast;
 
-import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
+import org.cafebabepy.runtime.module.DefinePyModule;
 
 /**
  * Created by yotchang4s on 2017/06/04.

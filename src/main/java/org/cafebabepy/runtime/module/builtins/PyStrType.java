@@ -1,14 +1,14 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.module.DefinePyFunction;
-import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
+import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyStrObject;
 
-import static org.cafebabepy.util.ProtocolNames.__add__;
-import static org.cafebabepy.util.ProtocolNames.__str__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -44,5 +44,43 @@ public final class PyStrType extends AbstractCafeBabePyType {
         }
 
         return ((PyStrObject) self).add((PyStrObject) other);
+    }
+
+    @DefinePyFunction(name = __eq__)
+    public PyObject __eq__(PyObject self, PyObject other) {
+        if (this.runtime.isInstance(self, "builtins.str")) {
+            if (!(self instanceof PyStrObject)) {
+                throw new CafeBabePyException("self is not PyStrObject " + self);
+
+            } else if (this.runtime.isInstance(other, "builtins.str")) {
+                if (!(other instanceof PyStrObject)) {
+                    throw new CafeBabePyException("other is not PyStrObject " + other);
+                }
+                String jself = ((PyStrObject) self).getValue();
+                String jother = ((PyStrObject) other).getValue();
+
+                return jself.equals(jother) ? this.runtime.True() : this.runtime.False();
+
+            } else {
+                return this.runtime.NotImplemented();
+            }
+
+        } else {
+            throw this.runtime.newRaiseTypeError("TypeError: descriptor '__eq__' requires a 'str' object but received a '" + self.getName() + "'");
+        }
+    }
+
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        if (this.runtime.isInstance(self, "builtins.str")) {
+            if (!(self instanceof PyStrObject)) {
+                throw new CafeBabePyException("self is not PyStrObject " + self);
+            }
+
+            return this.runtime.number(((PyStrObject) self).getValue().hashCode());
+
+        } else {
+            throw this.runtime.newRaiseTypeError("TypeError: descriptor '__hash__' requires a 'str' object but received a '" + self.getName() + "'");
+        }
     }
 }

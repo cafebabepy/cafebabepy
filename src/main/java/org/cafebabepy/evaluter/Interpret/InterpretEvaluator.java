@@ -131,6 +131,9 @@ public class InterpretEvaluator {
 
             case "Attribute":
                 return evalAttribute(context, node);
+
+            case "Dict":
+                return evalDict(context, node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -683,5 +686,34 @@ public class InterpretEvaluator {
 
         //　TODO どうする？
         return node;
+    }
+
+    private PyObject evalDict(PyObject context, PyObject node) {
+        PyObject keys = this.runtime.getattr(node, "keys");
+        PyObject values = this.runtime.getattr(node, "values");
+
+        List<PyObject> keyList = new ArrayList<>();
+        List<PyObject> valueList = new ArrayList<>();
+
+        this.runtime.iter(keys, keyList::add);
+        this.runtime.iter(values, valueList::add);
+
+        LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
+
+        for (int i = 0; i < keyList.size(); i++) {
+            PyObject key = eval(context, keyList.get(i));
+            PyObject value = eval(context, valueList.get(i));
+
+            if (key.isNone()) {
+                Map<PyObject, PyObject> vs = value.toJava(Map.class);
+                // TODO Error処理
+                map.putAll(vs);
+
+            } else {
+                map.put(key, value);
+            }
+        }
+
+        return this.runtime.dict(map);
     }
 }

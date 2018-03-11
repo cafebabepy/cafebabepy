@@ -5,9 +5,6 @@ package org.cafebabepy.util;
  */
 public final class ProtocolNames {
 
-    private ProtocolNames() {
-    }
-
     public static final String __main__ = "__main__";
     public static final String __module__ = "__module__";
     public static final String __class__ = "__class__";
@@ -25,8 +22,8 @@ public final class ProtocolNames {
     public static final String __rmod__ = "__rmod__";
     public static final String __mul__ = "__mul__";
     public static final String __rmul__ = "__rmul__";
-    public static final String __neg__ ="__neg__";
-    public static final String __pos__ ="__pos__";
+    public static final String __neg__ = "__neg__";
+    public static final String __pos__ = "__pos__";
     public static final String __invert__ = "__invert__";
     public static final String __lt__ = "__lt__";
     public static final String __rlt__ = "__rlt__";
@@ -48,4 +45,8 @@ public final class ProtocolNames {
     public static final String __getattribute__ = "__getattribute__";
     public static final String __getattr__ = "__getattr__";
     public static final String __setattr__ = "__setattr__";
+    public static final String __hash__ = "__hash__";
+
+    private ProtocolNames() {
+    }
 }
