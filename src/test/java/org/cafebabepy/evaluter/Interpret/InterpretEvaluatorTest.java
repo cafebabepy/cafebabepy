@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -60,19 +62,32 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void list() {
+            PyObject result = Python.eval("[1, 2]");
+
+            List<PyObject> list = new ArrayList<>();
+            list.add(result.getRuntime().number(1));
+            list.add(result.getRuntime().number(2));
+
+            assertEquals(result.toJava(List.class), list);
+            assertEquals(result.toJava(String.class),"[1, 2]");
+        }
+
+        @Test
         void dict() {
-            PyObject result = Python.eval("{\"test1\":1, \"test2\":2}");
+            PyObject result = Python.eval("{\"test1\":1 , \"test2\": 2}");
 
             LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
             map.put(result.getRuntime().str("test1"), result.getRuntime().number(1));
             map.put(result.getRuntime().str("test2"), result.getRuntime().number(2));
 
             assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 2}");
         }
 
         @Test
         void dictStar1() {
-            PyObject result = Python.eval("{\"test1\":1, \"test2\":2, **{\"test3\": 3}}");
+            PyObject result = Python.eval("{\"test1\": 1, \"test2\": 2, **{\"test3\": 3}}");
 
             LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
             map.put(result.getRuntime().str("test1"), result.getRuntime().number(1));
@@ -80,11 +95,12 @@ public class InterpretEvaluatorTest {
             map.put(result.getRuntime().str("test3"), result.getRuntime().number(3));
 
             assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 2, 'test3': 3}");
         }
 
         @Test
         void dictStar2() {
-            PyObject result = Python.eval("{**{\"test3\": 3},\"test1\":1, \"test2\":2}");
+            PyObject result = Python.eval("{**{\"test3\": 3}, \"test1\": 1, \"test2\": 2}");
 
             LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
             map.put(result.getRuntime().str("test3"), result.getRuntime().number(3));
@@ -92,6 +108,7 @@ public class InterpretEvaluatorTest {
             map.put(result.getRuntime().str("test2"), result.getRuntime().number(2));
 
             assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{'test3': 3, 'test1': 1, 'test2': 2}");
         }
 
         @Test
@@ -103,6 +120,7 @@ public class InterpretEvaluatorTest {
             map.put(result.getRuntime().str("test2"), result.getRuntime().number(2));
 
             assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 2}");
         }
 
         @Test
@@ -114,6 +132,7 @@ public class InterpretEvaluatorTest {
             map.put(result.getRuntime().str("test2"), result.getRuntime().number(3));
 
             assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 3}");
         }
     }
 

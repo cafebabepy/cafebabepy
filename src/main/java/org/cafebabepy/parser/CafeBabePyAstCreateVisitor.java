@@ -706,12 +706,6 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private PyObject visitDictOrSet(PythonParser.DictorsetmakerContext dictorsetmakerContext) {
         if (dictorsetmakerContext != null) {
             if (dictorsetmakerContext.comp_for() == null) {
-                //if (dictorsetmakerContext.COLON().isEmpty()) {
-                // set
-                //} else {
-                // dict
-                PyObject dict;
-
                 List<PyObject> keys = new ArrayList<>();
                 List<PyObject> values = new ArrayList<>();
 
@@ -747,12 +741,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 }
 
                 return this.runtime.newPyObject("_ast.Dict", this.runtime.list(keys), this.runtime.list(values));
-                //}
             }
-
-            //} else {
-            //    return this.runtime.newPyObject("_ast.Dict");
-            //}
         }
         return this.runtime.newPyObject("_ast.Dict", this.runtime.list(), this.runtime.list());
     }

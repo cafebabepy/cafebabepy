@@ -42,4 +42,14 @@ public class PyListObject extends AbstractPyObjectObject {
     public PyObject getType() {
         return this.runtime.typeOrThrow("builtins.list");
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T toJava(Class<T> clazz) {
+        if (clazz == List.class) {
+            return (T) new ArrayList<>(this.list);
+        }
+
+        return super.toJava(clazz);
+    }
 }

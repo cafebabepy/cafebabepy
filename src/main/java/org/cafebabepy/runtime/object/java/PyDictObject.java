@@ -37,9 +37,8 @@ public class PyDictObject extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
-        if (int.class.isAssignableFrom(clazz) || Map.class.isAssignableFrom(clazz)) {
-            return (T) this.map;
-
+        if (clazz == Map.class) {
+            return (T) new LinkedHashMap<>(this.map);
         }
 
         return super.toJava(clazz);

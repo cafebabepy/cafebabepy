@@ -171,7 +171,12 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
+        if (clazz == String.class) {
+            return (T) this.runtime.str(this).toJava(String.class);
+        }
+
         throw new CafeBabePyException("'" + getClass().getName() + "#toJava' not support '" + clazz.getName() + "'");
     }
 
@@ -369,5 +374,10 @@ public abstract class AbstractPyObject implements PyObject {
     @Override
     public int hashCode() {
         return this.runtime.hash(this).toJava(int.class);
+    }
+
+    @Override
+    public String toString() {
+        return toJava(String.class);
     }
 }
