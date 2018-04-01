@@ -74,6 +74,40 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void tuple1() {
+            PyObject result = Python.eval("(1, 2)");
+
+            List<PyObject> list = new ArrayList<>();
+            list.add(result.getRuntime().number(1));
+            list.add(result.getRuntime().number(2));
+
+            assertEquals(result.toJava(List.class), list);
+            assertEquals(result.toJava(String.class),"(1, 2)");
+        }
+
+        @Test
+        void tuple2() {
+            PyObject result = Python.eval("1,");
+
+            List<PyObject> list = new ArrayList<>();
+            list.add(result.getRuntime().number(1));
+
+            assertEquals(result.toJava(List.class), list);
+            assertEquals(result.toJava(String.class),"(1,)");
+        }
+
+        @Test
+        void tuple3() {
+            PyObject result = Python.eval("(1,)");
+
+            List<PyObject> list = new ArrayList<>();
+            list.add(result.getRuntime().number(1));
+
+            assertEquals(result.toJava(List.class), list);
+            assertEquals(result.toJava(String.class),"(1,)");
+        }
+
+        @Test
         void dict() {
             PyObject result = Python.eval("{\"test1\":1 , \"test2\": 2}");
 

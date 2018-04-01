@@ -134,6 +134,9 @@ public class InterpretEvaluator {
 
             case "Dict":
                 return evalDict(context, node);
+
+            case "Tuple":
+                return evalTuple(context, node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -715,5 +718,24 @@ public class InterpretEvaluator {
         }
 
         return this.runtime.dict(map);
+    }
+
+    private PyObject evalTuple(PyObject context, PyObject node) {
+        PyObject elts = this.runtime.getattr(node, "elts");
+
+        List<PyObject> elements = new ArrayList<>();
+        this.runtime.iter(elts, elt -> {
+            PyObject evalElt = eval(context, elt);
+
+            PyObject type = elt.getType();
+            if (type instanceof PyStarredType) {
+                this.runtime.iter(evalElt, elements::add);
+
+            } else {
+                elements.add(evalElt);
+            }
+        });
+
+        return this.runtime.tuple(elements);
     }
 }

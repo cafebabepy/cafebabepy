@@ -438,7 +438,7 @@ public final class Python {
 
         } else {
             PyObject iterType = getIterType(object);
-            PyObject iter = iterType.call(object);
+            PyObject iter = iterType.call();
             next = getIterNext(iter);
             obj = iter;
         }
@@ -448,7 +448,7 @@ public final class Python {
             PyObject value;
 
             try {
-                value = next.call(obj);
+                value = next.call();
 
             } catch (RaiseException e) {
                 PyObject exception = e.getException();

@@ -76,8 +76,14 @@ public class PyTupleType extends AbstractCafeBabePyType {
             jlist.add(jv);
         });
 
-        String jstr = jlist.stream().collect(Collectors.joining(", ", "(", ")"));
+        if (jlist.size() == 1) {
+            return this.runtime.str("(" + jlist.get(0) + ",)");
 
-        return this.runtime.str(jstr);
+        } else {
+
+            String jstr = jlist.stream().collect(Collectors.joining(", ", "(", ")"));
+
+            return this.runtime.str(jstr);
+        }
     }
 }

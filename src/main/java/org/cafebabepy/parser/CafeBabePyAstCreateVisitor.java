@@ -1,5 +1,6 @@
 package org.cafebabepy.parser;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.cafebabepy.parser.antlr.PythonParser;
@@ -89,19 +90,17 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     @Override
     public PyObject visitExpr_stmt(PythonParser.Expr_stmtContext ctx) {
         List<PythonParser.Testlist_star_exprContext> testlist_star_exprContextList = ctx.testlist_star_expr();
+        PyObject testlist_star_expr = visitTestlist_star_expr(testlist_star_exprContextList.get(0));
 
         PythonParser.AnnassignContext annassignContext = ctx.annassign();
         if (annassignContext != null) {
-            PyObject testlist_star_expr = visitTestlist_star_expr(testlist_star_exprContextList.get(0));
-
             return createAnnasign(testlist_star_expr, annassignContext);
 
         } else if (testlist_star_exprContextList.size() >= 2) {
             return createAssign(testlist_star_exprContextList);
         }
 
-        PyObject children = visitChildren(ctx);
-        PyObject expr_stmt = this.runtime.newPyObject("_ast.Expr", children);
+        PyObject expr_stmt = this.runtime.newPyObject("_ast.Expr", testlist_star_expr);
 
         return expr_stmt;
     }
@@ -651,16 +650,28 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
             }
 
-            // list
-            return visitList(ctx.testlist_comp());
+            if (ctx.yield_expr() != null) {
+                return visitYield_expr(ctx.yield_expr());
+
+            } else if (ctx.testlist_comp() != null) {
+                PyObject testlist_comp = visitTestlist_comp(ctx.testlist_comp());
+                PyObject load = this.runtime.newPyObject("_ast.Load");
+
+                return this.runtime.newPyObject("_ast.List", testlist_comp, load);
+
+            } else {
+                throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
+            }
 
         } else if ("(".equals(open)) {
             if (!")".equals(close)) {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
             }
 
-            // tuple or ()
-            return visitTuple(ctx.testlist_comp());
+            PyObject list = visitTestlist_comp(ctx.testlist_comp());
+
+            PyObject load = this.runtime.newPyObject("_ast.Load");
+            return this.runtime.newPyObject("_ast.Tuple", list, load);
 
         } else if ("{".equals(open)) {
             if (!"}".equals(close)) {
@@ -668,52 +679,25 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             }
 
             // dict or set
-            return visitDictOrSet(ctx.dictorsetmaker());
+            return visitDictorsetmaker(ctx.dictorsetmaker());
+
         }
 
         return super.visitAtom(ctx);
     }
 
-    private PyObject visitList(PythonParser.Testlist_compContext testlist_compContext) {
-        if (testlist_compContext != null) {
-            PyObject testList_comp = visitTestlist_comp(testlist_compContext);
-            return visitAtomToTestlist_comp(testList_comp, "_ast.ListComp", "_ast.List");
-
-        } else {
-            PyObject load = this.runtime.newPyObject("_ast.Load");
-            return this.runtime.newPyObject("_ast.List", this.runtime.list(), load);
-        }
-    }
-
-    private PyObject visitTuple(PythonParser.Testlist_compContext testlist_compContext) {
-        if (testlist_compContext != null) {
-            PyObject resultVisit = visitTestlist_comp(testlist_compContext);
-            List<PyObject> resultVisitList = this.runtime.toList(resultVisit);
-
-            if (resultVisitList.size() == 1) {
-                return resultVisitList.get(0);
-
-            } else {
-                return visitAtomToTestlist_comp(resultVisit, "_ast.GeneratorExp", "_ast.Tuple");
-            }
-
-        } else {
-            PyObject load = this.runtime.newPyObject("_ast.Load");
-            return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(), load);
-        }
-    }
-
-    private PyObject visitDictOrSet(PythonParser.DictorsetmakerContext dictorsetmakerContext) {
-        if (dictorsetmakerContext != null) {
-            if (dictorsetmakerContext.comp_for() == null) {
+    @Override
+    public PyObject visitDictorsetmaker(PythonParser.DictorsetmakerContext ctx) {
+        if (ctx != null) {
+            if (ctx.comp_for() == null) {
                 List<PyObject> keys = new ArrayList<>();
                 List<PyObject> values = new ArrayList<>();
 
                 boolean doubleStar = false;
                 PyObject test = null;
-                int count = dictorsetmakerContext.getChildCount();
+                int count = ctx.getChildCount();
                 for (int i = 0; i < count; i++) {
-                    ParseTree c = dictorsetmakerContext.getChild(i);
+                    ParseTree c = ctx.getChild(i);
                     if ("**".equals(c.getText())) {
                         doubleStar = true;
 
@@ -746,54 +730,75 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         return this.runtime.newPyObject("_ast.Dict", this.runtime.list(), this.runtime.list());
     }
 
-    private PyObject visitAtomToTestlist_comp(PyObject testList_Comp,
-                                              String comp, String structure) {
-        PyObject load = this.runtime.newPyObject("_ast.Load");
-
-        List<PyObject> resultVisitList = this.runtime.toList(testList_Comp);
-        int comprehensionCount = 0;
-        PyObject type = this.runtime.typeOrThrow("_ast.comprehension");
-        for (int i = 1; i < resultVisitList.size(); i++) {
-            if (this.runtime.isInstance(resultVisitList.get(i), type)) {
-                comprehensionCount++;
-            }
-        }
-        if (0 < comprehensionCount) {
-            if (resultVisitList.size() - 1 != comprehensionCount) {
-                throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid comprehension");
-            }
-            PyObject elt = resultVisitList.get(0);
-            PyObject generators = this.runtime.list(resultVisitList.subList(1, resultVisitList.size()));
-            return this.runtime.newPyObject(comp, elt, generators);
-
-        } else {
-            return this.runtime.newPyObject(structure, testList_Comp, load);
-        }
+    @Override
+    public PyObject visitTestlist_star_expr(PythonParser.Testlist_star_exprContext ctx) {
+        return visitTupleExpr(ctx, ctx.test().size() + ctx.star_expr().size(), ctx.COMMA().size());
     }
 
     @Override
     public PyObject visitTestlist_comp(PythonParser.Testlist_compContext ctx) {
-        List<PyObject> list = new ArrayList<>();
-
         PythonParser.Comp_forContext comp_forContext = ctx.comp_for();
         if (comp_forContext == null) {
-            int count = ctx.getChildCount();
-            for (int i = 0; i < count; i++) {
-                ParseTree c = ctx.getChild(i);
-                PyObject element = c.accept(this);
-                if (element != null) {
-                    list.add(element);
+            if (ctx.test().size() + ctx.star_expr().size() == 1) {
+                PyObject element = ctx.getChild(0).accept(this);
+                if (ctx.COMMA().isEmpty()) {
+                    return element;
+
+                } else {
+                    return this.runtime.list(element);
                 }
             }
 
+            List<PyObject> elements = new ArrayList<>(ctx.test().size() + ctx.star_expr().size());
+            int count = ctx.getChildCount();
+            for (int i = 0; i < count; i++) {
+                ParseTree parseTree = ctx.getChild(i);
+                if (parseTree != null) {
+                    PyObject element = parseTree.accept(this);
+                    if (element != null) {
+                        elements.add(element);
+                    }
+                }
+            }
+            return this.runtime.list(elements);
+
         } else {
+            List<PyObject> list = new ArrayList<>();
+
             list.add(ctx.getChild(0).accept(this));
 
             PyObject comp_for = visitComp_for(comp_forContext);
             this.runtime.iter(comp_for, list::add);
+
+            return this.runtime.list(list);
+        }
+    }
+
+    private PyObject visitTupleExpr(ParserRuleContext ctx, int exprSize, int commaSize) {
+        if (exprSize == 1) {
+            PyObject element = ctx.getChild(0).accept(this);
+            if (commaSize == 0) {
+                return element;
+
+            } else {
+                PyObject load = this.runtime.newPyObject("_ast.Load");
+                return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(element), load);
+            }
         }
 
-        return this.runtime.list(list);
+        List<PyObject> exprList = new ArrayList<>(commaSize);
+        int count = ctx.getChildCount();
+        for (int i = 0; i < count; i++) {
+            PyObject element = ctx.getChild(i).accept(this);
+            if (element == null) {
+                continue;
+            }
+
+            exprList.add(element);
+        }
+
+        PyObject load = this.runtime.newPyObject("_ast.Load");
+        return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(exprList), load);
     }
 
     @Override

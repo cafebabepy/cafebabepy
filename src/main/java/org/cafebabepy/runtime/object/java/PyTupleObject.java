@@ -4,9 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by yotchang4s on 2017/06/19.
@@ -36,5 +34,18 @@ public class PyTupleObject extends AbstractPyObjectObject {
     @Override
     public PyObject getType() {
         return this.runtime.typeOrThrow("builtins.tuple");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T toJava(Class<T> clazz) {
+        if (clazz == List.class) {
+            return (T) new ArrayList<>(this.list);
+
+        } else if (clazz == Set.class) {
+            return (T) new LinkedHashSet<>(this.list);
+        }
+
+        return super.toJava(clazz);
     }
 }
