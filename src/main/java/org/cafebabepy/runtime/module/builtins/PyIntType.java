@@ -42,6 +42,22 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) self).eq((PyIntObject) other);
     }
 
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        if (this.runtime.isInstance(self, "builtins.int")) {
+            if (!(self instanceof PyIntObject)) {
+                throw new CafeBabePyException("self is not PyIntObject " + self);
+            }
+
+            int value = ((PyIntObject) self).getIntValue();
+
+            return this.runtime.number(Integer.hashCode(value));
+
+        } else {
+            throw this.runtime.newRaiseTypeError("TypeError: descriptor '__hash__' requires a 'str' object but received a '" + self.getName() + "'");
+        }
+    }
+
     @DefinePyFunction(name = __ne__)
     public PyObject __ne__(PyObject self, PyObject other) {
         PyObject result = check(self, other);

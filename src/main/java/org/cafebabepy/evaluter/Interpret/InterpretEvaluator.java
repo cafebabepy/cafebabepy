@@ -137,6 +137,12 @@ public class InterpretEvaluator {
 
             case "Tuple":
                 return evalTuple(context, node);
+
+            case "Subscript":
+                return evalSubscript(context, node);
+
+            case "Index":
+                return evalIndex(context, node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -376,6 +382,9 @@ public class InterpretEvaluator {
         } else if (targetType instanceof PyListType) {
             targets = this.runtime.getattr(target, "elts");
 
+        } else if (targetType instanceof PyTupleType) {
+            targets = this.runtime.getattr(target, "elts");
+
         } else {
             throw this.runtime.newRaiseTypeError("Invalid '" + targetType.getFullName() + "' type");
         }
@@ -501,6 +510,34 @@ public class InterpretEvaluator {
         }
 
         return result;
+    }
+
+    private PyObject evalSubscript(PyObject context, PyObject node) {
+        PyObject value = this.runtime.getattr(node, "value");
+        PyObject slice = this.runtime.getattr(node, "slice");
+        PyObject ctx = this.runtime.getattr(node, "ctx");
+
+        if (this.runtime.isInstance(slice, "_ast.Index")) {
+            PyObject evalValue = eval(context, value);
+
+            Optional<PyObject> getattrOpt = this.runtime.getattrOptional(evalValue, __getitem__);
+            if (!getattrOpt.isPresent()) {
+                throw this.runtime.newRaiseTypeError("'" + evalValue.getFullName() + "' object is not subscriptable");
+            }
+
+            PyObject evalKey = eval(context, slice);
+
+            return getattrOpt.get().call(evalKey);
+        }
+
+        // TODO あとで実装
+        return this.runtime.NotImplemented();
+    }
+
+    private PyObject evalIndex(PyObject context, PyObject node) {
+        PyObject value = this.runtime.getattr(node, "value");
+
+        return eval(context, value);
     }
 
     private PyObject evalReturn(PyObject context, PyObject node) {

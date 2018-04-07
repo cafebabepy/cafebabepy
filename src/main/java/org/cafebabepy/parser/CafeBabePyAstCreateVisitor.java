@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.cafebabepy.parser.antlr.PythonParser;
 import org.cafebabepy.parser.antlr.PythonParserBaseVisitor;
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.*;
@@ -591,6 +592,13 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 } else {
                     trailer.getScope().put("value", expr);
                 }
+            } else if (this.runtime.isInstance(trailer, "_ast.Subscript")) {
+                if (expr == null) {
+                    trailer.getScope().put("value", atom);
+
+                } else {
+                    trailer.getScope().put("value", expr);
+                }
             }
 
             expr = trailer;
@@ -684,6 +692,11 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         return super.visitAtom(ctx);
+    }
+
+    @Override
+    public PyObject visitExprlist(PythonParser.ExprlistContext ctx) {
+        return visitTupleExpr(ctx, ctx.expr().size() + ctx.star_expr().size(), ctx.COMMA().size());
     }
 
     @Override
@@ -822,9 +835,51 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             // FIXME keywords
             return this.runtime.newPyObject("_ast.Call", this.runtime.None(), arglist, this.runtime.None());
+
+        } else if ("[".equals(firstText) && "]".equals(lastText)) {
+            PythonParser.SubscriptlistContext subscriptlistContext = ctx.subscriptlist();
+            if (subscriptlistContext == null) {
+                throw this.runtime.newRaiseException("builtins.SyntaxError", "sub script list not found");
+            }
+            PyObject subscriptlist = visitSubscriptlist(subscriptlistContext);
+
+            // Default
+            PyObject load = this.runtime.newPyObject("_ast.Load");
+
+            return this.runtime.newPyObject("_ast.Subscript", this.runtime.None(), subscriptlist, load);
+
+        } else {
+            throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
+        }
+    }
+
+    @Override
+    public PyObject visitSubscriptlist(PythonParser.SubscriptlistContext ctx) {
+        PyObject expr = visitTupleExpr(ctx, ctx.subscript().size(), ctx.COMMA().size());
+
+        int[] sliceCount = new int[1];
+        sliceCount[0] = 0;
+
+        if (this.runtime.isInstance(expr, "builtins.tuple")) {
+            this.runtime.iter(expr, x -> sliceCount[0]++);
         }
 
-        throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
+        if (sliceCount[0] == 0) {
+            return this.runtime.newPyObject("_ast.Index", expr);
+
+        } else {
+            throw new CafeBabePyException("Not implements");
+        }
+    }
+
+    @Override
+    public PyObject visitSubscript(PythonParser.SubscriptContext ctx) {
+        if (ctx.COLON() != null) {
+            throw new CafeBabePyException("Not implements");
+
+        } else {
+            return ctx.test(0).accept(this);
+        }
     }
 
     @Override

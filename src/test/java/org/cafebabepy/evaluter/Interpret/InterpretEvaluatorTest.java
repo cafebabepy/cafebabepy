@@ -38,6 +38,21 @@ public class InterpretEvaluatorTest {
         }
     }
 
+
+    @Nested
+    class Call {
+        @Test
+        void dict() throws IOException {
+            evalStdOutToResult(""
+                    + "a = {1: 2}\n"
+                    + "print(a[1])", result -> {
+                assertEquals(result, ""
+                        + "2" + System.lineSeparator()
+                );
+            });
+        }
+    }
+
     @Nested
     class Literal {
         @Test
@@ -70,7 +85,7 @@ public class InterpretEvaluatorTest {
             list.add(result.getRuntime().number(2));
 
             assertEquals(result.toJava(List.class), list);
-            assertEquals(result.toJava(String.class),"[1, 2]");
+            assertEquals(result.toJava(String.class), "[1, 2]");
         }
 
         @Test
@@ -82,7 +97,7 @@ public class InterpretEvaluatorTest {
             list.add(result.getRuntime().number(2));
 
             assertEquals(result.toJava(List.class), list);
-            assertEquals(result.toJava(String.class),"(1, 2)");
+            assertEquals(result.toJava(String.class), "(1, 2)");
         }
 
         @Test
@@ -93,7 +108,7 @@ public class InterpretEvaluatorTest {
             list.add(result.getRuntime().number(1));
 
             assertEquals(result.toJava(List.class), list);
-            assertEquals(result.toJava(String.class),"(1,)");
+            assertEquals(result.toJava(String.class), "(1,)");
         }
 
         @Test
@@ -104,7 +119,7 @@ public class InterpretEvaluatorTest {
             list.add(result.getRuntime().number(1));
 
             assertEquals(result.toJava(List.class), list);
-            assertEquals(result.toJava(String.class),"(1,)");
+            assertEquals(result.toJava(String.class), "(1,)");
         }
 
         @Test
@@ -167,6 +182,56 @@ public class InterpretEvaluatorTest {
 
             assertEquals(result.toJava(Map.class), map);
             assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 3}");
+        }
+    }
+
+    @Nested
+    class For {
+        @Test
+        void forStmt() throws IOException {
+            evalStdOutToResult(""
+                    + "for x in range(5):\n"
+                    + "  print(x)", result -> {
+                assertEquals(result, ""
+                        + "0" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "2" + System.lineSeparator()
+                        + "3" + System.lineSeparator()
+                        + "4" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void forStmtUnpack() throws IOException {
+            evalStdOutToResult(""
+                            + "for x, y in [(1, 2), (3, 4)]:\n"
+                            + "  print(x)\n"
+                            + "  print(y)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "3" + System.lineSeparator()
+                                + "4" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void forStmtStarUnpack() throws IOException {
+            evalStdOutToResult(""
+                            + "for x, *y in [(1, 2, 3), (4, 5, 6)]:\n"
+                            + "  print(x)\n"
+                            + "  print(y)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "[2, 3]" + System.lineSeparator()
+                                + "4" + System.lineSeparator()
+                                + "[5, 6]" + System.lineSeparator()
+                        );
+                    });
         }
     }
 
