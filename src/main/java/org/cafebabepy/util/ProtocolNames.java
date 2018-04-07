@@ -42,6 +42,7 @@ public final class ProtocolNames {
     public static final String __len__ = "__len__";
     public static final String __get__ = "__get__";
     public static final String __getitem__ = "__getitem__";
+    public static final String __setitem__ = "__setitem__";
     public static final String __getattribute__ = "__getattribute__";
     public static final String __getattr__ = "__getattr__";
     public static final String __setattr__ = "__setattr__";

@@ -203,7 +203,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void forStmtUnpack() throws IOException {
+        void forStmtUnpack1() throws IOException {
             evalStdOutToResult(""
                             + "for x, y in [(1, 2), (3, 4)]:\n"
                             + "  print(x)\n"
@@ -216,6 +216,23 @@ public class InterpretEvaluatorTest {
                                 + "4" + System.lineSeparator()
                         );
                     });
+        }
+
+        @Test
+        void forStmtIndex() throws IOException {
+            PyObject result = Python.eval(""
+                    + "d = {}\n"
+                    + "for i, *j, d[tuple(j)] in [(1, 2, 3, 4), (5, 6, 7, 8)]:\n"
+                    + "  pass\n"
+                    + "d");
+
+            Python runtime = result.getRuntime();
+
+            LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
+            map.put(runtime.tuple(runtime.number(2), runtime.number(3)), runtime.number(4));
+            map.put(runtime.tuple(runtime.number(6), runtime.number(7)), runtime.number(8));
+
+            assertEquals(result.toJava(Map.class), map);
         }
 
         @Test

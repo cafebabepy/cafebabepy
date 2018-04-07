@@ -16,15 +16,16 @@ public class PyTupleObject extends AbstractPyObjectObject {
     public PyTupleObject(Python runtime, PyObject... value) {
         super(runtime);
 
-        this.list = Collections.unmodifiableList(Arrays.asList(value));
+        this.list = new ArrayList<>();
+        this.list.addAll(Arrays.asList(value));
     }
 
-    public List<PyObject> getList() {
+    public List<PyObject> getRawList() {
         return this.list;
     }
 
-    public PyObject get(PyIntObject i) {
-        return this.list.get(i.getIntValue());
+    public List<PyObject> getList() {
+        return Collections.unmodifiableList(this.list);
     }
 
     public PyObject getLen() {

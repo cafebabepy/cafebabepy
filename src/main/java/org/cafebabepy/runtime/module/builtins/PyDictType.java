@@ -7,11 +7,14 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyDictObject;
+import org.cafebabepy.runtime.object.java.PyIntObject;
+import org.cafebabepy.runtime.object.java.PyTupleObject;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.__getitem__;
+import static org.cafebabepy.util.ProtocolNames.__setitem__;
 import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
@@ -51,5 +54,21 @@ public class PyDictType extends AbstractCafeBabePyType {
         }
 
         return value;
+    }
+
+    @DefinePyFunction(name = __setitem__)
+    public PyObject __setitem__(PyObject self, PyObject key, PyObject value) {
+        if (!this.runtime.isInstance(self, "builtins.dict")) {
+            throw this.runtime.newRaiseTypeError("descriptor '__setitem__' requires a 'dict' object but received a '" + self.getType().getName() + "'");
+        }
+
+        if (!PyDictObject.class.isAssignableFrom(self.getClass())) {
+            throw new CafeBabePyException(PyDictObject.class.getName() + " is not assignable from " + self.getClass().getName());
+        }
+
+        PyDictObject dict = (PyDictObject) self;
+        dict.getRawMap().put(key, value);
+
+        return this.runtime.None();
     }
 }

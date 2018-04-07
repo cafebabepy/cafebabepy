@@ -25,6 +25,24 @@ public class PyTupleType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
+    @DefinePyFunction(name = __init__)
+    public PyObject __init__(PyObject self, PyObject iterable) {
+        if (!(self instanceof PyTupleObject)) {
+            return this.runtime.getattr(self, __init__).call(iterable);
+        }
+
+        PyTupleObject tuple = (PyTupleObject) self;
+
+        // TODO 直接tuple.__init__を呼び出すとミュータブルになるが大丈夫か？
+        List<PyObject> list = new ArrayList<>();
+        this.runtime.iter(iterable, list::add);
+
+        tuple.getRawList().clear();
+        tuple.getRawList().addAll(list);
+
+        return this.runtime.None();
+    }
+
     @DefinePyFunction(name = __getitem__)
     public PyObject __getitem__(PyObject self, PyObject key) {
         if (!(self instanceof PyTupleObject)) {
@@ -41,7 +59,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         PyTupleObject tuple = (PyTupleObject) self;
         PyIntObject index = (PyIntObject) key;
 
-        return tuple.get(index);
+        return tuple.getRawList().get(index.getIntValue());
     }
 
     @DefinePyFunction(name = __len__)
@@ -85,5 +103,32 @@ public class PyTupleType extends AbstractCafeBabePyType {
 
             return this.runtime.str(jstr);
         }
+    }
+
+    @DefinePyFunction(name = __eq__)
+    public PyObject __eq__(PyObject self, PyObject other) {
+        if (!(self instanceof PyTupleObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__eq__' requires a 'list' object but received a '" + self.getType() + "'");
+        }
+
+        if (!(other instanceof PyTupleObject)) {
+            return this.runtime.NotImplemented();
+        }
+
+        PyTupleObject v1 = (PyTupleObject) self;
+        PyTupleObject v2 = (PyTupleObject) other;
+
+        return this.runtime.bool(v1.getRawList().equals(v2.getRawList()));
+    }
+
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        if (!(self instanceof PyTupleObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__hash__' requires a 'list' object but received a '" + self.getType() + "'");
+        }
+
+        PyTupleObject v = (PyTupleObject) self;
+
+        return this.runtime.number(v.getRawList().hashCode());
     }
 }

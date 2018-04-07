@@ -49,6 +49,10 @@ public class PyRangeType extends AbstractCafeBabePyType {
             step = getInt(args[2]);
         }
 
+        if (((PyIntObject) step).getIntValue() == 0) {
+            throw this.runtime.newRaiseException("builtins.ValueError", "range() arg 3 must not be zero");
+        }
+
         self.getScope().put("start", start);
         self.getScope().put("stop", stop);
         self.getScope().put("step", step);
@@ -95,5 +99,30 @@ public class PyRangeType extends AbstractCafeBabePyType {
         int stepInt = ((PyIntObject) step).getIntValue();
 
         return new PyRangeIteratorObject(this.runtime, startInt, stopInt, stepInt);
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (!this.runtime.isInstance(self, this)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__str__' requires a 'range' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        PyObject start = this.runtime.getattr(self, "start");
+        PyObject stop = this.runtime.getattr(self, "stop");
+        PyObject step = this.runtime.getattr(self, "step");
+
+        int startInt = ((PyIntObject) start).getIntValue();
+        int stopInt = ((PyIntObject) stop).getIntValue();
+        int stepInt = ((PyIntObject) step).getIntValue();
+
+        if (stepInt == 1) {
+            return this.runtime.str("range(" + startInt + ", " + stopInt + ")");
+
+        } else {
+            return this.runtime.str("range(" + startInt + ", " + stopInt + ", " + stepInt + ")");
+        }
     }
 }

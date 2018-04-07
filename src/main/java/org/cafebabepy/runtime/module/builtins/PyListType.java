@@ -80,4 +80,31 @@ public class PyListType extends AbstractCafeBabePyType {
 
         return this.runtime.str(jstr);
     }
+
+    @DefinePyFunction(name = __eq__)
+    public PyObject __eq__(PyObject self, PyObject other) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__eq__' requires a 'list' object but received a '" + self.getType() + "'");
+        }
+
+        if (!(other instanceof PyListObject)) {
+            return this.runtime.NotImplemented();
+        }
+
+        PyListObject v1 = (PyListObject) self;
+        PyListObject v2 = (PyListObject) other;
+
+        return this.runtime.bool(v1.getRawList().equals(v2.getRawList()));
+    }
+
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__hash__' requires a 'list' object but received a '" + self.getType() + "'");
+        }
+
+        PyListObject list = (PyListObject) self;
+
+        return this.runtime.number(list.getRawList().hashCode());
+    }
 }

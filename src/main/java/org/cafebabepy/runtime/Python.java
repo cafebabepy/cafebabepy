@@ -242,6 +242,21 @@ public final class Python {
         return tuple(array);
     }
 
+    public PyObject tuple(PyObject value) {
+        if (isIterable(value)) {
+            List<PyObject> list = new ArrayList<>();
+            iter(value, list::add);
+
+            return tuple(list);
+
+        } else {
+            PyTupleObject object = new PyTupleObject(this, value);
+            object.initialize();
+
+            return object;
+        }
+    }
+
     public PyObject tuple(PyObject... value) {
         PyTupleObject object = new PyTupleObject(this, value);
         object.initialize();

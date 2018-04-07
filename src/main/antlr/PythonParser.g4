@@ -333,8 +333,8 @@ atom_expr
 
 atom
  : OPEN_PAREN (yield_expr | testlist_comp)? CLOSE_PAREN
- | OPEN_BRACK testlist_comp CLOSE_BRACK
- | OPEN_BRACE dictorsetmaker CLOSE_BRACE
+ | OPEN_BRACK testlist_comp? CLOSE_BRACK
+ | OPEN_BRACE dictorsetmaker? CLOSE_BRACE
  | NAME
  | number
  | str+

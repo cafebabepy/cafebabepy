@@ -348,24 +348,18 @@ public class InterpretEvaluator {
             context.getScope().put(id.toJava(String.class), evalValue);
 
         } else {
-            LinkedHashMap<String, PyObject> assignMap = new LinkedHashMap<>();
-
-            unpack(context, target, evalValue, assignMap);
-
-            for (Map.Entry<String, PyObject> e : assignMap.entrySet()) {
-                context.getScope().put(e.getKey(), e.getValue());
-            }
+            unpack(context, target, evalValue);
         }
     }
 
-    private void unpack(PyObject context, PyObject target, PyObject evalValue, Map<String, PyObject> assignMap) {
+    private void unpack(PyObject context, PyObject target, PyObject evalValue) {
         PyObject targetType = target.getType();
 
         PyObject targets;
 
         if (targetType instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            assignMap.put(id.toJava(String.class), evalValue);
+            context.getScope().put(id.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
@@ -376,7 +370,7 @@ public class InterpretEvaluator {
 
         } else if (targetType instanceof PyStarredType) {
             PyObject value = this.runtime.getattr(target, "value");
-            unpack(context, value, evalValue, assignMap);
+            unpack(context, value, evalValue);
             return;
 
         } else if (targetType instanceof PyListType) {
@@ -384,6 +378,22 @@ public class InterpretEvaluator {
 
         } else if (targetType instanceof PyTupleType) {
             targets = this.runtime.getattr(target, "elts");
+
+        } else if (targetType instanceof PySubscriptType) {
+            PyObject value = this.runtime.getattr(target, "value");
+            PyObject slice = this.runtime.getattr(target, "slice");
+
+            PyObject evalTarget = eval(context, value);
+
+            Optional<PyObject> setattrOpt = this.runtime.getattrOptional(evalTarget, __setitem__);
+            if (!setattrOpt.isPresent()) {
+                throw this.runtime.newRaiseTypeError("'" + evalTarget.getFullName() + "' object does not support item assignment");
+            }
+
+            PyObject evalKey = eval(context, slice);
+
+            setattrOpt.get().call(evalKey, evalValue);
+            return;
 
         } else {
             throw this.runtime.newRaiseTypeError("Invalid '" + targetType.getFullName() + "' type");
@@ -444,19 +454,19 @@ public class InterpretEvaluator {
             } else {
                 if (starredTarget != null) {
                     PyObject value = this.runtime.list(starredValueList);
-                    unpack(context, starredTarget, value, assignMap);
+                    unpack(context, starredTarget, value);
 
                     starredTarget = null;
                     starredValueList = null;
                 }
-                unpack(context, t, evalValuePyList.get(valueIndex), assignMap);
+                unpack(context, t, evalValuePyList.get(valueIndex));
                 valueIndex++;
             }
         }
 
         if (starredTarget != null) {
             PyObject value = this.runtime.list(starredValueList);
-            unpack(context, starredTarget, value, assignMap);
+            unpack(context, starredTarget, value);
         }
 
         if (valueIndex < evalValuePyList.size()) {
