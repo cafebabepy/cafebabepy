@@ -754,12 +754,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         if (comp_forContext == null) {
             if (ctx.test().size() + ctx.star_expr().size() == 1) {
                 PyObject element = ctx.getChild(0).accept(this);
-                if (ctx.COMMA().isEmpty()) {
-                    return element;
-
-                } else {
-                    return this.runtime.list(element);
-                }
+                return this.runtime.list(element);
             }
 
             List<PyObject> elements = new ArrayList<>(ctx.test().size() + ctx.star_expr().size());

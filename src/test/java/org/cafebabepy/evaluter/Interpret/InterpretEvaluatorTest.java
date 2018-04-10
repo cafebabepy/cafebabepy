@@ -38,6 +38,26 @@ public class InterpretEvaluatorTest {
         }
     }
 
+    @Nested
+    class Assign {
+        @Test
+        void unpackAssign1() throws IOException {
+            evalStdOutToResult("" +
+                            "[[a], *[b], c, [d]] = [[1], [[2], [3], [4]], 5, [6]]\n" +
+                            "print(a)\n" +
+                            "print(b)\n" +
+                            "print(c)\n" +
+                            "print(d)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "[[2], [3], [4]]" + System.lineSeparator()
+                                + "5" + System.lineSeparator()
+                                + "6" + System.lineSeparator()
+                        );
+                    });
+        }
+    }
 
     @Nested
     class Call {
