@@ -270,6 +270,17 @@ public class InterpretEvaluatorTest {
                         );
                     });
         }
+
+        @Test
+        void forComprehension1() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [i for i in range(10)]\n"
+                            + "print(a)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]" + System.lineSeparator());
+                    });
+        }
     }
 
     @Nested

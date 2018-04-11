@@ -663,9 +663,13 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             } else if (ctx.testlist_comp() != null) {
                 PyObject testlist_comp = visitTestlist_comp(ctx.testlist_comp());
-                PyObject load = this.runtime.newPyObject("_ast.Load");
+                if (this.runtime.isInstance(testlist_comp, "_ast.ListComp")) {
+                    return testlist_comp;
 
-                return this.runtime.newPyObject("_ast.List", testlist_comp, load);
+                } else {
+                    PyObject load = this.runtime.newPyObject("_ast.Load");
+                    return this.runtime.newPyObject("_ast.List", testlist_comp, load);
+                }
 
             } else {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
@@ -676,10 +680,17 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
             }
 
-            PyObject list = visitTestlist_comp(ctx.testlist_comp());
+            PyObject testlist_comp = visitTestlist_comp(ctx.testlist_comp());
+            if (this.runtime.isInstance(testlist_comp, "_ast.ListComp")) {
+                PyObject elt = this.runtime.getattr(testlist_comp, "elt");
+                PyObject generators = this.runtime.getattr(testlist_comp, "generators");
 
-            PyObject load = this.runtime.newPyObject("_ast.Load");
-            return this.runtime.newPyObject("_ast.Tuple", list, load);
+                return this.runtime.newPyObject("_ast.GeneratorExp", elt, generators);
+
+            } else {
+                PyObject load = this.runtime.newPyObject("_ast.Load");
+                return this.runtime.newPyObject("_ast.Tuple", testlist_comp, load);
+            }
 
         } else if ("{".equals(open)) {
             if (!"}".equals(close)) {
@@ -771,14 +782,11 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             return this.runtime.list(elements);
 
         } else {
-            List<PyObject> list = new ArrayList<>();
-
-            list.add(ctx.getChild(0).accept(this));
-
+            PyObject elt = ctx.getChild(0).accept(this);
             PyObject comp_for = visitComp_for(comp_forContext);
-            this.runtime.iter(comp_for, list::add);
 
-            return this.runtime.list(list);
+            // ここだとまだ何の内包表記かわからないので一時的にListCompにする
+            return this.runtime.newPyObject("_ast.ListComp", elt, comp_for);
         }
     }
 
