@@ -282,11 +282,12 @@ public class InterpretEvaluator {
         return this.runtime.tuple(result);
     }
 
+    @SuppressWarnings("unchecked")
     private List<PyObject> evalComp(PyObject context, PyObject node) {
         PyObject elt = this.runtime.getattr(node, "elt");
         PyObject generators = this.runtime.getattr(node, "generators");
 
-        List<PyObject> generatorList = this.runtime.toList(generators);
+        List<PyObject> generatorList = (List<PyObject>)generators.toJava(List.class);
         List<PyObject> resultList = new ArrayList<>();
 
         PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
@@ -295,6 +296,7 @@ public class InterpretEvaluator {
         return resultList;
     }
 
+    @SuppressWarnings("unchecked")
     private void evalGenerators(PyObject context, PyObject elt, List<PyObject> generators, List<PyObject> resultList) {
         PyObject generator = generators.get(0);
         PyObject target = this.runtime.getattr(generator, "target");
@@ -309,7 +311,7 @@ public class InterpretEvaluator {
             ifList = Collections.emptyList();
 
         } else {
-            ifList = this.runtime.toList(ifs);
+            ifList = (List<PyObject>) ifs.toJava(List.class);
         }
         this.runtime.iter(evalIter, next -> {
             assign(context, target, next);
@@ -367,6 +369,7 @@ public class InterpretEvaluator {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void unpack(PyObject context, PyObject target, PyObject evalValue) {
         PyObject targetType = target.getType();
 
@@ -414,8 +417,8 @@ public class InterpretEvaluator {
             throw this.runtime.newRaiseTypeError("Invalid '" + targetType.getFullName() + "' type");
         }
 
-        List<PyObject> targetPyList = this.runtime.toList(targets);
-        List<PyObject> evalValuePyList = this.runtime.toList(evalValue);
+        List<PyObject> targetPyList = (List<PyObject>) targets.toJava(List.class);
+        List<PyObject> evalValuePyList = (List<PyObject>) evalValue.toJava(List.class);
 
         int notStarredFirstCount = 0;
         int notStarredLastCount = 0;

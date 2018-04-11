@@ -175,6 +175,14 @@ public abstract class AbstractPyObject implements PyObject {
     public <T> T toJava(Class<T> clazz) {
         if (clazz == String.class) {
             return (T) this.runtime.str(this).toJava(String.class);
+
+        } else if (clazz == List.class) {
+            if (this.runtime.isIterable(this)) {
+                List<PyObject> result = new ArrayList<>();
+                this.runtime.iter(this, result::add);
+
+                return (T) result;
+            }
         }
 
         throw new CafeBabePyException("'" + getClass().getName() + "#toJava' not support '" + clazz.getName() + "'");

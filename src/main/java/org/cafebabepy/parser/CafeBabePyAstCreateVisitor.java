@@ -57,9 +57,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             }
         }
         PyObject body = this.runtime.list(bodyList);
-        PyObject module = this.runtime.newPyObject("_ast.Module", body);
 
-        return module;
+        return this.runtime.newPyObject("_ast.Module", body);
     }
 
     @Override
@@ -101,9 +100,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             return createAssign(testlist_star_exprContextList);
         }
 
-        PyObject expr_stmt = this.runtime.newPyObject("_ast.Expr", testlist_star_expr);
-
-        return expr_stmt;
+        return this.runtime.newPyObject("_ast.Expr", testlist_star_expr);
     }
 
     private PyObject createAssign(List<PythonParser.Testlist_star_exprContext> testlist_star_exprContextList) {
@@ -163,16 +160,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private PyObject createAnnasign(PyObject testlist_star_expr, PythonParser.AnnassignContext annassignContext) {
         PyObject list = visitAnnassign(annassignContext);
-        List<PyObject> testList = this.runtime.toList(list);
+        List<PyObject> testList = list.toJava(List.class);
 
-        PyObject target = testlist_star_expr;
-        if (!this.runtime.isInstance(target, "_ast.Name")) {
+        if (!this.runtime.isInstance(testlist_star_expr, "_ast.Name")) {
             throw this.runtime.newRaiseException("builtins.SyntaxError",
                     "illegal target for annotation");
         }
-        target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+        testlist_star_expr.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
         PyObject annotation = testList.get(0);
         PyObject value = this.runtime.None();
         if (testList.size() == 2) {
@@ -181,7 +178,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         // FIXME simple value fixed 1???
         PyObject simple = this.runtime.number(1);
 
-        return this.runtime.newPyObject("_ast.Annassign", target, annotation, value, simple);
+        return this.runtime.newPyObject("_ast.Annassign", testlist_star_expr, annotation, value, simple);
     }
 
     @Override
@@ -573,8 +570,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         PyObject expr = null;
-        for (int i = 0; i < count; i++) {
-            PythonParser.TrailerContext trailerContext = trailerContextList.get(i);
+        for (PythonParser.TrailerContext trailerContext : trailerContextList) {
             PyObject trailer = visitTrailer(trailerContext);
 
             if (this.runtime.isInstance(trailer, "_ast.Call")) {
@@ -642,8 +638,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             } else {
                 str = visitStr(strContextList.get(0));
                 for (int i = 1; i < strContextList.size(); i++) {
-                    PyObject rightStr = visitStr(strContextList.get(i));
-                    str = this.runtime.add(str, rightStr);
+                    str = this.runtime.add(str, visitStr(strContextList.get(i)));
                 }
             }
 
@@ -944,8 +939,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             comprehensionList.add(comprehension);
 
             PyObject type = this.runtime.typeOrThrow("_ast.comprehension");
-            for (int i = 0; i < comp_iterList.size(); i++) {
-                PyObject e = comp_iterList.get(i);
+            for (PyObject e : comp_iterList) {
                 if (!this.runtime.isInstance(e, type)) {
                     ifsList.add(e);
 
@@ -987,9 +981,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     public PyObject visitNumber(PythonParser.NumberContext ctx) {
         String text = ctx.getChild(0).getText();
         PyObject number = this.runtime.number(Integer.parseInt(text));
-        PyObject object = this.runtime.newPyObject("_ast.Num", number);
 
-        return object;
+        return this.runtime.newPyObject("_ast.Num", number);
     }
 
     @Override

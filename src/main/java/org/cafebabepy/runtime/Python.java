@@ -675,13 +675,6 @@ public final class Python {
         return result;
     }
 
-    public List<PyObject> toList(PyObject object) {
-        List<PyObject> list = new ArrayList<>();
-        iter(object, list::add);
-
-        return list;
-    }
-
     private PyObject getIterType(PyObject object) {
         return getattrOptional(object, __iter__).orElseThrow(() ->
                 newRaiseException("builtins.TypeError",
