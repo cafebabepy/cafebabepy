@@ -102,6 +102,9 @@ public class InterpretEvaluator {
             case "ListComp":
                 return evalListComp(context, node);
 
+            case "GeneratorExp":
+                return evalGeneratorExp(context, node);
+
             case "Starred":
                 return evalStarred(context, node);
 
@@ -268,6 +271,18 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalListComp(PyObject context, PyObject node) {
+        List<PyObject> result = evalComp(context, node);
+
+        return this.runtime.list(result);
+    }
+
+    private PyObject evalGeneratorExp(PyObject context, PyObject node) {
+        List<PyObject> result = evalComp(context, node);
+
+        return this.runtime.tuple(result);
+    }
+
+    private List<PyObject> evalComp(PyObject context, PyObject node) {
         PyObject elt = this.runtime.getattr(node, "elt");
         PyObject generators = this.runtime.getattr(node, "generators");
 
@@ -277,7 +292,7 @@ public class InterpretEvaluator {
         PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
         evalGenerators(lexicalContext, elt, generatorList, resultList);
 
-        return this.runtime.list(resultList);
+        return resultList;
     }
 
     private void evalGenerators(PyObject context, PyObject elt, List<PyObject> generators, List<PyObject> resultList) {
