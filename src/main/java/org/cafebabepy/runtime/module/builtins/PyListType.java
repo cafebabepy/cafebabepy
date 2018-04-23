@@ -182,12 +182,7 @@ public class PyListType extends AbstractCafeBabePyType {
             List<PyObject> iterList = new ArrayList<>();
             this.runtime.iter(value, iterList::add);
 
-            if (iterList.size() == 1) {
-                newList.add(startInt, iterList.get(0));
-
-            } else {
-                newList.addAll(startInt, iterList);
-            }
+            newList.addAll(startInt, iterList);
 
             list.getRawList().clear();
             list.getRawList().addAll(newList);
