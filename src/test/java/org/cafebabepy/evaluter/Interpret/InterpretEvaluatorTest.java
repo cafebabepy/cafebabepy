@@ -206,6 +206,144 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
+    class Slice {
+        @Test
+        void slice1() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[0:3])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 2, 3]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice2() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[1:3])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[2, 3]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice3() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[0:])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 2, 3, 4]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice4() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[-2:4])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[3, 4]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice5() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[-2:5])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[3, 4]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice6() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4, 5]\n"
+                            + "print(a[-3:6])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[3, 4, 5]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice7() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[1:-1])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[2, 3]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice8() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[-4:4:2])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 3]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void slice9() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4]\n"
+                            + "print(a[:])",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 2, 3, 4]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void sliceAssign1() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4, 5]\n"
+                            + "a[-3:4] = [9]\n"
+                            + "print(a)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 2, 9, 5]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void sliceAssign2() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4, 5]\n"
+                            + "a[-3:4] = [9, 9]\n"
+                            + "print(a)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[1, 2, 9, 9, 5]" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void sliceAssign3() throws IOException {
+            evalStdOutToResult(""
+                            + "a = [1, 2, 3, 4, 5]\n"
+                            + "a[:] = [9]\n"
+                            + "print(a)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "[9]" + System.lineSeparator());
+                    });
+        }
+    }
+
+    @Nested
     class For {
         @Test
         void forStmt() throws IOException {
@@ -239,7 +377,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void forStmtIndex() throws IOException {
+        void forStmtStarUnpack1() throws IOException {
             PyObject result = Python.eval(""
                     + "d = {}\n"
                     + "for i, *j, d[tuple(j)] in [(1, 2, 3, 4), (5, 6, 7, 8)]:\n"
@@ -256,7 +394,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void forStmtStarUnpack() throws IOException {
+        void forStmtStarUnpack2() throws IOException {
             evalStdOutToResult(""
                             + "for x, *y in [(1, 2, 3), (4, 5, 6)]:\n"
                             + "  print(x)\n"
@@ -267,6 +405,19 @@ public class InterpretEvaluatorTest {
                                 + "[2, 3]" + System.lineSeparator()
                                 + "4" + System.lineSeparator()
                                 + "[5, 6]" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void forStmtStarUnpack3() throws IOException {
+            evalStdOutToResult(""
+                            + "L = []\n"
+                            + "for i, *L[0:0] in [(1, 2, 3, 4), (5, 6, 7, 8)]: pass\n"
+                            + "print(L)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "[6, 7, 8, 2, 3, 4]" + System.lineSeparator()
                         );
                     });
         }

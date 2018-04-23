@@ -33,15 +33,169 @@ public class PyListType extends AbstractCafeBabePyType {
                             + self.getType().getFullName()
                             + "'");
         }
-        if (!(key instanceof PyIntObject)) {
+        PyListObject list = (PyListObject) self;
+
+        if (key instanceof PyIntObject) {
+            PyIntObject index = (PyIntObject) key;
+
+            return list.get(index);
+
+        } else if (this.runtime.isInstance(key, "builtins.slice")) {
+            PyObject start = this.runtime.getattr(key, "start");
+            PyObject stop = this.runtime.getattr(key, "stop");
+            PyObject step = this.runtime.getattr(key, "step");
+
+            int startInt;
+            int stopInt;
+            int stepInt;
+
+            if (start.isNone()) {
+                startInt = 0;
+            } else {
+                startInt = getInt(start).getIntValue();
+            }
+            if (stop.isNone()) {
+                stopInt = list.getRawList().size();
+
+            } else {
+                stopInt = getInt(stop).getIntValue();
+            }
+            if (step.isNone()) {
+                stepInt = 1;
+
+            } else {
+                stepInt = getInt(step).getIntValue();
+                if (stepInt == 0) {
+                    throw this.runtime.newRaiseException("builtins.ValueError", "slice step cannot be zero");
+                }
+            }
+            if (startInt < 0) {
+                startInt = list.getRawList().size() + startInt;
+            }
+            if (stopInt < 0) {
+                stopInt = list.getRawList().size() + stopInt;
+            }
+            List<PyObject> jlist = new ArrayList<>();
+            for (int i = startInt; i < stopInt && i < list.getRawList().size(); i += stepInt) {
+                jlist.add(list.getRawList().get(i));
+            }
+
+            return this.runtime.list(jlist);
+
+        } else {
             throw this.runtime.newRaiseTypeError(
                     "list indices must be integers or slices, not " + key.getType().getFullName());
         }
+    }
+
+    private PyIntObject getInt(PyObject object) {
+        if (object instanceof PyIntObject) {
+            return (PyIntObject) object;
+        }
+        PyObject indexMethod = this.runtime.getattrOptional(object, __index__).orElseThrow(() ->
+                this.runtime.newRaiseTypeError(
+                        "'" + object.getFullName() + "' object cannot be interpreted as an integer")
+        );
+
+        PyObject intObject = indexMethod.call(object);
+        if (intObject instanceof PyIntObject) {
+            return (PyIntObject) intObject;
+        }
+
+        throw this.runtime.newRaiseTypeError("__index__ returned non-int (type " + intObject.getFullName() + ")");
+    }
+
+    @DefinePyFunction(name = __setitem__)
+    public void __setitem__(PyObject self, PyObject key, PyObject value) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__setitem__' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
 
         PyListObject list = (PyListObject) self;
-        PyIntObject index = (PyIntObject) key;
 
-        return list.get(index);
+        if (key instanceof PyIntObject) {
+            List<PyObject> jlist = ((PyListObject) self).getRawList();
+            PyIntObject index = (PyIntObject) key;
+
+            if (jlist.size() <= index.getIntValue()) {
+                throw this.runtime.newRaiseException("builtins.IndexError", "list assignment index out of range");
+            }
+
+            jlist.set(index.getIntValue(), value);
+
+        } else if (this.runtime.isInstance(key, "builtins.slice")) {
+            if (!this.runtime.isIterable(value)) {
+                throw this.runtime.newRaiseTypeError("can only assign an iterable");
+            }
+
+            PyObject start = this.runtime.getattr(key, "start");
+            PyObject stop = this.runtime.getattr(key, "stop");
+            PyObject step = this.runtime.getattr(key, "step");
+
+            int startInt;
+            int stopInt;
+            int stepInt;
+
+            if (start.isNone()) {
+                startInt = 0;
+            } else {
+                startInt = getInt(start).getIntValue();
+            }
+            if (stop.isNone()) {
+                stopInt = list.getRawList().size();
+
+            } else {
+                stopInt = getInt(stop).getIntValue();
+            }
+            if (step.isNone()) {
+                stepInt = 1;
+
+            } else {
+                stepInt = getInt(step).getIntValue();
+                if (stepInt == 0) {
+                    throw this.runtime.newRaiseException("builtins.ValueError", "slice step cannot be zero");
+                }
+            }
+            if (startInt < 0) {
+                startInt = list.getRawList().size() + startInt;
+            }
+            if (stopInt < 0) {
+                stopInt = list.getRawList().size() + stopInt;
+            }
+
+            if (stopInt > list.getRawList().size()) {
+                stopInt = list.getRawList().size() - 1;
+            }
+
+            List<PyObject> newList = new ArrayList<>();
+
+            for (int i = 0; i < startInt; i += stepInt) {
+                newList.add(list.getRawList().get(i));
+            }
+            for (int i = stopInt; i < list.getRawList().size(); i += stepInt) {
+                newList.add(list.getRawList().get(i));
+            }
+
+            List<PyObject> iterList = new ArrayList<>();
+            this.runtime.iter(value, iterList::add);
+
+            if (iterList.size() == 1) {
+                newList.add(startInt, iterList.get(0));
+
+            } else {
+                newList.addAll(startInt, iterList);
+            }
+
+            list.getRawList().clear();
+            list.getRawList().addAll(newList);
+
+        } else {
+            throw this.runtime.newRaiseTypeError(
+                    "list indices must be integers or slices, not " + key.getType().getFullName());
+        }
     }
 
     @DefinePyFunction(name = __len__)

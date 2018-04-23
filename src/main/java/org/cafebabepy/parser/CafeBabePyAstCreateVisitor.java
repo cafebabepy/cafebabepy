@@ -667,7 +667,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 }
 
             } else {
-                throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
+                PyObject load = this.runtime.newPyObject("_ast.Load");
+                return this.runtime.newPyObject("_ast.List", this.runtime.list(), load);
             }
 
         } else if ("(".equals(open)) {
@@ -873,10 +874,50 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     @Override
     public PyObject visitSubscript(PythonParser.SubscriptContext ctx) {
         if (ctx.COLON() != null) {
-            throw new CafeBabePyException("Not implements");
+            PyObject lower = this.runtime.None();
+            PyObject upper = this.runtime.None();
+            PyObject step = this.runtime.None();
+
+            int colonCount = 0;
+            int count = ctx.getChildCount();
+            if (ctx.sliceop() != null) {
+                count--;
+            }
+
+            for (int i = 0; i < count; i++) {
+                ParseTree tree = ctx.getChild(i);
+                PyObject element = tree.accept(this);
+                if (element != null) {
+                    if (colonCount == 0) {
+                        lower = element;
+
+                    } else if (colonCount == 1) {
+                        upper = element;
+                    }
+
+                } else if (":".equals(tree.getText())) {
+                    colonCount++;
+                }
+            }
+
+            if (ctx.sliceop() != null) {
+                step = ctx.sliceop().accept(this);
+            }
+
+            return this.runtime.newPyObject("_ast.Slice", lower, upper, step);
 
         } else {
             return ctx.test(0).accept(this);
+        }
+    }
+
+    @Override
+    public PyObject visitSliceop(PythonParser.SliceopContext ctx) {
+        if (ctx.test() != null) {
+            return ctx.test().accept(this);
+
+        } else {
+            return this.runtime.None();
         }
     }
 

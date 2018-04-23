@@ -146,6 +146,9 @@ public class InterpretEvaluator {
 
             case "Index":
                 return evalIndex(context, node);
+
+            case "Slice":
+                return evalSlice(context, node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -287,7 +290,7 @@ public class InterpretEvaluator {
         PyObject elt = this.runtime.getattr(node, "elt");
         PyObject generators = this.runtime.getattr(node, "generators");
 
-        List<PyObject> generatorList = (List<PyObject>)generators.toJava(List.class);
+        List<PyObject> generatorList = (List<PyObject>) generators.toJava(List.class);
         List<PyObject> resultList = new ArrayList<>();
 
         PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
@@ -554,7 +557,6 @@ public class InterpretEvaluator {
             }
 
             PyObject evalKey = eval(context, slice);
-
             return getattrOpt.get().call(evalKey);
         }
 
@@ -566,6 +568,18 @@ public class InterpretEvaluator {
         PyObject value = this.runtime.getattr(node, "value");
 
         return eval(context, value);
+    }
+
+    private PyObject evalSlice(PyObject context, PyObject node) {
+        PyObject lower = this.runtime.getattr(node, "lower");
+        PyObject upper = this.runtime.getattr(node, "upper");
+        PyObject step = this.runtime.getattr(node, "step");
+
+        PyObject evalLower = eval(context, lower);
+        PyObject evalUpper = eval(context, upper);
+        PyObject evalStep = eval(context, step);
+
+        return this.runtime.newPyObject("builtins.slice", evalLower, evalUpper, evalStep);
     }
 
     private PyObject evalReturn(PyObject context, PyObject node) {
@@ -683,19 +697,19 @@ public class InterpretEvaluator {
 
         if (this.runtime.isInstance(op, uAddType)) {
             PyObject pos = this.runtime.getattr(evalOperand, __pos__);
-            return pos.call(evalOperand);
+            return pos.call();
 
         } else if (this.runtime.isInstance(op, uSubType)) {
             PyObject pos = this.runtime.getattr(evalOperand, __neg__);
-            return pos.call(evalOperand);
+            return pos.call();
 
         } else if (this.runtime.isInstance(op, invertType)) {
             PyObject pos = this.runtime.getattr(evalOperand, __invert__);
-            return pos.call(evalOperand);
+            return pos.call();
 
         } else if (this.runtime.isInstance(op, notType)) {
             PyObject bool = this.runtime.getattr(evalOperand, __bool__);
-            PyObject result = bool.call(evalOperand);
+            PyObject result = bool.call();
             if (result.isTrue()) {
                 return this.runtime.False();
 

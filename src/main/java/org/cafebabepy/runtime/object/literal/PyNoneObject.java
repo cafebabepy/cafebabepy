@@ -15,7 +15,7 @@ public class PyNoneObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.NoneType", false);
+        return this.runtime.typeOrThrow("types.NoneType", false);
     }
 
     @Override
