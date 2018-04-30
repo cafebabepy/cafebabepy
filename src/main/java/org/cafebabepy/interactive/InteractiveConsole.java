@@ -26,12 +26,6 @@ public class InteractiveConsole {
 
     private Python runtime;
 
-    private enum Status {
-        READLINE,
-        INCOMPLETE,
-        QUIT
-    }
-
     public InteractiveConsole(Python runtime) {
         this.runtime = runtime;
     }
@@ -112,7 +106,7 @@ public class InteractiveConsole {
                 PyObject result;
 
                 try {
-                    result = evaluator.evalMainModule(ast);
+                    result = evaluator.eval(this.runtime.getMainModule(), ast);
                     if (!result.isNone()) {
                         if (result instanceof PyStrObject) {
                             this.consoleReader.println(result.toString());
@@ -132,5 +126,11 @@ public class InteractiveConsole {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private enum Status {
+        READLINE,
+        INCOMPLETE,
+        QUIT
     }
 }

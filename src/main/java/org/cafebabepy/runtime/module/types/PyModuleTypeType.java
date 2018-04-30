@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.module.builtins;
+package org.cafebabepy.runtime.module.types;
 
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -7,10 +7,10 @@ import org.cafebabepy.runtime.module.DefinePyType;
 /**
  * Created by yotchang4s on 2017/05/12.
  */
-@DefinePyType(name = "builtins.module", appear = false)
-public class PyModuleType extends AbstractCafeBabePyType {
+@DefinePyType(name = "types.ModuleType", appear = false)
+public class PyModuleTypeType extends AbstractCafeBabePyType {
 
-    public PyModuleType(Python runtime) {
+    public PyModuleTypeType(Python runtime) {
         super(runtime);
     }
 }

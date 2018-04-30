@@ -13,12 +13,12 @@ import java.util.Map;
  */
 public class PyDictObject extends AbstractPyObjectObject {
 
-    private final LinkedHashMap<PyObject, PyObject> map;
+    private LinkedHashMap<PyObject, PyObject> map;
 
     public PyDictObject(Python runtime, LinkedHashMap<PyObject, PyObject> map) {
         super(runtime);
 
-        this.map = new LinkedHashMap<>(map);
+        this.map = map;
     }
 
     public Map<PyObject, PyObject> getMap() {

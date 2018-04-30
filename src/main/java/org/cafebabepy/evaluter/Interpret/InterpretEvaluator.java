@@ -17,15 +17,18 @@ public class InterpretEvaluator {
 
     private Python runtime;
 
+    private ImportManager importManager;
+
     public InterpretEvaluator(Python runtime) {
         this.runtime = runtime;
+        this.importManager = new ImportManager(runtime);
     }
 
+    /*
     public PyObject evalMainModule(PyObject node) {
         PyObject context = this.runtime.moduleOrThrow("__main__");
         return eval(context, node);
 
-        /*
         System.out.println(node.asJavaString());
         PyObject superType = typeOrThrow("builtins.super");
         PyObject superObject = superType.call(self);
@@ -34,8 +37,8 @@ public class InterpretEvaluator {
         PyObject visit = getattribute.call(superObject, this.runtime.str("visit"));
 
         visit.call(self, node);
-        */
     }
+    */
 
     public PyObject eval(PyObject context, PyObject node) {
         if (node.isNone()) {
@@ -68,6 +71,9 @@ public class InterpretEvaluator {
 
             case "Suite":
                 return evalSuite(context, node);
+
+            case "Import":
+                return evalImport(context, node);
 
             case "FunctionDef":
                 return evalFunctionDef(context, node);
@@ -174,6 +180,18 @@ public class InterpretEvaluator {
         });
 
         return result[0];
+    }
+
+    private PyObject evalImport(PyObject context, PyObject node) {
+        PyObject names = this.runtime.getattr(node, "names");
+        this.runtime.iter(names, n -> {
+            PyObject name = this.runtime.getattr(n, "name");
+            PyObject asname = this.runtime.getattr(n, "asname");
+
+            this.importManager.importAsName(context, name, asname);
+        });
+
+        return this.runtime.None();
     }
 
     private PyObject evalFunctionDef(PyObject context, PyObject node) {

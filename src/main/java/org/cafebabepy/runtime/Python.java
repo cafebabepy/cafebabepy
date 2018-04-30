@@ -2,14 +2,11 @@ package org.cafebabepy.runtime;
 
 import org.cafebabepy.evaluter.Interpret.InterpretEvaluator;
 import org.cafebabepy.parser.NormalParser;
-import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.module.PyMainModule;
 import org.cafebabepy.runtime.module._ast.PyAstModule;
 import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;
-import org.cafebabepy.runtime.module.builtins.PyObjectType;
-import org.cafebabepy.runtime.module.builtins.PyTypeType;
-import org.cafebabepy.runtime.module.types.PyMethodTypeType;
+import org.cafebabepy.runtime.module.sys.PySysModule;
 import org.cafebabepy.runtime.module.types.PyTypesModule;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
@@ -23,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,8 +35,11 @@ public final class Python {
 
     public static final String APPLICATION_NAME = "cafebabepy";
 
-    // FIXME sys.modulesに持って行きたい
-    private Map<String, PyObject> moduleMap;
+    private NormalParser parser;
+
+    private InterpretEvaluator evaluator;
+
+    private LinkedHashMap<PyObject, PyObject> sysModules;
 
     private PyNoneObject noneObject;
 
@@ -53,17 +52,14 @@ public final class Python {
     private PyNotImplementedObject notImplementedObject;
 
     private Python() {
-        this.moduleMap = new ConcurrentHashMap<>();
     }
 
     public static PyObject eval(String input) {
         Python runtime = Python.createRuntime();
 
-        NormalParser parser = new NormalParser(runtime);
-        PyObject ast = parser.parse(input);
+        PyObject ast = runtime.parser.parse(input);
 
-        InterpretEvaluator evaluter = new InterpretEvaluator(runtime);
-        return evaluter.evalMainModule(ast);
+        return runtime.evaluator.eval(runtime.getMainModule(), ast);
     }
 
     public static Python createRuntime() {
@@ -73,81 +69,43 @@ public final class Python {
         return runtime;
     }
 
-    private void initialize() {
-        initializeBootstrap();
+    public PyObject eval(PyObject context, String input) {
+        PyObject ast = this.parser.parse(input);
 
+        return this.evaluator.eval(context, ast);
+    }
+
+    public PyObject getMainModule() {
+        return module("__main__").orElseGet(() -> {
+            initializeModuleAndTypes(PyMainModule.class);
+            PyObject mainModule = moduleOrThrow("__main__");
+
+            PyObject builtinsModule = moduleOrThrow("builtins");
+            Map<String, PyObject> objectMap = builtinsModule.getScope().gets();
+            for (Map.Entry<String, PyObject> e : objectMap.entrySet()) {
+                mainModule.getScope().put(e.getKey(), e.getValue());
+            }
+
+            return mainModule;
+        });
+    }
+
+    private void initialize() {
+        this.parser = new NormalParser(this);
+        this.evaluator = new InterpretEvaluator(this);
+        this.sysModules = new LinkedHashMap<>();
+
+        initializeModuleAndTypes(PySysModule.class);
+        initializeModuleAndTypes(PyBuiltinsModule.class);
         initializeModuleAndTypes(PyTypesModule.class);
-        initializeModuleAndTypes(PyMainModule.class);
         initializeModuleAndTypes(PyAstModule.class);
 
         initializeObjects();
-
-        // TODO __main__でいいの？
-        PyObject builtinsModule = moduleOrThrow("builtins");
-        PyObject mainModule = moduleOrThrow("__main__");
-
-        Map<String, PyObject> objectMap = builtinsModule.getScope().gets();
-        for (Map.Entry<String, PyObject> e : objectMap.entrySet()) {
-            mainModule.getScope().put(e.getKey(), e.getValue());
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void initializeBootstrap() {
-        Class<PyBuiltinsModule> builtinsModuleClass = PyBuiltinsModule.class;
-        DefinePyModule defineBuiltinsModule = builtinsModuleClass.getAnnotation(DefinePyModule.class);
-        if (defineBuiltinsModule == null) {
-            throw new CafeBabePyException("'" + builtinsModuleClass.getName() + "' module is not found");
-        }
-        PyObject builtinsModule = createType(builtinsModuleClass, defineBuiltinsModule.name());
-
-        Class<PyObjectType> objectClass = PyObjectType.class;
-        DefinePyType defineObjectType = objectClass.getAnnotation(DefinePyType.class);
-        if (defineObjectType == null) {
-            throw new CafeBabePyException("'" + objectClass.getName() + "' type is not found");
-        }
-        PyObject objectType = createType(objectClass, defineObjectType.name());
-
-        Class<PyTypeType> typeClass = PyTypeType.class;
-        DefinePyType defineTypeType = typeClass.getAnnotation(DefinePyType.class);
-        if (defineTypeType == null) {
-            throw new CafeBabePyException("'" + typeClass.getName() + "' type is not found");
-        }
-        PyObject typeType = createType(typeClass, defineTypeType.name());
-
-        Class<PyTypesModule> typesModuleClass = PyTypesModule.class;
-        DefinePyModule defineTypesModule = typesModuleClass.getAnnotation(DefinePyModule.class);
-        if (defineTypesModule == null) {
-            throw new CafeBabePyException("'" + typesModuleClass.getName() + "' module is not found");
-        }
-        PyObject typesModule = createType(typesModuleClass, defineTypesModule.name());
-
-
-        Class<PyMethodTypeType> methodTypeClass = PyMethodTypeType.class;
-        DefinePyType defineMethodTypeType = methodTypeClass.getAnnotation(DefinePyType.class);
-        if (defineMethodTypeType == null) {
-            throw new CafeBabePyException("'" + methodTypeClass.getName() + "' type is not found");
-        }
-        PyObject methodTypeType = createType(methodTypeClass, defineMethodTypeType.name());
-
-        builtinsModule.initialize();
-        objectType.initialize();
-        typeType.initialize();
-        typesModule.initialize();
-        methodTypeType.initialize();
-
-        initializeTypes(builtinsModuleClass, PyTypeType.class);
-        initializeTypes(typesModuleClass, PyMethodTypeType.class);
     }
 
     @SuppressWarnings("unchecked")
     private void initializeModuleAndTypes(Class<? extends PyObject> moduleClass) {
-        DefinePyModule definePyModule = moduleClass.getAnnotation(DefinePyModule.class);
-        if (definePyModule == null) {
-            throw new CafeBabePyException("'" + moduleClass.getName() + "' module is not found");
-        }
-
-        PyObject module = createType(moduleClass, definePyModule.name());
+        PyObject module = createType(moduleClass);
         module.initialize();
         initializeTypes(moduleClass);
     }
@@ -178,7 +136,7 @@ public final class Python {
 
             Class<PyObject> clazz = (Class<PyObject>) c;
 
-            PyObject type = createType(clazz, definePyType.name());
+            PyObject type = createType(clazz);
             type.initialize();
 
             if (checkDuplicateTypes.contains(definePyType.name())) {
@@ -189,7 +147,7 @@ public final class Python {
         }
     }
 
-    private PyObject createType(Class<? extends PyObject> clazz, String typeFullName) {
+    private PyObject createType(Class<? extends PyObject> clazz) {
         try {
             Constructor<? extends PyObject> constructor = clazz.getConstructor(Python.class);
             constructor.setAccessible(true);
@@ -201,7 +159,7 @@ public final class Python {
                 NoSuchMethodException |
                 IllegalAccessException e) {
             throw new CafeBabePyException(
-                    "Fail '" + typeFullName + "' initialize '" + clazz.getName() + "'", e);
+                    "Fail initialize '" + clazz.getName() + "'", e);
         }
     }
 
@@ -211,6 +169,16 @@ public final class Python {
         this.falseObject = new PyFalseObject(this);
         this.notImplementedObject = new PyNotImplementedObject(this);
         this.ellipsisObject = new PyEllipsisObject(this);
+
+        this.noneObject.initialize();
+        this.trueObject.initialize();
+        this.falseObject.initialize();
+        this.notImplementedObject.initialize();
+        this.ellipsisObject.initialize();
+    }
+
+    public LinkedHashMap<PyObject, PyObject> getSysModuleMap() {
+        return this.sysModules;
     }
 
     public PyObject str(PyObject value) {
@@ -322,7 +290,7 @@ public final class Python {
     }
 
     public Optional<PyObject> module(String name) {
-        return Optional.ofNullable(this.moduleMap.get(name));
+        return Optional.ofNullable(this.sysModules.get(str(name)));
     }
 
     public PyObject typeOrThrow(String name) {
@@ -485,8 +453,6 @@ public final class Python {
         }
     }
 
-    //private volatile Map<String, PyObject> methodMap;
-
     public Optional<PyObject> getattrOptional(PyObject object, String name) {
         try {
             return Optional.of(getattr(object, name));
@@ -545,6 +511,55 @@ public final class Python {
 
             throw e;
         }
+    }
+
+    public Optional<PyObject> getitemOptional(PyObject object, PyObject key) {
+        try {
+            return Optional.of(getitem(object, key));
+
+        } catch (RaiseException e) {
+            if (isInstance(e.getException(), "builtins.KeyError")) {
+                return Optional.empty();
+            }
+
+            throw e;
+        }
+    }
+
+    public PyObject getitem(PyObject object, PyObject key) {
+        Optional<PyObject> getattrOpt = getattrOptional(object, __getitem__);
+        if (!getattrOpt.isPresent()) {
+            throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__getitem__'");
+        }
+
+        return getattrOpt.get().call(key);
+    }
+
+    public void setitem(PyObject object, PyObject key, PyObject value) {
+        Optional<PyObject> setattrOpt = getattrOptional(object, __setitem__);
+        if (!setattrOpt.isPresent()) {
+            throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__setitem__'");
+        }
+
+        setattrOpt.get().call(key, value);
+    }
+
+    public void del(PyObject object, PyObject key) {
+        Optional<PyObject> delitemOpt = getattrOptional(object, __delitem__);
+        if (!delitemOpt.isPresent()) {
+            throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__delitem__'");
+        }
+
+        delitemOpt.get().call(key);
+    }
+
+    public boolean contains(PyObject object, PyObject key) {
+        Optional<PyObject> containsOpt = getattrOptional(object, __contains__);
+        if (!containsOpt.isPresent()) {
+            throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__contains__'");
+        }
+
+        return containsOpt.get().call(key).isTrue();
     }
 
     public PyObject hash(PyObject object) {
@@ -731,7 +746,7 @@ public final class Python {
         String[] moduleNames = StringUtils.splitDot(module.getName());
 
         if (moduleNames.length == 1) {
-            this.moduleMap.put(moduleNames[0], module);
+            this.sysModules.put(str(moduleNames[0]), module);
             return;
         }
 
@@ -740,14 +755,14 @@ public final class Python {
 
         for (int i = 1; i < moduleNames.length; i++) {
             String moduleName = moduleBuilder.toString();
-            if (!this.moduleMap.containsKey(moduleName)) {
+            if (!this.sysModules.containsKey(str(moduleName))) {
                 throw new CafeBabePyException("module '" + moduleName + "' is not found");
             }
 
             moduleBuilder.append('.').append(moduleNames[i]);
 
             if (i == moduleNames.length - 1) {
-                this.moduleMap.put(moduleBuilder.toString(), module);
+                this.sysModules.put(str(moduleBuilder.toString()), module);
             }
         }
     }

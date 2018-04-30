@@ -30,6 +30,9 @@ public abstract class AbstractPyObject implements PyObject {
         if (!object.isType() && !object.isModule()) {
             throw new CafeBabePyException("'" + object.getName() + "' is not type");
         }
+        if(object.isModule()) {
+            object = object.getType();
+        }
         List<PyObject> result = new ArrayList<>();
         result.add(object);
 

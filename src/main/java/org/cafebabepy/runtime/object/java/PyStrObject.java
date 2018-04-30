@@ -41,6 +41,26 @@ public class PyStrObject extends AbstractPyObjectObject {
     }
 
     @Override
+    public int hashCode() {
+        return this.value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+
+        } else if (other instanceof PyStrObject) {
+            PyStrObject otherStrObject = (PyStrObject) other;
+
+            return this.value.equals(otherStrObject.value);
+
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public String toString() {
         return "'" + this.value + "'";
     }

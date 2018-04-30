@@ -39,6 +39,45 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
+    class Import {
+        @Test
+        void importName1() {
+            PyObject result = Python.eval("" +
+                    "import _ast\n" +
+                    "_ast"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_ast"));
+        }
+
+        @Test
+        void importNameAs1() {
+            PyObject result = Python.eval("" +
+                    "import _ast as a\n" +
+                    "a"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_ast"));
+        }
+
+        @Test
+        void importFromClassPath() {
+            PyObject result = Python.eval("" +
+                    "import test\n" +
+                    "test"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("test"));
+        }
+    }
+
+    @Nested
     class Assign {
         @Test
         void unpackAssign1() throws IOException {

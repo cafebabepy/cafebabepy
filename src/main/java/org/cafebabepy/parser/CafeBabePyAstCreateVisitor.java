@@ -262,6 +262,52 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitImport_name(PythonParser.Import_nameContext ctx) {
+        PyObject names = ctx.dotted_as_names().accept(this);
+
+        return this.runtime.newPyObject("_ast.Import", names);
+    }
+
+    @Override
+    public PyObject visitDotted_as_names(PythonParser.Dotted_as_namesContext ctx) {
+        int count = ctx.dotted_as_name().size();
+        List<PyObject> dottedAsNames = new ArrayList<>(count);
+
+        for(int i = 0; i < count; i++) {
+            PyObject dottedAsName = ctx.dotted_as_name(i).accept(this);
+            dottedAsNames.add(dottedAsName);
+        }
+
+        return this.runtime.list(dottedAsNames);
+    }
+
+    @Override
+    public PyObject visitDotted_as_name(PythonParser.Dotted_as_nameContext ctx) {
+        PyObject name = ctx.dotted_name().accept(this);
+        PyObject asName = this.runtime.None();
+
+        if (ctx.NAME() != null) {
+            asName = this.runtime.str(ctx.NAME().getSymbol().getText());
+        }
+
+        return this.runtime.newPyObject("_ast.alias", name, asName);
+    }
+
+    @Override
+    public PyObject visitDotted_name(PythonParser.Dotted_nameContext ctx) {
+        StringBuilder nameBuilder = new StringBuilder();
+
+        nameBuilder.append(ctx.NAME().get(0).getSymbol().getText());
+
+        int count = ctx.NAME().size();
+        for (int i = 1; i < count; i++) {
+            nameBuilder.append('.').append(ctx.NAME().get(i).getSymbol().getText());
+        }
+
+        return this.runtime.str(nameBuilder.toString());
+    }
+
+    @Override
     public PyObject visitIf_stmt(PythonParser.If_stmtContext ctx) {
         PyObject test = null;
         PyObject body = null;

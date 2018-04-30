@@ -9,9 +9,9 @@ import org.cafebabepy.runtime.Python;
  */
 public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabePyAny {
 
-    private final static String[] BASE_NAMES = {"builtins.module"};
+    private final static String[] BASE_NAMES = {"types.ModuleType"};
 
-    private String name;
+    protected String name;
 
     protected AbstractCafeBabePyModule(Python runtime) {
         super(runtime, true);
@@ -33,12 +33,16 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         }
 
         this.name = definePyModule.name();
+        defineModule();
+    }
+
+    protected void defineModule() {
         this.runtime.defineModule(this);
     }
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.module", false);
+        return this.runtime.typeOrThrow("types.ModuleType", false);
     }
 
     @Override
