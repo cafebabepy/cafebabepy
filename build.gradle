@@ -109,6 +109,4 @@ run {
 
 clean {
     delete antlr.destinationDir
-    delete python.sourceDir
-    delete python.testSourceDir
 }
