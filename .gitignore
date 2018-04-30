@@ -10,3 +10,4 @@ target
 !/gradle/wrapper/gradle-wrapper.jar
 *.tokens
 *.iml
+venv
