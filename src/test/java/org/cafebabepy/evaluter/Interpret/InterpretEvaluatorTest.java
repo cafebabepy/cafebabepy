@@ -247,6 +247,15 @@ public class InterpretEvaluatorTest {
     @Nested
     class Operator {
         @Test
+        void priority() {
+            PyObject result = Python.eval("2 * (3 + 4)");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.number(14));
+        }
+
+        @Test
         void lessThen1() {
             PyObject result = Python.eval("1 < 2");
 

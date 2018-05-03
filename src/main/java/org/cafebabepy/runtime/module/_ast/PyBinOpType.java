@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2017/05/29.
  */
-@DefinePyType(name = "_ast.BinOp", parent = {"_ast.operator"})
+@DefinePyType(name = "_ast.BinOp", parent = {"_ast.expr"})
 public class PyBinOpType extends AbstractCafeBabePyType {
 
     public PyBinOpType(Python runtime) {

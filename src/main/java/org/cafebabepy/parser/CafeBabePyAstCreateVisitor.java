@@ -735,8 +735,15 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                     return testlist_comp;
 
                 } else {
+                    PyObject elts;
+                    if (this.runtime.isInstance(testlist_comp, "builtins.list")) {
+                        elts = testlist_comp;
+
+                    } else {
+                        elts = this.runtime.list(testlist_comp);
+                    }
                     PyObject load = this.runtime.newPyObject("_ast.Load");
-                    return this.runtime.newPyObject("_ast.List", testlist_comp, load);
+                    return this.runtime.newPyObject("_ast.List", elts, load);
                 }
 
             } else {
@@ -755,6 +762,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 PyObject generators = this.runtime.getattr(testlist_comp, "generators");
 
                 return this.runtime.newPyObject("_ast.GeneratorExp", elt, generators);
+
+            } else if (this.runtime.isInstance(testlist_comp, "_ast.expr")) {
+                return testlist_comp;
 
             } else {
                 PyObject load = this.runtime.newPyObject("_ast.Load");
@@ -834,7 +844,12 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         if (comp_forContext == null) {
             if (ctx.test().size() + ctx.star_expr().size() == 1) {
                 PyObject element = ctx.getChild(0).accept(this);
-                return this.runtime.list(element);
+                if (ctx.COMMA().size() >= 1) {
+                    return this.runtime.list(element);
+
+                } else {
+                    return element;
+                }
             }
 
             List<PyObject> elements = new ArrayList<>(ctx.test().size() + ctx.star_expr().size());
