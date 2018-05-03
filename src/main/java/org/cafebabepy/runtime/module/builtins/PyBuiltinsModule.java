@@ -62,4 +62,14 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
 
         return this.runtime.None();
     }
+
+    @DefinePyFunction(name= "chr")
+    public PyObject chr(PyObject i) {
+        int value = i.toJava(int.class);
+        if(value < 0 || 0x10FFFF < value) {
+            throw this.runtime.newRaiseException("builtins.ValueError", "chr() arg not in range(0x110000)");
+        }
+
+        return this.runtime.str(new String(new int[] { value }, 0, 1));
+    }
 }
