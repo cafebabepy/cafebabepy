@@ -53,7 +53,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void importNameAs1() {
+        void importNameAs() {
             PyObject result = Python.eval("" +
                     "import _ast as a\n" +
                     "a"
@@ -241,6 +241,231 @@ public class InterpretEvaluatorTest {
 
             assertEquals(result.toJava(Map.class), map);
             assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 3}");
+        }
+    }
+
+    @Nested
+    class Operator {
+        @Test
+        void lessThen1() {
+            PyObject result = Python.eval("1 < 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void lessThen2() {
+            PyObject result = Python.eval("2 < 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void greaterThen1() {
+            PyObject result = Python.eval("1 > 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void greaterThen2() {
+            PyObject result = Python.eval("2 > 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void equals1() {
+            PyObject result = Python.eval("1 == 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void equals() {
+            PyObject result = Python.eval("1 == 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void lessThenEquals1() {
+            PyObject result = Python.eval("1 <= 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void lessThenEquals2() {
+            PyObject result = Python.eval("1 <= 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void lessThenEquals3() {
+            PyObject result = Python.eval("2 <= 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void greaterThenEquals1() {
+            PyObject result = Python.eval("2 >= 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void greaterThenEquals2() {
+            PyObject result = Python.eval("1 >= 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void greaterThenEquals3() {
+            PyObject result = Python.eval("1 >= 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void notEq1() {
+            PyObject result = Python.eval("1 != 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void notEq2() {
+            PyObject result = Python.eval("1 != 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void notEq3() {
+            PyObject result = Python.eval("1 <> 1");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void notEq4() {
+            PyObject result = Python.eval("1 <> 2");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void in1() {
+            PyObject result = Python.eval("2 in [1, 2, 3]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void in2() {
+            PyObject result = Python.eval("4 in [1, 2, 3]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void notIn1() {
+            PyObject result = Python.eval("2 not in [1, 2, 3]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void notIn2() {
+            PyObject result = Python.eval("4 not in [1, 2, 3]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void is1() {
+            PyObject result = Python.eval("" +
+                    "a = [1, 2]\n" +
+                    "b = a\n" +
+                    "a is b");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
+        }
+
+        @Test
+        void is2() {
+            PyObject result = Python.eval("[1, 2] is [1, 2]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void isNot1() {
+            PyObject result = Python.eval("" +
+                    "a = [1, 2]\n" +
+                    "b = a\n" +
+                    "a is not b");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.False());
+        }
+
+        @Test
+        void isNot2() {
+            PyObject result = Python.eval("[1, 2] is not [1, 2]");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.True());
         }
     }
 

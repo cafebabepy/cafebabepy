@@ -621,12 +621,16 @@ public class InterpretEvaluator {
         PyObject ops = this.runtime.getattr(node, "ops");
         List<PyObject> opList = getLinkedList(ops);
 
-        PyObject eqType = this.runtime.typeOrThrow("_ast.Eq");
-        PyObject notEqType = this.runtime.typeOrThrow("_ast.NotEq");
         PyObject ltType = this.runtime.typeOrThrow("_ast.Lt");
-        PyObject lteType = this.runtime.typeOrThrow("_ast.LtE");
         PyObject gtType = this.runtime.typeOrThrow("_ast.Gt");
+        PyObject eqType = this.runtime.typeOrThrow("_ast.Eq");
         PyObject gteType = this.runtime.typeOrThrow("_ast.GtE");
+        PyObject lteType = this.runtime.typeOrThrow("_ast.LtE");
+        PyObject notEqType = this.runtime.typeOrThrow("_ast.NotEq");
+        PyObject inType = this.runtime.typeOrThrow("_ast.In");
+        PyObject notInType = this.runtime.typeOrThrow("_ast.NotIn");
+        PyObject isType = this.runtime.typeOrThrow("_ast.Is");
+        PyObject isNotType = this.runtime.typeOrThrow("_ast.IsNot");
 
         boolean evalResult = true;
         for (int i = 0; i < comparatorList.size() - 1; i++) {
@@ -634,23 +638,35 @@ public class InterpretEvaluator {
             PyObject evalRight = eval(context, comparatorList.get(i + 1));
             PyObject op = opList.get(i);
 
-            if (this.runtime.isInstance(op, eqType)) {
-                evalResult &= this.runtime.eq(evalLeft, evalRight).isTrue();
-
-            } else if (this.runtime.isInstance(op, notEqType)) {
-                evalResult &= this.runtime.ne(evalLeft, evalRight).isTrue();
-
-            } else if (this.runtime.isInstance(op, ltType)) {
+            if (this.runtime.isInstance(op, ltType)) {
                 evalResult &= this.runtime.lt(evalLeft, evalRight).isTrue();
-
-            } else if (this.runtime.isInstance(op, lteType)) {
-                evalResult &= this.runtime.le(evalLeft, evalRight).isTrue();
 
             } else if (this.runtime.isInstance(op, gtType)) {
                 evalResult &= this.runtime.gt(evalLeft, evalRight).isTrue();
 
+            } else if (this.runtime.isInstance(op, eqType)) {
+                evalResult &= this.runtime.eq(evalLeft, evalRight).isTrue();
+
             } else if (this.runtime.isInstance(op, gteType)) {
                 evalResult &= this.runtime.ge(evalLeft, evalRight).isTrue();
+
+            } else if (this.runtime.isInstance(op, lteType)) {
+                evalResult &= this.runtime.le(evalLeft, evalRight).isTrue();
+
+            } else if (this.runtime.isInstance(op, notEqType)) {
+                evalResult &= this.runtime.ne(evalLeft, evalRight).isTrue();
+
+            } else if (this.runtime.isInstance(op, inType)) {
+                evalResult &= this.runtime.contains(evalRight, evalLeft).isTrue();
+
+            } else if (this.runtime.isInstance(op, notInType)) {
+                evalResult &= !this.runtime.contains(evalRight, evalLeft).isTrue();
+
+            } else if (this.runtime.isInstance(op, isType)) {
+                evalResult &= (evalLeft == evalRight);
+
+            } else if (this.runtime.isInstance(op, isNotType)) {
+                evalResult &= !(evalLeft == evalRight);
 
             } else {
                 throw this.runtime.newRaiseTypeError("Unknown AST '" + op.getType().getFullName() + "'");

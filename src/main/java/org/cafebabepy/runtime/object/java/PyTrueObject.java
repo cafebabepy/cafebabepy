@@ -8,7 +8,7 @@ import org.cafebabepy.runtime.Python;
 public class PyTrueObject extends PyBoolObject {
 
     public PyTrueObject(Python runtime) {
-        super(runtime);
+        super(runtime, true);
     }
 
     @Override

@@ -273,7 +273,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         int count = ctx.dotted_as_name().size();
         List<PyObject> dottedAsNames = new ArrayList<>(count);
 
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             PyObject dottedAsName = ctx.dotted_as_name(i).accept(this);
             dottedAsNames.add(dottedAsName);
         }
@@ -477,29 +477,56 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitComp_op(PythonParser.Comp_opContext ctx) {
-        String op = ctx.getText();
-        switch (op) {
-            case "<":
-                return this.runtime.newPyObject("_ast.Lt");
-
-            case "<=":
-                return this.runtime.newPyObject("_ast.LtE");
-
-            case ">":
-                return this.runtime.newPyObject("_ast.Gt");
-
-            case ">=":
-                return this.runtime.newPyObject("_ast.GtE");
-
-            case "==":
-                return this.runtime.newPyObject("_ast.Eq");
-
-            case "!=":
-                return this.runtime.newPyObject("_ast.NotEq");
-
-            default:
-                throw this.runtime.newRaiseException("builtins.SyntaxError", "op '" + op + "' is not found");
+        // <
+        if (ctx.LESS_THAN() != null) {
+            return this.runtime.newPyObject("_ast.Lt");
         }
+        // >
+        if (ctx.GREATER_THAN() != null) {
+            return this.runtime.newPyObject("_ast.Gt");
+        }
+        // ==
+        if (ctx.EQUALS() != null) {
+            return this.runtime.newPyObject("_ast.Eq");
+        }
+        // >=
+        if (ctx.GT_EQ() != null) {
+            return this.runtime.newPyObject("_ast.GtE");
+        }
+        // <=
+        if (ctx.LT_EQ() != null) {
+            return this.runtime.newPyObject("_ast.LtE");
+        }
+        // <>
+        if (ctx.NOT_EQ_1() != null) {
+            return this.runtime.newPyObject("_ast.NotEq");
+        }
+        // !=
+        if (ctx.NOT_EQ_2() != null) {
+            return this.runtime.newPyObject("_ast.NotEq");
+        }
+
+        if (ctx.IN() != null) {
+            // not in
+            if (ctx.NOT() != null) {
+                return this.runtime.newPyObject("_ast.NotIn");
+
+            } else {
+                return this.runtime.newPyObject("_ast.In");
+            }
+        }
+
+        if (ctx.IS() != null) {
+            // not is
+            if (ctx.NOT() != null) {
+                return this.runtime.newPyObject("_ast.IsNot");
+
+            } else {
+                return this.runtime.newPyObject("_ast.Is");
+            }
+        }
+
+        throw this.runtime.newRaiseException("builtins.SyntaxError", "op '" + ctx.getText() + "' is not found");
     }
 
     @Override

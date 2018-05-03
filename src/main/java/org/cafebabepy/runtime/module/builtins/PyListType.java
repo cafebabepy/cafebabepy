@@ -217,6 +217,20 @@ public class PyListType extends AbstractCafeBabePyType {
         return new PyListIteratorObject(this.runtime, (PyListObject) self);
     }
 
+    @DefinePyFunction(name = __contains__)
+    public PyObject __contains__(PyObject self, PyObject other) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__iter__' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        PyListObject list = (PyListObject) self;
+
+        return this.runtime.bool(list.getRawList().contains(other));
+    }
+
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         List<String> jlist = new ArrayList<>();

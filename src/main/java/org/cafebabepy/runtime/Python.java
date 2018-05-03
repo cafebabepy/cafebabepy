@@ -553,13 +553,13 @@ public final class Python {
         delitemOpt.get().call(key);
     }
 
-    public boolean contains(PyObject object, PyObject key) {
+    public PyObject contains(PyObject object, PyObject key) {
         Optional<PyObject> containsOpt = getattrOptional(object, __contains__);
         if (!containsOpt.isPresent()) {
             throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__contains__'");
         }
 
-        return containsOpt.get().call(key).isTrue();
+        return containsOpt.get().call(key);
     }
 
     public PyObject hash(PyObject object) {
