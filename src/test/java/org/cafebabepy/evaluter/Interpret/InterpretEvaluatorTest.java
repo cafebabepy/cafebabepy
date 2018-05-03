@@ -122,17 +122,24 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void stringSingle() {
+        void stringSingleQuote() {
             PyObject result = Python.eval("'abc'");
 
             assertEquals(result.toJava(String.class), "abc");
         }
 
         @Test
-        void stringDouble() {
+        void stringDoubleQuote() {
             PyObject result = Python.eval("\"abc\"");
 
             assertEquals(result.toJava(String.class), "abc");
+        }
+
+        @Test
+        void stringTripleQuote() {
+            PyObject result = Python.eval("\"\"\"abc\ndef\"\"\"");
+
+            assertEquals(result.toJava(String.class), "abc\ndef");
         }
 
         @Test
