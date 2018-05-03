@@ -1116,14 +1116,18 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitStr(PythonParser.StrContext ctx) {
-        String rawString = ctx.getText();
-        int firstQuoteIndex = rawString.indexOf('\'');
-        if (firstQuoteIndex == -1) {
-            firstQuoteIndex = rawString.indexOf('"');
+        String rawString = ctx.STRING_LITERAL().getSymbol().getText();
+
+        String str;
+        if(rawString.indexOf("\"\"\"") == 0) {
+            str = rawString.substring(3, rawString.length() - 3);
+
+        } else {
+            str = rawString.substring(1, rawString.length() - 1);
         }
 
         // TODO prefix
 
-        return this.runtime.str(rawString.substring(firstQuoteIndex + 1, rawString.length() - 1));
+        return this.runtime.str(str);
     }
 }
