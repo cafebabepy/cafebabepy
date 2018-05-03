@@ -4,34 +4,32 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 
 /**
  * Created by yotchang4s on 2017/06/22.
  */
-abstract class AbstractPyIteratorObject extends AbstractPyObjectObject {
+abstract class AbstractPyIteratorObject extends AbstractPyObjectObject implements Iterator<PyObject> {
 
-    private final Collection<PyObject> collection;
     private final Iterator<PyObject> iterator;
 
     AbstractPyIteratorObject(Python runtime, Collection<PyObject> collection) {
+        this(runtime, collection.iterator());
+    }
+
+    AbstractPyIteratorObject(Python runtime, Iterator<PyObject> iterator) {
         super(runtime);
 
-        this.collection = Collections.unmodifiableCollection(new ArrayList<>(collection));
-        this.iterator = collection.iterator();
+        this.iterator = iterator;
     }
 
-    public final Collection<PyObject> getCollection() {
-        return this.collection;
-    }
-
+    @Override
     public final boolean hasNext() {
         return this.iterator.hasNext();
     }
 
+    @Override
     public final PyObject next() {
         if (this.iterator.hasNext()) {
             return this.iterator.next();

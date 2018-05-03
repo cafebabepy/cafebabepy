@@ -12,6 +12,14 @@ public final class StringUtils {
     private StringUtils() {
     }
 
+    public static int codePointCount(String target) {
+        return target.codePointCount(0, target.length());
+    }
+
+    public static String codePointAt(String target, int index) {
+        return new String(new int[]{target.codePointAt(index)}, 0, 1);
+    }
+
     public static String substringCodePoint(String target, int startIndex, int endIndex) {
         char[] charArray = target.toCharArray();
 
