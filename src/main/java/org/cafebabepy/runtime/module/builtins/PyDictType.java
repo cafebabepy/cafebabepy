@@ -98,4 +98,32 @@ public class PyDictType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseException("builtins.KeyError", String.valueOf(key));
         }
     }
+
+    // FIXME default value
+    @DefinePyFunction(name = "get")
+    public PyObject get(PyObject self, PyObject key, PyObject... defaultValue) {
+        if (!this.runtime.isInstance(self, "builtins.dict")) {
+            throw this.runtime.newRaiseTypeError("descriptor 'get' requires a 'dict' object but received a '" + self.getType().getName() + "'");
+        }
+
+        if (!PyDictObject.class.isAssignableFrom(self.getClass())) {
+            throw new CafeBabePyException(PyDictObject.class.getName() + " is not assignable from " + self.getClass().getName());
+        }
+
+        if (defaultValue.length > 1) {
+            throw this.runtime.newRaiseTypeError("get expected at most 2 arguments, got " + (1 + defaultValue.length));
+        }
+
+        PyDictObject dict = (PyDictObject) self;
+        PyObject value = dict.getRawMap().get(key);
+        if (value == null) {
+            if (defaultValue.length == 1) {
+                value = defaultValue[0];
+            } else {
+                value = this.runtime.None();
+            }
+        }
+
+        return value;
+    }
 }
