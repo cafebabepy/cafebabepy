@@ -83,4 +83,30 @@ public final class PyStrType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("TypeError: descriptor '__hash__' requires a 'str' object but received a '" + self.getName() + "'");
         }
     }
+
+    @DefinePyFunction(name = "join")
+    public PyObject join(PyObject self, PyObject iterable) {
+        if (!this.runtime.isInstance(self, "builtins.str")) {
+            throw this.runtime.newRaiseTypeError("TypeError: descriptor '__hash__' requires a 'str' object but received a '" + self.getName() + "'");
+        }
+        if (!(self instanceof PyStrObject)) {
+            throw new CafeBabePyException("self is not PyStrObject " + self);
+        }
+
+        if (!this.runtime.isIterable(iterable)) {
+            throw this.runtime.newRaiseTypeError("can only join an iterable");
+        }
+
+        String selfValue = ((PyStrObject) self).getValue();
+
+        StringBuilder builder = new StringBuilder();
+        this.runtime.iterIndex(iterable, (v, i) -> {
+            if (i > 0) {
+                builder.append(selfValue);
+            }
+            builder.append(v.toJava(String.class));
+        });
+
+        return this.runtime.str(builder.toString());
+    }
 }
