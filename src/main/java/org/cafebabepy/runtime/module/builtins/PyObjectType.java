@@ -77,7 +77,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
                 //PyObject method = this.methodMap.get(name);
                 PyObject method = null;
                 if (method == null) {
-                    //method = newPyObject("types.MethodType", result, object);
+                    //method = newPyObject("builtins.MethodType", result, object);
                     method = new PyMethodTypeObject(this.runtime, self, result);
                     //this.methodMap.put(name, method);
                 }

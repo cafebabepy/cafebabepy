@@ -40,6 +40,6 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("types.MethodType");
+        return this.runtime.typeOrThrow("builtins.MethodType");
     }
 }

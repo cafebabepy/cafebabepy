@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.module.types;
+package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__get__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "types.FunctionType")
+@DefinePyType(name = "builtins.FunctionType")
 public class PyFunctionTypeType extends AbstractCafeBabePyType {
 
     public PyFunctionTypeType(Python runtime) {
@@ -31,6 +31,6 @@ public class PyFunctionTypeType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("expected at most 2 arguments, got " + args.length);
         }
 
-        return this.runtime.newPyObject("types.MethodType", self, args[0]);
+        return this.runtime.newPyObject("builtins.MethodType", self, args[0]);
     }
 }

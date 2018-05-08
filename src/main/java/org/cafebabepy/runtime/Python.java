@@ -7,7 +7,6 @@ import org.cafebabepy.runtime.module.PyMainModule;
 import org.cafebabepy.runtime.module._ast.PyAstModule;
 import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;
 import org.cafebabepy.runtime.module.sys.PySysModule;
-import org.cafebabepy.runtime.module.types.PyTypesModule;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
@@ -97,7 +96,6 @@ public final class Python {
 
         initializeModuleAndTypes(PySysModule.class);
         initializeModuleAndTypes(PyBuiltinsModule.class);
-        initializeModuleAndTypes(PyTypesModule.class);
         initializeModuleAndTypes(PyAstModule.class);
 
         initializeObjects();

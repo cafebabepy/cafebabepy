@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.module.types;
+package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "types.MethodType")
+@DefinePyType(name = "builtins.MethodType")
 public class PyMethodTypeType extends AbstractCafeBabePyType {
 
     public PyMethodTypeType(Python runtime) {
