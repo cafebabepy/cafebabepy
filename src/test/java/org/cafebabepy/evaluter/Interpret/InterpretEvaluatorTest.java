@@ -65,15 +65,48 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void importFromClassPath() {
+        void importName_ast() {
             PyObject result = Python.eval("" +
-                    "import test\n" +
-                    "test"
+                    "import this\n" +
+                    "this"
             );
 
             Python runtime = result.getRuntime();
 
-            assertEquals(result, runtime.moduleOrThrow("test"));
+            assertEquals(result, runtime.moduleOrThrow("this"));
+        }
+
+        @Test
+        void importFrom() {
+            PyObject result = Python.eval("" +
+                    "from cafebabepy_test import func1\n" +
+                    "func1('test')");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.str("test"));
+        }
+
+        @Test
+        void importFromStar() {
+            PyObject result = Python.eval("" +
+                    "from cafebabepy_test import *\n" +
+                    "func1('test')");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.str("test"));
+        }
+
+        @Test
+        void importFromABCDE() {
+            PyObject result = Python.eval("" +
+                    "from a.b.c.d import *\n" +
+                    "a11");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.number(99));
         }
     }
 

@@ -75,6 +75,9 @@ public class InterpretEvaluator {
             case "Import":
                 return evalImport(context, node);
 
+            case "ImportFrom":
+                return evalImportFrom(context, node);
+
             case "FunctionDef":
                 return evalFunctionDef(context, node);
 
@@ -184,12 +187,23 @@ public class InterpretEvaluator {
 
     private PyObject evalImport(PyObject context, PyObject node) {
         PyObject names = this.runtime.getattr(node, "names");
+
         this.runtime.iter(names, n -> {
             PyObject name = this.runtime.getattr(n, "name");
             PyObject asname = this.runtime.getattr(n, "asname");
 
             this.importManager.importAsName(context, name, asname);
         });
+
+        return this.runtime.None();
+    }
+
+    private PyObject evalImportFrom(PyObject context, PyObject node) {
+        PyObject module = this.runtime.getattr(node, "module");
+        PyObject names = this.runtime.getattr(node, "names");
+        PyObject level = this.runtime.getattr(node, "level");
+
+        this.importManager.importFrom(context, module, names, level);
 
         return this.runtime.None();
     }

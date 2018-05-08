@@ -24,6 +24,37 @@ public class PyObjectScope {
         this.parent = parent;
     }
 
+    public final void put(PyObjectScope scope) {
+        put(scope, true);
+    }
+
+    public final void put(PyObjectScope scope, boolean appear) {
+        Map<String, PyObject> source = scope.gets(appear);
+
+        if (appear) {
+            if (this.objectMap == null) {
+                synchronized (this) {
+                    if (this.objectMap == null) {
+                        this.objectMap = Collections.synchronizedMap(new LinkedHashMap<>());
+                    }
+                }
+            }
+
+            this.objectMap.putAll(source);
+
+        } else {
+            if (this.notAppearObjectMap == null) {
+                synchronized (this) {
+                    if (this.notAppearObjectMap == null) {
+                        this.notAppearObjectMap = Collections.synchronizedMap(new LinkedHashMap<>());
+                    }
+                }
+            }
+
+            this.notAppearObjectMap.putAll(source);
+        }
+    }
+
     public final void put(String name, PyObject object) {
         put(name, object, true);
     }
@@ -64,12 +95,15 @@ public class PyObjectScope {
     public Map<String, PyObject> gets(boolean appear) {
         Map<String, PyObject> map = Collections.synchronizedMap(new LinkedHashMap<>());
 
-        if (this.objectMap != null) {
-            map.putAll(this.objectMap);
-        }
+        if (appear) {
+            if (this.objectMap != null) {
+                map.putAll(this.objectMap);
+            }
 
-        if (!appear && this.notAppearObjectMap != null) {
-            map.putAll(this.notAppearObjectMap);
+        } else {
+            if (this.notAppearObjectMap != null) {
+                map.putAll(this.notAppearObjectMap);
+            }
         }
 
         return map;

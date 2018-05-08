@@ -269,6 +269,58 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitImport_from(PythonParser.Import_fromContext ctx) {
+        int level = 0;
+        if (ctx.DOT() != null) {
+            level += ctx.DOT().size();
+        }
+        if (ctx.ELLIPSIS() != null) {
+            level += (ctx.ELLIPSIS().size() * 3);
+        }
+        PyObject module = this.runtime.None();
+        if (ctx.dotted_name() != null) {
+            module = ctx.dotted_name().accept(this);
+        }
+
+        PyObject names;
+        if (ctx.STAR() != null) {
+            PyObject alias = this.runtime.newPyObject("_ast.alias", this.runtime.str("*"), this.runtime.None());
+
+            names = this.runtime.list(alias);
+
+        } else {
+            names = ctx.import_as_names().accept(this);
+        }
+
+        return this.runtime.newPyObject("_ast.ImportFrom", module, names, this.runtime.number(level));
+    }
+
+    @Override
+    public PyObject visitImport_as_names(PythonParser.Import_as_namesContext ctx) {
+        List<PyObject> names = new ArrayList<>(ctx.import_as_name().size());
+        int count = ctx.import_as_name().size();
+        for (int i = 0; i < count; i++) {
+            PyObject importAsName = ctx.import_as_name(i).accept(this);
+            names.add(importAsName);
+        }
+
+        return this.runtime.list(names);
+    }
+
+    @Override
+    public PyObject visitImport_as_name(PythonParser.Import_as_nameContext ctx) {
+        PyObject name = this.runtime.str(ctx.NAME(0).getSymbol().getText());
+        PyObject asName = this.runtime.None();
+
+        if (ctx.NAME().size() == 2) {
+            asName = this.runtime.str(ctx.NAME(1).getSymbol().getText());
+
+        }
+
+        return this.runtime.newPyObject("_ast.alias", name, asName);
+    }
+
+    @Override
     public PyObject visitDotted_as_names(PythonParser.Dotted_as_namesContext ctx) {
         int count = ctx.dotted_as_name().size();
         List<PyObject> dottedAsNames = new ArrayList<>(count);
@@ -1119,7 +1171,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         String rawString = ctx.STRING_LITERAL().getSymbol().getText();
 
         String str;
-        if(rawString.indexOf("\"\"\"") == 0) {
+        if (rawString.indexOf("\"\"\"") == 0) {
             str = rawString.substring(3, rawString.length() - 3);
 
         } else {

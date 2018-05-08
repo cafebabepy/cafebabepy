@@ -2,12 +2,12 @@ package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.RaiseException;
+import org.cafebabepy.runtime.object.PyModuleObject;
+import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
@@ -40,30 +40,158 @@ class ImportManager {
         }
     }
 
-    private PyObject loadModule(String moduleName) {
-        try {
-            Optional<PyObject> moduleOpt = loadModuleFromClassPath(moduleName);
-            if (moduleOpt.isPresent()) {
-                return moduleOpt.get();
+    void importFrom(PyObject context, PyObject moduleName, PyObject names, PyObject level) {
+        String moduleNameJava = moduleName.toJava(String.class);
+        int levelJava = level.toJava(int.class);
 
-            } else {
-                throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
+        String fromModuleName = getImportModuleName(context.getName(), moduleNameJava, levelJava);
+
+        String[] moduleSplitNames = StringUtils.splitDot(fromModuleName);
+
+        StringBuilder moduleNameBuilder = new StringBuilder();
+        for (String moduleSplitName : moduleSplitNames) {
+            moduleNameBuilder.append(moduleSplitName);
+
+            String currentModuleName = moduleNameBuilder.toString();
+            PyObject loadModule = this.runtime.module(currentModuleName).orElseGet(() -> loadModule(currentModuleName));
+
+            this.runtime.iter(names, n -> {
+                PyObject name = this.runtime.getattr(n, "name");
+                PyObject asName = this.runtime.getattr(n, "asname");
+                PyObject importName = asName.isNone() ? name : asName;
+
+                String nameJava = name.toJava(String.class);
+                if ("*".equals(nameJava)) {
+                    context.getScope().put(loadModule.getScope());
+
+                } else {
+                    PyObject target = this.runtime.getattrOptional(loadModule, nameJava).orElseGet(() -> {
+                        PyObject sysModules = this.runtime.getattr(this.runtime.moduleOrThrow("sys"), "modules");
+
+                        return this.runtime.getitemOptional(sysModules, name).orElseThrow(() ->
+                                this.runtime.newRaiseException("builtins.ImportError", "cannot import name '" + nameJava + "'")
+                        );
+                    });
+
+                    context.getScope().put(importName.toJava(String.class), target);
+                }
+            });
+
+            moduleNameBuilder.append(".");
+        }
+    }
+
+    private String getImportModuleName(String baseName, String moduleName, int level) {
+        String[] dotSplit = StringUtils.splitDot(baseName);
+        if (dotSplit.length < level) {
+            throw this.runtime.newRaiseException("builtins.ValueError", "attempted relative import beyond top-level package");
+        }
+
+        if (level > 0) {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = level; i >= level; i--) {
+                builder.append(dotSplit[level - i]).append('.');
             }
 
+            builder.append(moduleName);
+
+            return builder.toString();
+        }
+
+        return moduleName;
+    }
+
+    private PyObject loadModule(String moduleName) {
+        try {
+            Optional<PyObject> moduleOpt;
+
+            moduleOpt = loadModuleFromClassPath(moduleName);
+            if (moduleOpt.isPresent()) {
+                return moduleOpt.get();
+            }
+
+            moduleOpt = loadModuleFromFile(moduleName);
+            if (moduleOpt.isPresent()) {
+                return moduleOpt.get();
+            }
+
+            throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
+
         } catch (IOException e) {
+            e.printStackTrace();
             throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
         }
+    }
+
+    private Optional<PyObject> loadModuleFromFile(String moduleName) throws IOException {
+        File baseFile = new File(".").getAbsoluteFile().getParentFile();
+
+        String path = moduleName.replace('.', '/');
+
+        // __init__
+        String initPath = path + "/__init__.py";
+        File initFile = new File(baseFile, initPath);
+
+        try (InputStream in = new FileInputStream(initFile)) {
+            return loadModuleFromInputStream(moduleName, in);
+
+        } catch (FileNotFoundException e) {
+            // Nothing
+        }
+
+        // module.py
+        String pyPath = path + ".py";
+        File file = new File(baseFile, pyPath);
+
+        try (InputStream in = new FileInputStream(file)) {
+            return loadModuleFromInputStream(moduleName, in);
+
+        } catch (FileNotFoundException e) {
+            // Nothing
+        }
+
+        // empty module
+        File dir = new File(baseFile, path);
+        if (dir.isDirectory()) {
+            return Optional.of(createModule(moduleName));
+
+        }
+
+        return Optional.empty();
     }
 
     private Optional<PyObject> loadModuleFromClassPath(String moduleName) throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        // File
-        InputStream in = classLoader.getResourceAsStream(moduleName.replace('.', '/') + ".py");
-        if (in == null) {
-            return Optional.empty();
+        String path = moduleName.replace('.', '/');
+
+        InputStream in;
+
+        // __init__.py
+        in = classLoader.getResourceAsStream(path + "/__init.__.py");
+        if (in != null) {
+            try (InputStream tmpIn = in) {
+                return loadModuleFromInputStream(moduleName, tmpIn);
+            }
         }
 
+        // module.py
+        in = classLoader.getResourceAsStream(path + ".py");
+        if (in != null) {
+            try (InputStream tmpIn = in) {
+                return loadModuleFromInputStream(moduleName, tmpIn);
+            }
+        }
+
+        if (ReflectionUtils.isDirectory(moduleName)) {
+            return Optional.of(createModule(moduleName));
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<PyObject> loadModuleFromInputStream(String moduleName, InputStream in) throws IOException {
         StringBuilder builder = new StringBuilder();
 
         // TODO UTF-8固定はまずいか？
@@ -86,7 +214,7 @@ class ImportManager {
         try {
             this.runtime.eval(module, builder.toString());
 
-        } catch (Exception e) {
+        } catch (RaiseException e) {
             this.runtime.del(modules, this.runtime.str(moduleName));
             throw e;
         }
@@ -95,7 +223,8 @@ class ImportManager {
     }
 
     private PyObject createModule(String name) {
-        PyObject module = this.runtime.newPyObject("types.ModuleType", false, this.runtime.str(name));
+        PyObject module = new PyModuleObject(this.runtime, name);
+        module.initialize();
 
         PyObject builtinsModule = this.runtime.moduleOrThrow("builtins");
         Map<String, PyObject> objectMap = builtinsModule.getScope().gets();
