@@ -155,6 +155,13 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void integer16() {
+            PyObject result = Python.eval("0x99");
+
+            assertEquals((int) result.toJava(Integer.class), 0x99);
+        }
+
+        @Test
         void stringSingleQuote() {
             PyObject result = Python.eval("'abc'");
 
@@ -231,6 +238,16 @@ public class InterpretEvaluatorTest {
 
             assertEquals(result.toJava(Map.class), map);
             assertEquals(result.toJava(String.class), "{'test1': 1, 'test2': 2}");
+        }
+
+        @Test
+        void dictEmpty() {
+            PyObject result = Python.eval("{}");
+
+            LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
+
+            assertEquals(result.toJava(Map.class), map);
+            assertEquals(result.toJava(String.class), "{}");
         }
 
         @Test
@@ -828,7 +845,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "function");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("types.FunctionType"));
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType"));
         }
 
         @Test
@@ -843,7 +860,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "method");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("types.MethodType"));
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.MethodType"));
         }
 
         @Test

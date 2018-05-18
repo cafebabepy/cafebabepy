@@ -1233,8 +1233,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitNumber(PythonParser.NumberContext ctx) {
+        // TODO over jva int
         String text = ctx.getChild(0).getText();
-        PyObject number = this.runtime.number(Integer.parseInt(text));
+
+        PyObject number;
+        if (text.startsWith("0x")) {
+            number = this.runtime.number(Integer.decode(text));
+
+        } else {
+            number = this.runtime.number(Integer.parseInt(text));
+        }
 
         return this.runtime.newPyObject("_ast.Num", number);
     }
