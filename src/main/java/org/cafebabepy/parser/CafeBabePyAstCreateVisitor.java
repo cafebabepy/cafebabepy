@@ -218,9 +218,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject[] argArray = new PyObject[tfpdefContextList.size()];
 
         for (int i = 0; i < argArray.length; i++) {
-            argArray[i] = visitTfpdef(tfpdefContextList.get(i));
+            argArray[i] = tfpdefContextList.get(i).accept(this);
         }
 
+        // TODO 対応する
         PyObject args = this.runtime.list(argArray);
         PyObject vararg = this.runtime.None();
         PyObject kwonlyargs = this.runtime.None();
@@ -237,12 +238,39 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject arg = this.runtime.str(ctx.NAME().getText());
         PyObject annotation = this.runtime.None();
 
-        PythonParser.TestContext testContext = ctx.test();
-        if (testContext != null) {
-            annotation = visitTest(testContext);
+        if (ctx.test() != null) {
+            annotation = ctx.test().accept(this);
         }
 
         return this.runtime.newPyObject("_ast.arg", arg, annotation);
+    }
+
+    @Override
+    public PyObject visitVarargslist(PythonParser.VarargslistContext ctx) {
+        List<PythonParser.VfpdefContext> vfpdefContextList = ctx.vfpdef();
+        PyObject[] argArray = new PyObject[vfpdefContextList.size()];
+
+        for (int i = 0; i < argArray.length; i++) {
+            argArray[i] = vfpdefContextList.get(i).accept(this);
+        }
+
+        // TODO 対応する
+        PyObject args = this.runtime.list(argArray);
+        PyObject vararg = this.runtime.None();
+        PyObject kwonlyargs = this.runtime.None();
+        PyObject kw_defaults = this.runtime.None();
+        PyObject kwarg = this.runtime.None();
+        PyObject defaults = this.runtime.None();
+
+        return this.runtime.newPyObject(
+                "_ast.arguments", args, vararg, kwonlyargs, kw_defaults, kwarg, defaults);
+    }
+
+    @Override
+    public PyObject visitVfpdef(PythonParser.VfpdefContext ctx) {
+        PyObject arg = this.runtime.str(ctx.NAME().getText());
+
+        return this.runtime.newPyObject("_ast.arg", arg, this.runtime.None());
     }
 
     @Override
@@ -419,18 +447,63 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitTest(PythonParser.TestContext ctx) {
-        List<PythonParser.Or_testContext> or_testContext = ctx.or_test();
-
-        PyObject test = visitOr_test(or_testContext.get(0));
-        if (or_testContext.size() == 2) {
-            PyObject ifTest = visitOr_test(or_testContext.get(1));
-            PyObject elseTest = visitTest(ctx.test());
-
-            return this.runtime.newPyObject("_ast.IfExp", ifTest, test, elseTest);
+        if (ctx.lambdef() != null) {
+            return ctx.lambdef().accept(this);
 
         } else {
-            return test;
+            PyObject test = ctx.or_test().get(0).accept(this);
+            if (ctx.or_test().size() == 2) {
+                PyObject ifTest = ctx.or_test().get(1).accept(this);
+                PyObject elseTest = ctx.test().accept(this);
+
+                return this.runtime.newPyObject("_ast.IfExp", ifTest, test, elseTest);
+
+            } else {
+                return test;
+            }
         }
+    }
+
+    @Override
+    public PyObject visitLambdef(PythonParser.LambdefContext ctx) {
+        PyObject arguments;
+        if (ctx.varargslist() != null) {
+            arguments = ctx.varargslist().accept(this);
+
+        } else {
+            arguments = this.runtime.newPyObject("_ast.arguments",
+                    this.runtime.list(),
+                    this.runtime.None(),
+                    this.runtime.None(),
+                    this.runtime.list(),
+                    this.runtime.list(),
+                    this.runtime.list());
+        }
+
+        PyObject body = ctx.test().accept(this);
+
+        return this.runtime.newPyObject("_ast.Lambda", arguments, body);
+    }
+
+    @Override
+    public PyObject visitLambdef_nocond(PythonParser.Lambdef_nocondContext ctx) {
+        PyObject arguments;
+        if (ctx.varargslist() != null) {
+            arguments = ctx.varargslist().accept(this);
+
+        } else {
+            arguments = this.runtime.newPyObject("_ast.arguments",
+                    this.runtime.list(),
+                    this.runtime.None(),
+                    this.runtime.None(),
+                    this.runtime.list(),
+                    this.runtime.list(),
+                    this.runtime.list());
+        }
+
+        PyObject body = ctx.test_nocond().accept(this);
+
+        return this.runtime.newPyObject("_ast.Lambda", arguments, body);
     }
 
     @Override

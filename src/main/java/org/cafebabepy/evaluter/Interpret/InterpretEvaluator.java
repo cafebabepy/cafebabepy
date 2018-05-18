@@ -123,6 +123,9 @@ public class InterpretEvaluator {
             case "UnaryOp":
                 return evalUnaryOp(context, node);
 
+            case "Lambda":
+                return evalLambda(context, node);
+
             case "Call":
                 return evalCall(context, node);
 
@@ -768,6 +771,14 @@ public class InterpretEvaluator {
         } else {
             throw this.runtime.newRaiseTypeError("Unknown op");
         }
+    }
+
+    private PyObject evalLambda(PyObject context, PyObject node) {
+        PyObject args = this.runtime.getattr(node, "args");
+        PyObject body = this.runtime.getattr(node, "body");
+
+        return new PyInterpretFunctionObject(
+                this.runtime, this, context, args, body);
     }
 
     private PyObject evalName(PyObject context, PyObject node) {

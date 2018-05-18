@@ -858,4 +858,61 @@ public class InterpretEvaluatorTest {
             });
         }
     }
+
+    @Nested
+    class Function {
+        @Test
+        void lambda() {
+            PyObject result = Python.eval(""
+                    + "a = lambda x: x + 1\n"
+                    + "a(99)");
+
+            Python runtime = result.getRuntime();
+            assertEquals(result, runtime.number(100));
+        }
+
+        @Test
+        void lambdaNoArgument() throws IOException {
+            PyObject result = Python.eval(""
+                    + "a = lambda: 99 + 1\n"
+                    + "a()");
+
+            Python runtime = result.getRuntime();
+            assertEquals(result, runtime.number(100));
+        }
+    }
+
+    @Nested
+    class Comment {
+        @Test
+        void comment() throws IOException {
+            evalStdOutToResult(""
+                    + "# test1\n"
+                    + "print('test') # test2", result -> {
+                assertEquals(result, "test" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void lineComment1() throws IOException {
+            evalStdOutToResult(""
+                    + "\"\"\"\n"
+                    + "test1\n"
+                    + "\"\"\"\n"
+                    + "print('test')", result -> {
+                assertEquals(result, "test" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void lineComment2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a():\n"
+                    + "  \"\"\"comment\"\"\"\n"
+                    + "  print('test')  \n"
+                    + "a()", result -> {
+                assertEquals(result, "test" + System.lineSeparator());
+            });
+        }
+    }
 }
