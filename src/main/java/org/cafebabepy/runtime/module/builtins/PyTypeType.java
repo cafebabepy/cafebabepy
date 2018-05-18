@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -22,6 +23,18 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __call__)
     public PyObject __call__(PyObject self, PyObject... args) {
+        if (self == this) {
+            if (args.length == 1) {
+                return args[0].getType();
+
+            } else if (args.length == 3) {
+                throw new CafeBabePyException("Not implement");
+
+            } else {
+                throw this.runtime.newRaiseTypeError("type() takes 1 or 3 arguments");
+            }
+
+        }
         PyObject object = this.runtime.getattr(self, __new__).call();
         this.runtime.getattr(object, __init__).call(args);
 
@@ -37,7 +50,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                             + ")");
         }
 
-        if(cls.getClass() == PyTupleType.class) {
+        if (cls.getClass() == PyTupleType.class) {
             return new PyTupleObject(this.runtime);
         }
 

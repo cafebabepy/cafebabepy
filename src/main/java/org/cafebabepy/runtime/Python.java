@@ -312,6 +312,11 @@ public final class Python {
                 "module '" + module.getName() + "' has no attribute '" + name + "'");
     }
 
+    public PyObject type(PyObject object) {
+        PyObject type = typeOrThrow("builtins.type");
+        return getattr(typeOrThrow("builtins.type"), __call__).call(type, object);
+    }
+
     public Optional<PyObject> type(String name) {
         return type(name, true);
     }
@@ -725,15 +730,21 @@ public final class Python {
     }
 
     public RaiseException newRaiseException(String exceptionType) {
-        PyObject e = newPyObject(exceptionType);
-
-        return new RaiseException(e);
+        return new RaiseException(newPyObject(exceptionType));
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
         PyObject e = newPyObject(exceptionType, str(message));
 
         return new RaiseException(e, message);
+    }
+
+    public RaiseException newRaiseException(PyObject exception) {
+        if (!exception.isException()) {
+            throw new CafeBabePyException("'" + exception.getFullName() + "' is not exception");
+        }
+
+        return new RaiseException(exception);
     }
 
     public void defineModule(PyObject module) {

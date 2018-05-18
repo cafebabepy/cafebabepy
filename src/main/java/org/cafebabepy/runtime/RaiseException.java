@@ -12,6 +12,7 @@ public class RaiseException extends RuntimeException {
         this.exception = exception;
     }
 
+    // FIXME remove
     public RaiseException(PyObject exception, String message) {
         super(message);
 
