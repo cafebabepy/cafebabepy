@@ -24,8 +24,8 @@ public class PyBinOpType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("left", args[0]);
-        self.getScope().put("op", args[1]);
-        self.getScope().put("right", args[2]);
+        self.getScope().put(this.runtime.str("left"), args[0]);
+        self.getScope().put(this.runtime.str("op"), args[1]);
+        self.getScope().put(this.runtime.str("right"), args[2]);
     }
 }

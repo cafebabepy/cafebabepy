@@ -24,7 +24,7 @@ public class PyLambdaType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("args", args[0]);
-        self.getScope().put("body", args[1]);
+        self.getScope().put(this.runtime.str("args"), args[0]);
+        self.getScope().put(this.runtime.str("body"), args[1]);
     }
 }

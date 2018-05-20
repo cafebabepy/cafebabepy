@@ -24,6 +24,6 @@ public class PyNumType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("n", args[0]);
+        self.getScope().put(this.runtime.str("n"), args[0]);
     }
 }

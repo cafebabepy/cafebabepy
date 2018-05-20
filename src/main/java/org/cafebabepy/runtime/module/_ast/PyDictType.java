@@ -24,7 +24,7 @@ public class PyDictType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("keys", args[0]);
-        self.getScope().put("values", args[1]);
+        self.getScope().put(this.runtime.str("keys"), args[0]);
+        self.getScope().put(this.runtime.str("values"), args[1]);
     }
 }

@@ -29,20 +29,18 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject name) {
-        String n = name.toJava(String.class);
-
-        Optional<PyObject> resultOpt = self.getScope().get(n);
+        Optional<PyObject> resultOpt = self.getScope().get(name);
         if (resultOpt.isPresent()) {
             return resultOpt.get();
         }
 
         boolean isParent = false;
 
-        resultOpt = getFromTypes(self, n);
+        resultOpt = getFromTypes(self, name);
         if (!resultOpt.isPresent()) {
-            resultOpt = getFromType(self, n);
+            resultOpt = getFromType(self, name);
             if (!resultOpt.isPresent()) {
-                resultOpt = getFromParent(self, n);
+                resultOpt = getFromParent(self, name);
                 if (!resultOpt.isPresent()) {
                     if (self.isModule()) {
                         throw this.runtime.newRaiseException("builtins.AttributeError",
@@ -97,7 +95,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             );
         }
 
-        self.getScope().put(name.toJava(String.class), value);
+        self.getScope().put(name, value);
     }
 
     @DefinePyFunction(name = __str__)
@@ -163,7 +161,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         return this.runtime.number(System.identityHashCode(self));
     }
 
-    public Optional<PyObject> getFromType(PyObject object, String name) {
+    public Optional<PyObject> getFromType(PyObject object, PyObject name) {
         if (object.isType()) {
             Optional<PyObject> typeObject = this.runtime.typeOrThrow("builtins.type").getScope().get(name);
             if (typeObject.isPresent()) {
@@ -174,7 +172,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         return Optional.empty();
     }
 
-    public Optional<PyObject> getFromTypes(PyObject object, String name) {
+    public Optional<PyObject> getFromTypes(PyObject object, PyObject name) {
         for (PyObject type : object.getTypes()) {
             Optional<PyObject> typeObject = type.getScope().get(name);
             if (typeObject.isPresent()) {
@@ -185,7 +183,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         return Optional.empty();
     }
 
-    public Optional<PyObject> getFromParent(PyObject object, String name) {
+    public Optional<PyObject> getFromParent(PyObject object, PyObject name) {
         Optional<PyObjectScope> parentOpt = object.getScope().getParent();
         while (parentOpt.isPresent()) {
             PyObjectScope parent = parentOpt.get();

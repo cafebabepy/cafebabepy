@@ -24,7 +24,7 @@ public class PyKeywordType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("arg", args[0]);
-        self.getScope().put("value", args[1]);
+        self.getScope().put(this.runtime.str("arg"), args[0]);
+        self.getScope().put(this.runtime.str("value"), args[1]);
     }
 }

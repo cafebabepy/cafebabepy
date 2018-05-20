@@ -24,8 +24,8 @@ public class PyCompareType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("left", args[0]);
-        self.getScope().put("ops", args[1]);
-        self.getScope().put("comparators", args[2]);
+        self.getScope().put(this.runtime.str("left"), args[0]);
+        self.getScope().put(this.runtime.str("ops"), args[1]);
+        self.getScope().put(this.runtime.str("comparators"), args[2]);
     }
 }

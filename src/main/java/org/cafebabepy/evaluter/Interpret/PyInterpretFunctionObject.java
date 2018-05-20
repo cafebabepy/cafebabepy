@@ -25,7 +25,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
         this.args = args;
         this.body = body;
 
-        getScope().put(__call__, this);
+        getScope().put(this.runtime.str(__call__), this);
     }
 
     @Override
@@ -41,7 +41,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
         this.runtime.getattrOptional(this.args, "args").ifPresent(argslist ->
                 this.runtime.iterIndex(argslist, (a, i) -> {
                     PyObject arg = this.runtime.getattr(a, "arg");
-                    scope.put(arg.toJava(String.class), args[i]);
+                    scope.put(arg, args[i]);
                 })
         );
 

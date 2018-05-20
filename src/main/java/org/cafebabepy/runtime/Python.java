@@ -80,8 +80,8 @@ public final class Python {
             PyObject mainModule = moduleOrThrow("__main__");
 
             PyObject builtinsModule = moduleOrThrow("builtins");
-            Map<String, PyObject> objectMap = builtinsModule.getScope().gets();
-            for (Map.Entry<String, PyObject> e : objectMap.entrySet()) {
+            Map<PyObject, PyObject> objectMap = builtinsModule.getScope().gets();
+            for (Map.Entry<PyObject, PyObject> e : objectMap.entrySet()) {
                 mainModule.getScope().put(e.getKey(), e.getValue());
             }
 
@@ -303,7 +303,7 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        Optional<PyObject> typeOpt = module.getScope().get(splitLastDot[1], appear);
+        Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
         if (typeOpt.isPresent()) {
             return typeOpt.get();
         }
@@ -331,7 +331,7 @@ public final class Python {
 
         return module(splitDot[0])
                 .map(PyObject::getScope)
-                .flatMap(scope -> scope.get(splitDot[1], appear));
+                .flatMap(scope -> scope.get(str(splitDot[1]), appear));
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
@@ -350,7 +350,7 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        PyObject function = module.getScope().get(splitLastDot[1]).orElseThrow(() ->
+        PyObject function = module.getScope().get(str(splitLastDot[1])).orElseThrow(() ->
                 newRaiseException(
                         "builtins.AttributeError", "module '" + module.getFullName() + "' has no attribute '" + splitLastDot[1] + "'"));
 
@@ -471,18 +471,18 @@ public final class Python {
     }
 
     public PyObject getattr(PyObject object, String name) {
-        Optional<PyObject> getattributeOpt = object.getScope().get(__getattribute__);
+        Optional<PyObject> getattributeOpt = object.getScope().get(str(__getattribute__));
         if (getattributeOpt.isPresent()) {
             return getattributeOpt.get().call(object, str(name));
         }
 
-        Optional<PyObject> getattributeTypeOpt = object.getType().getScope().get(__getattribute__);
+        Optional<PyObject> getattributeTypeOpt = object.getType().getScope().get(str(__getattribute__));
         if (getattributeTypeOpt.isPresent()) {
             return getattributeTypeOpt.get().call(object, str(name));
         }
 
         for (PyObject typesType : object.getType().getTypes()) {
-            Optional<PyObject> getattributeTypesTypeOpt = typesType.getScope().get(__getattribute__);
+            Optional<PyObject> getattributeTypesTypeOpt = typesType.getScope().get(str(__getattribute__));
             if (getattributeTypesTypeOpt.isPresent()) {
                 return getattributeTypesTypeOpt.get().call(object, str(name));
             }

@@ -24,7 +24,7 @@ public class PyAliasType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("name", args[0]);
-        self.getScope().put("asname", args[1]);
+        self.getScope().put(this.runtime.str("name"), args[0]);
+        self.getScope().put(this.runtime.str("asname"), args[1]);
     }
 }

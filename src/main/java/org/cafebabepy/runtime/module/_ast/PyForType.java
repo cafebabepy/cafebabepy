@@ -24,9 +24,9 @@ public class PyForType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("target", args[0]);
-        self.getScope().put("iter", args[1]);
-        self.getScope().put("body", args[2]);
-        self.getScope().put("orelse", args[3]);
+        self.getScope().put(this.runtime.str("target"), args[0]);
+        self.getScope().put(this.runtime.str("iter"), args[1]);
+        self.getScope().put(this.runtime.str("body"), args[2]);
+        self.getScope().put(this.runtime.str("orelse"), args[3]);
     }
 }

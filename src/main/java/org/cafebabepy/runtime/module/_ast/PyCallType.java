@@ -24,8 +24,8 @@ public class PyCallType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("func", args[0]);
-        self.getScope().put("args", args[1]);
-        self.getScope().put("keywords", args[2]);
+        self.getScope().put(this.runtime.str("func"), args[0]);
+        self.getScope().put(this.runtime.str("args"), args[1]);
+        self.getScope().put(this.runtime.str("keywords"), args[2]);
     }
 }

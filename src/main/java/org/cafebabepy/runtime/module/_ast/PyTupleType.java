@@ -24,7 +24,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("elts", args[0]);
-        self.getScope().put("ctx", args[1]);
+        self.getScope().put(this.runtime.str("elts"), args[0]);
+        self.getScope().put(this.runtime.str("ctx"), args[1]);
     }
 }

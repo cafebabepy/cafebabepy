@@ -22,6 +22,10 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         super(runtime);
     }
 
+    protected AbstractCafeBabePyType(Python runtime, boolean dict) {
+        super(runtime, dict);
+    }
+
     @Override
     final String[] getBaseNames() {
         return this.baseNames;
@@ -49,7 +53,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
         this.module = this.runtime.moduleOrThrow(splitStr[0]);
         this.name = splitStr[1];
-        this.module.getScope().put(this.name, this, definePyType.appear());
+        this.module.getScope().put(this.runtime.str(this.name), this, definePyType.appear());
     }
 
     @Override
@@ -79,7 +83,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
     @Override
     public PyObject call(PyObject... args) {
-        return this.runtime.typeOrThrow("builtins.type").getScope().get(__call__).orElseThrow(() ->
+        return this.runtime.typeOrThrow("builtins.type").getScope().get(this.runtime.str(__call__)).orElseThrow(() ->
                 new CafeBabePyException("type " + __call__ + " is not foud")
         ).call(this, args);
     }

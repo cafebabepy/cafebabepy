@@ -22,7 +22,7 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
         this.function = function;
         ;
 
-        getScope().put(__call__, this);
+        getScope().put(this.runtime.str(__call__), this);
     }
 
     public PyObject getSource() {

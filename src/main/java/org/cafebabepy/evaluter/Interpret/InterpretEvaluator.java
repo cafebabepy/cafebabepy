@@ -221,7 +221,7 @@ public class InterpretEvaluator {
         PyObject function = new PyInterpretFunctionObject(
                 this.runtime, this, context, args, body);
 
-        context.getScope().put(name.toJava(String.class), function);
+        context.getScope().put(name, function);
 
         return this.runtime.None();
     }
@@ -251,7 +251,7 @@ public class InterpretEvaluator {
         PyObject clazz = new PyInterpretClassObject(
                 this.runtime, context, n, baseList);
 
-        context.getScope().put(name.toJava(String.class), clazz);
+        context.getScope().put(name, clazz);
 
         eval(clazz, body);
 
@@ -400,7 +400,7 @@ public class InterpretEvaluator {
     private void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            context.getScope().put(id.toJava(String.class), evalValue);
+            context.getScope().put(id, evalValue);
 
         } else {
             unpack(context, target, evalValue);
@@ -415,13 +415,13 @@ public class InterpretEvaluator {
 
         if (targetType instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            context.getScope().put(id.toJava(String.class), evalValue);
+            context.getScope().put(id, evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
             PyObject attr = this.runtime.getattr(target, "attr");
             PyObject attributeContext = eval(context, target);
-            attributeContext.getScope().put(attr.toJava(String.class), evalValue);
+            attributeContext.getScope().put(attr, evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
@@ -538,7 +538,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(target, "id");
             PyObject evalValue = eval(context, value);
 
-            context.getScope().put(id.toJava(String.class), evalValue);
+            context.getScope().put(id, evalValue);
         }
 
         return this.runtime.None();

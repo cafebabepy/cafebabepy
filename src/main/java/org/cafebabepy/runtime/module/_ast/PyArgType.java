@@ -24,7 +24,7 @@ public class PyArgType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("arg", args[0]);
-        self.getScope().put("annotation", args[1]);
+        self.getScope().put(this.runtime.str("arg"), args[0]);
+        self.getScope().put(this.runtime.str("annotation"), args[1]);
     }
 }

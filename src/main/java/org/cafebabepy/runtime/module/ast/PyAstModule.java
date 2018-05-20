@@ -21,8 +21,8 @@ public class PyAstModule extends AbstractCafeBabePyModule {
 
     @DefinePyFunction(name = "iter_fields")
     public PyObject iter_fields(PyObject node) {
-        Map<String, PyObject> objectMap = node.getScope().gets();
-        Iterator<Map.Entry<String, PyObject>> objectIter = objectMap.entrySet().iterator();
+        Map<PyObject, PyObject> objectMap = node.getScope().gets();
+        Iterator<Map.Entry<PyObject, PyObject>> objectIter = objectMap.entrySet().iterator();
 
         return this.runtime.generator(stopper -> {
             if (!objectIter.hasNext()) {
@@ -32,7 +32,7 @@ public class PyAstModule extends AbstractCafeBabePyModule {
                 return this.runtime.None();
             }
 
-            Map.Entry<String, PyObject> e = objectIter.next();
+            Map.Entry<PyObject, PyObject> e = objectIter.next();
 
             return this.runtime.list(this.runtime.str(e.getKey()), e.getValue());
         });

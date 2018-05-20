@@ -22,8 +22,8 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
         super(runtime);
     }
 
-    AbstractAbstractCafeBabePyAny(Python runtime, boolean appear) {
-        super(runtime, appear);
+    AbstractAbstractCafeBabePyAny(Python runtime, boolean dict) {
+        super(runtime, dict);
     }
 
     @Override
@@ -113,10 +113,10 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                     method);
 
             if (__call__.equals(f.getName())) {
-                f.getScope().put(__call__, f);
+                f.getScope().put(this.runtime.str(__call__), f);
             }
 
-            getScope().put(f.getName(), f);
+            getScope().put(this.runtime.str(f.getName()), f);
 
             defineClassMemberNamesSet.add(definePyFunction.name());
         }

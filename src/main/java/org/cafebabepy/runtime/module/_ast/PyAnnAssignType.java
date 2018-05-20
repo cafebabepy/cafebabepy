@@ -24,9 +24,9 @@ public class PyAnnAssignType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("target", args[0]);
-        self.getScope().put("annotation", args[1]);
-        self.getScope().put("value", args[2]);
-        self.getScope().put("simple", args[3]);
+        self.getScope().put(this.runtime.str("target"), args[0]);
+        self.getScope().put(this.runtime.str("annotation"), args[1]);
+        self.getScope().put(this.runtime.str("value"), args[2]);
+        self.getScope().put(this.runtime.str("simple"), args[3]);
     }
 }

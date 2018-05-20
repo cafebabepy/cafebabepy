@@ -126,7 +126,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private void toStore(PyObject target, int attributeDepth) {
         PyObject type = target.getType();
         if (type instanceof PyStarredType) {
-            target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+            target.getScope().put(this.runtime.str("ctx"), this.runtime.newPyObject("_ast.Store"));
             PyObject value = this.runtime.getattr(target, "value");
             if (this.runtime.isIterable(value)) {
                 this.runtime.iter(value, v -> toStore(v, 0));
@@ -137,19 +137,19 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
         } else if (type instanceof PyNameType) {
             if (attributeDepth == 0) {
-                target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+                target.getScope().put(this.runtime.str("ctx"), this.runtime.newPyObject("_ast.Store"));
             }
 
         } else if (type instanceof PyAttributeType) {
             if (attributeDepth == 0) {
-                target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+                target.getScope().put(this.runtime.str("ctx"), this.runtime.newPyObject("_ast.Store"));
             }
 
             PyObject value = this.runtime.getattr(target, "value");
             toStore(value, attributeDepth + 1);
 
         } else if (type instanceof PyListType) {
-            target.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+            target.getScope().put(this.runtime.str("ctx"), this.runtime.newPyObject("_ast.Store"));
             PyObject elts = this.runtime.getattr(target, "elts");
 
             this.runtime.iter(elts, elt -> toStore(elt, 0));
@@ -169,7 +169,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             throw this.runtime.newRaiseException("builtins.SyntaxError",
                     "illegal target for annotation");
         }
-        testlist_star_expr.getScope().put("ctx", this.runtime.newPyObject("_ast.Store"));
+        testlist_star_expr.getScope().put(this.runtime.str("ctx"), this.runtime.newPyObject("_ast.Store"));
         PyObject annotation = testList.get(0);
         PyObject value = this.runtime.None();
         if (testList.size() == 2) {
@@ -773,25 +773,25 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             if (this.runtime.isInstance(trailer, "_ast.Call")) {
                 if (expr == null) {
-                    trailer.getScope().put("func", atom);
+                    trailer.getScope().put(this.runtime.str("func"), atom);
 
                 } else {
-                    trailer.getScope().put("func", expr);
+                    trailer.getScope().put(this.runtime.str("func"), expr);
                 }
 
             } else if (this.runtime.isInstance(trailer, "_ast.Attribute")) {
                 if (expr == null) {
-                    trailer.getScope().put("value", atom);
+                    trailer.getScope().put(this.runtime.str("value"), atom);
 
                 } else {
-                    trailer.getScope().put("value", expr);
+                    trailer.getScope().put(this.runtime.str("value"), expr);
                 }
             } else if (this.runtime.isInstance(trailer, "_ast.Subscript")) {
                 if (expr == null) {
-                    trailer.getScope().put("value", atom);
+                    trailer.getScope().put(this.runtime.str("value"), atom);
 
                 } else {
-                    trailer.getScope().put("value", expr);
+                    trailer.getScope().put(this.runtime.str("value"), expr);
                 }
             }
 
@@ -1203,7 +1203,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             }
 
             ifs = this.runtime.list(ifsList);
-            comprehension.getScope().put("ifs", ifs);
+            comprehension.getScope().put(this.runtime.str("ifs"), ifs);
 
             return this.runtime.list(comprehensionList);
 

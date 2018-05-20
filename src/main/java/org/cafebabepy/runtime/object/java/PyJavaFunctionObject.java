@@ -35,7 +35,7 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
             this.method.setAccessible(true);
         }
 
-        getScope().put(__call__, this);
+        getScope().put(this.runtime.str(__call__), this);
     }
 
     @Override

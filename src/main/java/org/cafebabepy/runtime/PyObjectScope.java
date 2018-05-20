@@ -12,9 +12,9 @@ public class PyObjectScope {
 
     private final PyObjectScope parent;
 
-    private volatile Map<String, PyObject> objectMap;
+    private volatile Map<PyObject, PyObject> objectMap;
 
-    private volatile Map<String, PyObject> notAppearObjectMap;
+    private volatile Map<PyObject, PyObject> notAppearObjectMap;
 
     public PyObjectScope() {
         this.parent = null;
@@ -29,7 +29,7 @@ public class PyObjectScope {
     }
 
     public final void put(PyObjectScope scope, boolean appear) {
-        Map<String, PyObject> source = scope.gets(appear);
+        Map<PyObject, PyObject> source = scope.gets(appear);
 
         if (appear) {
             if (this.objectMap == null) {
@@ -55,11 +55,11 @@ public class PyObjectScope {
         }
     }
 
-    public final void put(String name, PyObject object) {
+    public final void put(PyObject name, PyObject object) {
         put(name, object, true);
     }
 
-    public void put(String name, PyObject object, boolean appear) {
+    public void put(PyObject name, PyObject object, boolean appear) {
         if (appear) {
             if (this.objectMap == null) {
                 synchronized (this) {
@@ -88,12 +88,41 @@ public class PyObjectScope {
         return Optional.ofNullable(this.parent);
     }
 
-    public final Map<String, PyObject> gets() {
+    public final Map<PyObject, PyObject> getsRaw() {
+        return getsRaw(true);
+    }
+
+    public Map<PyObject, PyObject> getsRaw(boolean appear) {
+        if (appear) {
+            if (this.objectMap == null) {
+                synchronized (this) {
+                    if (this.objectMap == null) {
+                        this.objectMap = Collections.synchronizedMap(new LinkedHashMap<>());
+                    }
+                }
+            }
+
+            return this.objectMap;
+
+        } else {
+            if (this.notAppearObjectMap == null) {
+                synchronized (this) {
+                    if (this.notAppearObjectMap == null) {
+                        this.notAppearObjectMap = Collections.synchronizedMap(new LinkedHashMap<>());
+                    }
+                }
+            }
+
+            return this.notAppearObjectMap;
+        }
+    }
+
+    public final Map<PyObject, PyObject> gets() {
         return gets(true);
     }
 
-    public Map<String, PyObject> gets(boolean appear) {
-        Map<String, PyObject> map = Collections.synchronizedMap(new LinkedHashMap<>());
+    public Map<PyObject, PyObject> gets(boolean appear) {
+        Map<PyObject, PyObject> map = Collections.synchronizedMap(new LinkedHashMap<>());
 
         if (appear) {
             if (this.objectMap != null) {
@@ -109,11 +138,11 @@ public class PyObjectScope {
         return map;
     }
 
-    public final Optional<PyObject> get(String name) {
+    public final Optional<PyObject> get(PyObject name) {
         return get(name, true);
     }
 
-    public Optional<PyObject> get(String name, boolean appear) {
+    public Optional<PyObject> get(PyObject name, boolean appear) {
         if (this.objectMap != null) {
             PyObject object = this.objectMap.get(name);
             if (object != null) {
@@ -128,7 +157,7 @@ public class PyObjectScope {
         return Optional.empty();
     }
 
-    public Optional<PyObject> getAppearOnly(String name) {
+    public Optional<PyObject> getAppearOnly(PyObject name) {
         PyObject object = null;
         if (this.notAppearObjectMap != null) {
             object = this.notAppearObjectMap.get(name);
@@ -140,11 +169,11 @@ public class PyObjectScope {
         return Optional.of(object);
     }
 
-    public boolean containsKey(String name) {
+    public boolean containsKey(PyObject name) {
         return containsKey(name, true);
     }
 
-    public boolean containsKey(String name, boolean appear) {
+    public boolean containsKey(PyObject name, boolean appear) {
         if (this.objectMap != null && this.objectMap.containsKey(name)) {
             return true;
         }

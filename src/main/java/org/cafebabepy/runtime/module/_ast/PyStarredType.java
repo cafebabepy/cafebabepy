@@ -24,7 +24,7 @@ public class PyStarredType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("value", args[0]);
-        self.getScope().put("ctx", args[1]);
+        self.getScope().put(this.runtime.str("value"), args[0]);
+        self.getScope().put(this.runtime.str("ctx"), args[1]);
     }
 }

@@ -170,7 +170,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final boolean isCallable() {
-        return getScope().containsKey(__call__);
+        return getScope().containsKey(this.runtime.str(__call__));
     }
 
     @Override

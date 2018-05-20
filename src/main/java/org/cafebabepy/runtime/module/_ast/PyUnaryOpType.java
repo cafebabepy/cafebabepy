@@ -24,7 +24,7 @@ public class PyUnaryOpType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("op", args[0]);
-        self.getScope().put("operand", args[1]);
+        self.getScope().put(this.runtime.str("op"), args[0]);
+        self.getScope().put(this.runtime.str("operand"), args[1]);
     }
 }

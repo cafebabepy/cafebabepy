@@ -24,7 +24,7 @@ public class PyAssignType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("targets", args[0]);
-        self.getScope().put("value", args[1]);
+        self.getScope().put(this.runtime.str("targets"), args[0]);
+        self.getScope().put(this.runtime.str("value"), args[1]);
     }
 }

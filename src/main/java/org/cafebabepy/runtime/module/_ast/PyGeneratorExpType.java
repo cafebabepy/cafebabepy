@@ -24,7 +24,7 @@ public class PyGeneratorExpType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("elt", args[0]);
-        self.getScope().put("generators", args[1]);
+        self.getScope().put(this.runtime.str("elt"), args[0]);
+        self.getScope().put(this.runtime.str("generators"), args[1]);
     }
 }

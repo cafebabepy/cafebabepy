@@ -24,11 +24,11 @@ public class PyArgumentsType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("args", args[0]);
-        self.getScope().put("vararg", args[1]);
-        self.getScope().put("kwonlyargs", args[2]);
-        self.getScope().put("kw_defaults", args[3]);
-        self.getScope().put("kwarg", args[4]);
-        self.getScope().put("defaults", args[5]);
+        self.getScope().put(this.runtime.str("args"), args[0]);
+        self.getScope().put(this.runtime.str("vararg"), args[1]);
+        self.getScope().put(this.runtime.str("kwonlyargs"), args[2]);
+        self.getScope().put(this.runtime.str("kw_defaults"), args[3]);
+        self.getScope().put(this.runtime.str("kwarg"), args[4]);
+        self.getScope().put(this.runtime.str("defaults"), args[5]);
     }
 }

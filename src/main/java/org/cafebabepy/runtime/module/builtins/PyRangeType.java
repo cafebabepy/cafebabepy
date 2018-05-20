@@ -53,9 +53,9 @@ public class PyRangeType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseException("builtins.ValueError", "range() arg 3 must not be zero");
         }
 
-        self.getScope().put("start", start);
-        self.getScope().put("stop", stop);
-        self.getScope().put("step", step);
+        self.getScope().put(this.runtime.str("start"), start);
+        self.getScope().put(this.runtime.str("stop"), stop);
+        self.getScope().put(this.runtime.str("step"), step);
 
         int stepInt = ((PyIntObject) step).getIntValue();
         if (stepInt <= 0) {

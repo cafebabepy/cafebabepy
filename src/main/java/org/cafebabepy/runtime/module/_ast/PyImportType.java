@@ -24,6 +24,6 @@ public class PyImportType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("names", args[0]);
+        self.getScope().put(this.runtime.str("names"), args[0]);
     }
 }

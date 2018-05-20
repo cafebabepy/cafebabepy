@@ -14,7 +14,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     protected String name;
 
     protected AbstractCafeBabePyModule(Python runtime) {
-        super(runtime, true);
+        super(runtime);
     }
 
     @Override

@@ -24,7 +24,7 @@ public class PyNameType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("id", args[0]);
-        self.getScope().put("ctx", args[1]);
+        self.getScope().put(this.runtime.str("id"), args[0]);
+        self.getScope().put(this.runtime.str("ctx"), args[1]);
     }
 }

@@ -24,8 +24,8 @@ public class PyIfType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("test", args[0]);
-        self.getScope().put("body", args[1]);
-        self.getScope().put("orelse", args[2]);
+        self.getScope().put(this.runtime.str("test"), args[0]);
+        self.getScope().put(this.runtime.str("body"), args[1]);
+        self.getScope().put(this.runtime.str("orelse"), args[2]);
     }
 }

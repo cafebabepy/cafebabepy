@@ -24,9 +24,9 @@ public class PyComprehensionType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("target", args[0]);
-        self.getScope().put("iter", args[1]);
-        self.getScope().put("ifs", args[2]);
-        self.getScope().put("is_async", args[3]);
+        self.getScope().put(this.runtime.str("target"), args[0]);
+        self.getScope().put(this.runtime.str("iter"), args[1]);
+        self.getScope().put(this.runtime.str("ifs"), args[2]);
+        self.getScope().put(this.runtime.str("is_async"), args[3]);
     }
 }

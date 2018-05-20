@@ -25,7 +25,7 @@ class PyInterpretClassObject extends AbstractPyObject {
     private volatile PyObjectScope scope;
 
     PyInterpretClassObject(Python runtime, PyObject context, String name, List<PyObject> bases) {
-        super(runtime, true);
+        super(runtime);
 
         this.context = new PyLexicalScopeProxyObject(context);
         this.name = name;

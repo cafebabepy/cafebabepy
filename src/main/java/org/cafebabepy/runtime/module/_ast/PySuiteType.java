@@ -24,6 +24,6 @@ public class PySuiteType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("body", args[0]);
+        self.getScope().put(this.runtime.str("body"), args[0]);
     }
 }

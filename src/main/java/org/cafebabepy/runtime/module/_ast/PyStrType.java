@@ -24,6 +24,6 @@ public class PyStrType extends AbstractCafeBabePyType {
             return;
         }
 
-        self.getScope().put("s", args[0]);
+        self.getScope().put(this.runtime.str("s"), args[0]);
     }
 }
