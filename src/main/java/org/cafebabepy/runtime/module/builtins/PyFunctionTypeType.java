@@ -6,6 +6,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 
+import static org.cafebabepy.util.ProtocolNames.__code__;
 import static org.cafebabepy.util.ProtocolNames.__get__;
 
 /**
@@ -16,6 +17,13 @@ public class PyFunctionTypeType extends AbstractCafeBabePyType {
 
     public PyFunctionTypeType(Python runtime) {
         super(runtime);
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+
+        getScope().put(this.runtime.str(__code__), this.runtime.typeOrThrow("builtins.CodeType", false));
     }
 
     @Override
