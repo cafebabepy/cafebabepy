@@ -31,8 +31,6 @@ public interface PyObject {
 
     boolean isCallable();
 
-    boolean isAppear();
-
     boolean isNone();
 
     boolean isNotImplemented();
@@ -44,6 +42,8 @@ public interface PyObject {
     boolean isTrue();
 
     boolean isFalse();
+
+    boolean existsDict();
 
     <T> T toJava(Class<T> clazz);
 

@@ -49,6 +49,7 @@ public final class ProtocolNames {
     public static final String __setattr__ = "__setattr__";
     public static final String __hash__ = "__hash__";
     public static final String __contains__ = "__contains__";
+    public static final String __dict__ = "__dict__";
 
     private ProtocolNames() {
     }

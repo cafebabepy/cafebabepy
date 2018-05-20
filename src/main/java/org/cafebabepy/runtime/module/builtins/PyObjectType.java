@@ -6,6 +6,8 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.java.PyDictObject;
+import org.cafebabepy.runtime.object.java.PyMappingProxyTypeObject;
 import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 import org.cafebabepy.util.StringUtils;
 
@@ -32,6 +34,22 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         Optional<PyObject> resultOpt = self.getScope().get(name);
         if (resultOpt.isPresent()) {
             return resultOpt.get();
+
+        } else if (this.runtime.str(__dict__).equals(name)) {
+            if (self.existsDict()) {
+                PyObject dict;
+
+                if (self.isType()) {
+                    dict = new PyMappingProxyTypeObject(this.runtime, self.getScope().getsRaw());
+
+                } else {
+                    dict = new PyDictObject(this.runtime, self.getScope().getsRaw());
+                }
+
+                self.getScope().put(this.runtime.str(__dict__), dict);
+
+                return dict;
+            }
         }
 
         boolean isParent = false;

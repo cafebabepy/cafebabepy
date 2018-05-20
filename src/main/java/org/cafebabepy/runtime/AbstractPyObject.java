@@ -13,24 +13,24 @@ import static org.cafebabepy.util.ProtocolNames.*;
 public abstract class AbstractPyObject implements PyObject {
 
     protected final Python runtime;
-    private final boolean appear;
     private volatile PyObjectScope scope;
     private volatile List<PyObject> types;
+    private volatile boolean dict;
 
     protected AbstractPyObject(Python runtime) {
         this(runtime, true);
     }
 
-    protected AbstractPyObject(Python runtime, boolean appear) {
+    protected AbstractPyObject(Python runtime, boolean dict) {
         this.runtime = runtime;
-        this.appear = appear;
+        this.dict = dict;
     }
 
     private static List<PyObject> getC3AlgorithmTypes(PyObject object) {
         if (!object.isType() && !object.isModule()) {
             throw new CafeBabePyException("'" + object.getName() + "' is not type");
         }
-        if(object.isModule()) {
+        if (object.isModule()) {
             object = object.getType();
         }
         List<PyObject> result = new ArrayList<>();
@@ -117,6 +117,11 @@ public abstract class AbstractPyObject implements PyObject {
     }
 
     @Override
+    public boolean existsDict() {
+        return this.dict;
+    }
+
+    @Override
     public List<PyObject> getTypes() {
         if (this.types == null) {
             synchronized (this) {
@@ -161,11 +166,6 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public void initialize() {
-    }
-
-    @Override
-    public final boolean isAppear() {
-        return this.appear;
     }
 
     @Override

@@ -79,11 +79,6 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public boolean isAppear() {
-        return this.source.isAppear();
-    }
-
-    @Override
     public boolean isNone() {
         return this.source.isNone();
     }
@@ -111,6 +106,11 @@ public class PyProxyObject implements PyObject {
     @Override
     public boolean isFalse() {
         return this.source.isFalse();
+    }
+
+    @Override
+    public boolean existsDict() {
+        return this.source.existsDict();
     }
 
     @Override
