@@ -62,15 +62,15 @@ public final class PyObjectType extends AbstractCafeBabePyType {
                 if (!resultOpt.isPresent()) {
                     if (self.isModule()) {
                         throw this.runtime.newRaiseException("builtins.AttributeError",
-                                "module '" + self.getName() + "' has no attribute '" + name + "'");
+                                "module '" + self.getName() + "' has no attribute " + name);
 
                     } else if (self.isType()) {
                         throw this.runtime.newRaiseException("builtins.AttributeError",
-                                "type object '" + self.getName() + "' has no attribute '" + name + "'");
+                                "type object '" + self.getName() + "' has no attribute " + name);
 
                     } else {
                         throw this.runtime.newRaiseException("builtins.AttributeError",
-                                "'" + self.getName() + "' object has no attribute '" + name + "'");
+                                "'" + self.getName() + "' object has no attribute " + name);
                     }
 
                 } else {

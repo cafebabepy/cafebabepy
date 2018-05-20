@@ -219,7 +219,7 @@ public class InterpretEvaluator {
         PyObject returns = this.runtime.getattr(node, "returns");
 
         PyObject function = new PyInterpretFunctionObject(
-                this.runtime, this, context, args, body);
+                this.runtime, this, context, name, args, body);
 
         context.getScope().put(name, function);
 
@@ -778,7 +778,7 @@ public class InterpretEvaluator {
         PyObject body = this.runtime.getattr(node, "body");
 
         return new PyInterpretFunctionObject(
-                this.runtime, this, context, args, body);
+                this.runtime, this, context, this.runtime.str("<lambda>"), args, body);
     }
 
     private PyObject evalName(PyObject context, PyObject node) {
