@@ -205,7 +205,15 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     public PyObject visitParameters(PythonParser.ParametersContext ctx) {
         PythonParser.TypedargslistContext typedargslistContext = ctx.typedargslist();
         if (typedargslistContext == null) {
-            return this.runtime.newPyObject("_ast.arguments");
+            PyObject args = this.runtime.list();
+            PyObject vararg = this.runtime.None();
+            PyObject kwonlyargs = this.runtime.list();
+            PyObject kw_defaults = this.runtime.list();
+            PyObject kwarg = this.runtime.None();
+            PyObject defaults = this.runtime.list();
+
+            return this.runtime.newPyObject(
+                    "_ast.arguments", args, vararg, kwonlyargs, kw_defaults, kwarg, defaults);
 
         } else {
             return visitTypedargslist(typedargslistContext);
@@ -214,20 +222,53 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitTypedargslist(PythonParser.TypedargslistContext ctx) {
-        List<PythonParser.TfpdefContext> tfpdefContextList = ctx.tfpdef();
-        PyObject[] argArray = new PyObject[tfpdefContextList.size()];
+        PyObject[] argArray = new PyObject[ctx.tfpdef().size()];
+        PyObject[] defaultArgArray = new PyObject[ctx.test().size()];
 
-        for (int i = 0; i < argArray.length; i++) {
-            argArray[i] = tfpdefContextList.get(i).accept(this);
+        int argumentIndex = 0;
+        int defaultArgumentIndex = 0;
+        boolean argument = true;
+        boolean defaultArgument = false;
+        boolean beforeDefaultArgument = false;
+
+        int count = ctx.getChildCount();
+        for (int i = 0; i < count; i++) {
+            PyObject element = ctx.getChild(i).accept(this);
+            if (element != null) {
+                if (defaultArgument) {
+                    defaultArgArray[defaultArgumentIndex] = element;
+
+                    argument = false;
+                    defaultArgument = false;
+                    beforeDefaultArgument = true;
+                    defaultArgumentIndex++;
+
+                } else if (argument) {
+                    if (beforeDefaultArgument && i == (count - 1)) {
+                        throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
+                    }
+                    argArray[argumentIndex++] = element;
+                    argument = false;
+                }
+
+            } else if ("=".equals(ctx.getChild(i).getText())) {
+                if (beforeDefaultArgument && argumentIndex > defaultArgumentIndex + 1) {
+                    throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
+                }
+                defaultArgument = true;
+
+            } else if (",".equals(ctx.getChild(i).getText())) {
+                argument = true;
+            }
         }
 
         // TODO 対応する
         PyObject args = this.runtime.list(argArray);
         PyObject vararg = this.runtime.None();
-        PyObject kwonlyargs = this.runtime.None();
-        PyObject kw_defaults = this.runtime.None();
+        PyObject kwonlyargs = this.runtime.list();
+        PyObject kw_defaults = this.runtime.list();
         PyObject kwarg = this.runtime.None();
-        PyObject defaults = this.runtime.None();
+        PyObject defaults = this.runtime.list(defaultArgArray);
 
         return this.runtime.newPyObject(
                 "_ast.arguments", args, vararg, kwonlyargs, kw_defaults, kwarg, defaults);
@@ -257,10 +298,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         // TODO 対応する
         PyObject args = this.runtime.list(argArray);
         PyObject vararg = this.runtime.None();
-        PyObject kwonlyargs = this.runtime.None();
-        PyObject kw_defaults = this.runtime.None();
+        PyObject kwonlyargs = this.runtime.list();
+        PyObject kw_defaults = this.runtime.list();
         PyObject kwarg = this.runtime.None();
-        PyObject defaults = this.runtime.None();
+        PyObject defaults = this.runtime.list();
 
         return this.runtime.newPyObject(
                 "_ast.arguments", args, vararg, kwonlyargs, kw_defaults, kwarg, defaults);
@@ -881,28 +922,38 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
             }
 
-            PyObject testlist_comp = visitTestlist_comp(ctx.testlist_comp());
-            if (this.runtime.isInstance(testlist_comp, "_ast.ListComp")) {
-                PyObject elt = this.runtime.getattr(testlist_comp, "elt");
-                PyObject generators = this.runtime.getattr(testlist_comp, "generators");
+            if (ctx.testlist_comp() != null) {
+                PyObject testlist_comp = ctx.testlist_comp().accept(this);
+                if (this.runtime.isInstance(testlist_comp, "_ast.ListComp")) {
+                    PyObject elt = this.runtime.getattr(testlist_comp, "elt");
+                    PyObject generators = this.runtime.getattr(testlist_comp, "generators");
 
-                return this.runtime.newPyObject("_ast.GeneratorExp", elt, generators);
+                    return this.runtime.newPyObject("_ast.GeneratorExp", elt, generators);
 
-            } else if (this.runtime.isInstance(testlist_comp, "_ast.expr")) {
-                return testlist_comp;
+                } else if (this.runtime.isInstance(testlist_comp, "_ast.expr")) {
+                    return testlist_comp;
 
-            } else {
-                PyObject load = this.runtime.newPyObject("_ast.Load");
-                return this.runtime.newPyObject("_ast.Tuple", testlist_comp, load);
+                } else {
+                    PyObject load = this.runtime.newPyObject("_ast.Load");
+                    return this.runtime.newPyObject("_ast.Tuple", testlist_comp, load);
+                }
             }
+
+            PyObject load = this.runtime.newPyObject("_ast.Load");
+            return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(), load);
 
         } else if ("{".equals(open)) {
             if (!"}".equals(close)) {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "invalid syntax");
             }
 
-            // dict or set
-            return visitDictorsetmaker(ctx.dictorsetmaker());
+            if (ctx.dictorsetmaker() != null) {
+                // dict or set
+                return ctx.dictorsetmaker().accept(this);
+
+            } else {
+                return this.runtime.newPyObject("_ast.Dict", this.runtime.list(), this.runtime.list());
+            }
 
         }
 

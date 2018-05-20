@@ -39,49 +39,58 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public PyObject call(PyObject... args) {
         PyObject lexicalContext = new PyLexicalScopeProxyObject(this.context);
         PyObjectScope scope = lexicalContext.getScope();
 
-        this.runtime.getattrOptional(this.args, "args").ifPresent(argslist -> {
-                    List<PyObject> arguments = (List<PyObject>) argslist.toJava(List.class);
-                    if (args.length < arguments.size()) {
-                        List<PyObject> notEnoughArguments = arguments.subList(args.length, arguments.size());
+        List<PyObject> argsList = this.runtime.getattr(this.args, "args").toJava(List.class);
+        List<PyObject> defaultsList = this.runtime.getattr(this.args, "defaults").toJava(List.class);
 
-                        StringBuilder error = new StringBuilder(name.toJava(String.class) + "() missing " + notEnoughArguments.size() + " required positional argument: ");
+        if (args.length + defaultsList.size() < argsList.size()) {
+            List<PyObject> notEnoughArguments = argsList.subList(args.length, argsList.size());
 
-                        if (notEnoughArguments.size() == 1) {
-                            error.append(this.runtime.getattr(notEnoughArguments.get(0), "arg"));
+            StringBuilder error = new StringBuilder(name.toJava(String.class) + "() missing " + notEnoughArguments.size() + " required positional argument: ");
 
-                        } else {
-                            for (int i = 0; i < notEnoughArguments.size() - 2; i++) {
-                                if (i != 0) {
-                                    error.append(", ");
-                                }
-                                error.append(this.runtime.getattr(notEnoughArguments.get(i), "arg"));
-                            }
-                            if (notEnoughArguments.size() > 2) {
-                                error.append(", ");
-                            }
+            if (notEnoughArguments.size() == 1) {
+                error.append(this.runtime.getattr(notEnoughArguments.get(0), "arg"));
 
-                            error.append(this.runtime.getattr(notEnoughArguments.get(notEnoughArguments.size() - 2), "arg"))
-                                    .append(" and ").append(this.runtime.getattr(notEnoughArguments.get(notEnoughArguments.size() - 1), "arg"));
-                        }
-
-                        throw this.runtime.newRaiseTypeError(error.toString());
-
-                    } else if (args.length > arguments.size()) {
-                        String error = name.toJava(String.class) + "() takes " + arguments.size() + " positional arguments but " + args.length + " were given";
-
-                        throw this.runtime.newRaiseTypeError(error);
+            } else {
+                for (int i = 0; i < notEnoughArguments.size() - 2; i++) {
+                    if (i != 0) {
+                        error.append(", ");
                     }
-
-                    this.runtime.iterIndex(argslist, (a, i) -> {
-                        PyObject arg = this.runtime.getattr(a, "arg");
-                        scope.put(arg, args[i]);
-                    });
+                    error.append(this.runtime.getattr(notEnoughArguments.get(i), "arg"));
                 }
-        );
+                if (notEnoughArguments.size() > 2) {
+                    error.append(", ");
+                }
+
+                error.append(this.runtime.getattr(notEnoughArguments.get(notEnoughArguments.size() - 2), "arg"))
+                        .append(" and ").append(this.runtime.getattr(notEnoughArguments.get(notEnoughArguments.size() - 1), "arg"));
+            }
+
+            throw this.runtime.newRaiseTypeError(error.toString());
+
+        } else if (args.length > argsList.size()) {
+            String error = name.toJava(String.class) + "() takes " + argsList.size() + " positional arguments but " + args.length + " were given";
+
+            throw this.runtime.newRaiseTypeError(error);
+        }
+
+        int count = argsList.size();
+
+        for (int i = 0; i < count; i++) {
+            PyObject arg = this.runtime.getattr(argsList.get(i), "arg");
+
+            if (i < args.length) {
+                scope.put(arg, args[i]);
+
+            } else {
+                PyObject value = evaluator.eval(lexicalContext, defaultsList.get(i));
+                scope.put(arg, value);
+            }
+        }
 
         return evaluator.eval(lexicalContext, body);
     }

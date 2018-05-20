@@ -897,6 +897,54 @@ public class InterpretEvaluatorTest {
             Python runtime = result.getRuntime();
             assertEquals(result, runtime.number(100));
         }
+
+        @Test
+        void functionDefaultArguments0() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c = 9, b = 99, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a()", result -> {
+                assertEquals(result, "9" + System.lineSeparator() + "99" + System.lineSeparator() + "999" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionDefaultArguments1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c = 9, b = 99, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a(1)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "99" + System.lineSeparator() + "999" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionDefaultArguments2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c = 9, b = 99, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a(1, 11)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "11" + System.lineSeparator() + "999" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionDefaultArguments3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c = 9, b = 99, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a(1, 11, 111)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "11" + System.lineSeparator() + "111" + System.lineSeparator());
+            });
+        }
     }
 
     @Nested
