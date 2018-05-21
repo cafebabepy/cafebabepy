@@ -6,6 +6,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
@@ -20,34 +21,49 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
     private PyObject name;
     private PyObject args;
     private PyObject body;
+    private List<PyObject> defaultArgs;
 
     PyInterpretFunctionObject(Python runtime, InterpretEvaluator evaluator, PyObject context, PyObject name, PyObject args, PyObject body) {
         super(runtime);
 
         this.evaluator = evaluator;
-        this.context = context;
+        this.context = new PyLexicalScopeProxyObject(context);
         this.name = name;
         this.args = args;
         this.body = body;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void initialize() {
+        List<PyObject> defaultsList = this.runtime.getattr(this.args, "defaults").toJava(List.class);
+
+        int count = defaultsList.size();
+        this.defaultArgs = new ArrayList<>(count);
+
+        for (int i = 0; i < count; i++) {
+            PyObject value = this.evaluator.eval(this.context, defaultsList.get(i));
+            this.defaultArgs.add(value);
+        }
 
         getScope().put(this.runtime.str(__call__), this);
     }
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.FunctionType");
+        return this.runtime.typeOrThrow("builtins.FunctionType", false);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public PyObject call(PyObject... args) {
         PyObject lexicalContext = new PyLexicalScopeProxyObject(this.context);
+
         PyObjectScope scope = lexicalContext.getScope();
 
         List<PyObject> argsList = this.runtime.getattr(this.args, "args").toJava(List.class);
-        List<PyObject> defaultsList = this.runtime.getattr(this.args, "defaults").toJava(List.class);
 
-        if (args.length + defaultsList.size() < argsList.size()) {
+        if (args.length + this.defaultArgs.size() < argsList.size()) {
             List<PyObject> notEnoughArguments = argsList.subList(args.length, argsList.size());
 
             StringBuilder error = new StringBuilder(name.toJava(String.class) + "() missing " + notEnoughArguments.size() + " required positional argument: ");
@@ -80,6 +96,14 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
 
         int count = argsList.size();
 
+        int defaultArgumentIndex;
+        if (argsList.size() == this.defaultArgs.size()) {
+            defaultArgumentIndex = args.length;
+
+        } else {
+            defaultArgumentIndex = argsList.size() - this.defaultArgs.size() - args.length;
+        }
+
         for (int i = 0; i < count; i++) {
             PyObject arg = this.runtime.getattr(argsList.get(i), "arg");
 
@@ -87,11 +111,10 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
                 scope.put(arg, args[i]);
 
             } else {
-                PyObject value = evaluator.eval(lexicalContext, defaultsList.get(i));
-                scope.put(arg, value);
+                scope.put(arg, this.defaultArgs.get(defaultArgumentIndex++));
             }
         }
 
-        return evaluator.eval(lexicalContext, body);
+        return this.evaluator.eval(lexicalContext, body);
     }
 }

@@ -945,6 +945,42 @@ public class InterpretEvaluatorTest {
                 assertEquals(result, "1" + System.lineSeparator() + "11" + System.lineSeparator() + "111" + System.lineSeparator());
             });
         }
+
+        @Test
+        void functionDefaultArguments4() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c, b = 99, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a(1)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "99" + System.lineSeparator() + "999" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionDefaultArguments5() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(c, b, d = 999):\n"
+                    + "  print(c)\n"
+                    + "  print(b)\n"
+                    + "  print(d)\n"
+                    + "a(1, 99)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "99" + System.lineSeparator() + "999" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionDefaultArgumentsScope() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b = []):\n"
+                    + "  b.append(1)\n"
+                    + "  return b\n"
+                    + "print(a())\n"
+                    + "print(a())", result -> {
+                assertEquals(result, "[1]" + System.lineSeparator() + "[1, 1]" + System.lineSeparator());
+            });
+        }
     }
 
     @Nested

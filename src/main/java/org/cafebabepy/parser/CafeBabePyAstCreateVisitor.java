@@ -229,35 +229,51 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         int defaultArgumentIndex = 0;
         boolean argument = true;
         boolean defaultArgument = false;
-        boolean beforeDefaultArgument = false;
+        boolean defineDefaultArgument = false;
 
         int count = ctx.getChildCount();
+        ParseTree nextTree = null;
         for (int i = 0; i < count; i++) {
-            PyObject element = ctx.getChild(i).accept(this);
+            ParseTree tree;
+            if (i == 0) {
+                tree = ctx.getChild(i);
+
+            } else {
+                tree = nextTree;
+            }
+            if (i + 1 < count) {
+                nextTree = ctx.getChild(i + 1);
+
+            } else {
+                nextTree = null;
+            }
+            if (tree == null) {
+                continue;
+            }
+
+            PyObject element = tree.accept(this);
+
             if (element != null) {
                 if (defaultArgument) {
                     defaultArgArray[defaultArgumentIndex] = element;
 
                     argument = false;
                     defaultArgument = false;
-                    beforeDefaultArgument = true;
+                    defineDefaultArgument = true;
                     defaultArgumentIndex++;
 
                 } else if (argument) {
-                    if (beforeDefaultArgument && i == (count - 1)) {
+                    if (defineDefaultArgument && (i == (count - 1) || (nextTree != null && ",".equals(nextTree.getText())))) {
                         throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
                     }
                     argArray[argumentIndex++] = element;
                     argument = false;
                 }
 
-            } else if ("=".equals(ctx.getChild(i).getText())) {
-                if (beforeDefaultArgument && argumentIndex > defaultArgumentIndex + 1) {
-                    throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
-                }
+            } else if ("=".equals(tree.getText())) {
                 defaultArgument = true;
 
-            } else if (",".equals(ctx.getChild(i).getText())) {
+            } else if (",".equals(tree.getText())) {
                 argument = true;
             }
         }
