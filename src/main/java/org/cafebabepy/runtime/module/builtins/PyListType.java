@@ -231,6 +231,20 @@ public class PyListType extends AbstractCafeBabePyType {
         return this.runtime.bool(list.getRawList().contains(other));
     }
 
+    @DefinePyFunction(name = "append")
+    public void append(PyObject self, PyObject x) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor 'append' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        PyListObject list = (PyListObject) self;
+
+        list.getRawList().add(x);
+    }
+
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         List<String> jlist = new ArrayList<>();
