@@ -156,7 +156,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final String getFullName() {
-        if (isModule()) {
+        if (isModule() || "builtins".equals(getModule().getName())) {
             return getName();
 
         } else {
