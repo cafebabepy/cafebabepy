@@ -41,7 +41,10 @@ public class PyDictObject extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
-        if (clazz == Map.class) {
+        if (clazz == LinkedHashMap.class) {
+            return (T) new LinkedHashMap<>(this.map);
+
+        } else if (clazz == Map.class) {
             return (T) new LinkedHashMap<>(this.map);
         }
 
