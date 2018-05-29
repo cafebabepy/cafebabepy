@@ -23,16 +23,6 @@ public class PyDictType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    @DefinePyFunction(name = __str__)
-    @SuppressWarnings("unchecked")
-    public PyObject __str__(PyObject self) {
-        Map<PyObject, PyObject> map = (Map<PyObject, PyObject>) self.toJava(Map.class);
-
-        String jstr = map.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", ", "{", "}"));
-
-        return this.runtime.str(jstr);
-    }
-
     @DefinePyFunction(name = __getitem__)
     public PyObject __getitem__(PyObject self, PyObject key) {
         if (!this.runtime.isInstance(self, "builtins.dict")) {
@@ -125,5 +115,42 @@ public class PyDictType extends AbstractCafeBabePyType {
         }
 
         return value;
+    }
+
+    @DefinePyFunction(name = __str__)
+    @SuppressWarnings("unchecked")
+    public PyObject __str__(PyObject self) {
+        Map<PyObject, PyObject> map = (Map<PyObject, PyObject>) self.toJava(Map.class);
+
+        String jstr = map.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", ", "{", "}"));
+
+        return this.runtime.str(jstr);
+    }
+
+    @DefinePyFunction(name = __eq__)
+    public PyObject __eq__(PyObject self, PyObject other) {
+        if (!(self instanceof PyDictObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__eq__' requires a 'dict' object but received a '" + self.getType() + "'");
+        }
+
+        if (!(other instanceof PyDictObject)) {
+            return this.runtime.NotImplemented();
+        }
+
+        PyDictObject v1 = (PyDictObject) self;
+        PyDictObject v2 = (PyDictObject) other;
+
+        return this.runtime.bool(v1.getRawMap().equals(v2.getRawMap()));
+    }
+
+    @DefinePyFunction(name = __hash__)
+    public PyObject __hash__(PyObject self) {
+        if (!(self instanceof PyDictObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__hash__' requires a 'dict' object but received a '" + self.getType() + "'");
+        }
+
+        PyDictObject list = (PyDictObject) self;
+
+        return this.runtime.number(list.getRawMap().hashCode());
     }
 }
