@@ -9,6 +9,8 @@ import org.cafebabepy.runtime.module.DefinePyModule;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.cafebabepy.util.ProtocolNames.__len__;
+
 /**
  * Created by yotchang4s on 2017/05/12.
  */
@@ -63,13 +65,22 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         return this.runtime.None();
     }
 
-    @DefinePyFunction(name= "chr")
+    @DefinePyFunction(name = "chr")
     public PyObject chr(PyObject i) {
         int value = i.toJava(int.class);
-        if(value < 0 || 0x10FFFF < value) {
+        if (value < 0 || 0x10FFFF < value) {
             throw this.runtime.newRaiseException("builtins.ValueError", "chr() arg not in range(0x110000)");
         }
 
-        return this.runtime.str(new String(new int[] { value }, 0, 1));
+        return this.runtime.str(new String(new int[]{value}, 0, 1));
+    }
+
+    @DefinePyFunction(name = "len")
+    public PyObject len(PyObject s) {
+        PyObject len = this.runtime.getattrOptional(s, __len__).orElseThrow(() ->
+                this.runtime.newRaiseTypeError("object of type '" + s.getFullName() + "' has no len()")
+        );
+
+        return len.call();
     }
 }
