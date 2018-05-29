@@ -244,6 +244,10 @@ public final class Python {
         return object;
     }
 
+    public PyObject dict() {
+        return dict(new LinkedHashMap<>());
+    }
+
     public PyObject dict(LinkedHashMap<PyObject, PyObject> map) {
         PyDictObject object = new PyDictObject(this, map);
         object.initialize();
@@ -585,6 +589,10 @@ public final class Python {
         }
 
         return result;
+    }
+
+    public PyObject len(PyObject object) {
+        return callFunction("builtins.len", object);
     }
 
     public PyObject ne(PyObject x, PyObject y) {
