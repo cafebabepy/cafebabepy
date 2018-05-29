@@ -4,6 +4,8 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
+import java.util.LinkedHashMap;
+
 /**
  * Created by yotchang4s on 2017/05/30.
  */
@@ -67,6 +69,11 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     @Override
     public final PyObject call(PyObject... args) {
+        throw getRuntime().newRaiseTypeError("'" + getFullName() + "' object is not callable");
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         throw getRuntime().newRaiseTypeError("'" + getFullName() + "' object is not callable");
     }
 }

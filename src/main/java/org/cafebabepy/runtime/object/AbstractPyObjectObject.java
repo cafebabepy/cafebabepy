@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -62,6 +63,11 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        throw this.runtime.newRaiseTypeError("'" + getName() + "' object is not callable");
+        throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
     }
 }

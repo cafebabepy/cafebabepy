@@ -4,6 +4,8 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
+import java.util.LinkedHashMap;
+
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
@@ -36,6 +38,15 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
     @Override
     public PyObject call(PyObject... args) {
         return this.function.call(this.source, args);
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        PyObject[] newArgs = new PyObject[args.length + 1];
+        System.arraycopy(args, 0, newArgs, 1, args.length);
+        newArgs[0] = this.source;
+
+        return this.function.callSubstance(newArgs, keywords);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -95,4 +96,6 @@ public interface PyObject {
                   PyObject... args);
 
     PyObject call(PyObject... args);
+
+    PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords);
 }

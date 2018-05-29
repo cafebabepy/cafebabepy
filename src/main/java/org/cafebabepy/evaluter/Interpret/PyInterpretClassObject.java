@@ -8,11 +8,10 @@ import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
-import static org.cafebabepy.util.ProtocolNames.__init__;
-import static org.cafebabepy.util.ProtocolNames.__new__;
 
 class PyInterpretClassObject extends AbstractPyObject {
 
@@ -99,5 +98,11 @@ class PyInterpretClassObject extends AbstractPyObject {
     public PyObject call(PyObject... args) {
         PyObject type = this.runtime.typeOrThrow("builtins.type");
         return this.runtime.getattr(type, __call__).call(this, args);
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        // FIXME keywords
+        return call(args);
     }
 }

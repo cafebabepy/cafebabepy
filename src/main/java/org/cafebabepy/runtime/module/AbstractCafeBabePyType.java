@@ -5,6 +5,8 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.util.StringUtils;
 
+import java.util.LinkedHashMap;
+
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
@@ -86,5 +88,16 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         return this.runtime.typeOrThrow("builtins.type").getScope().get(this.runtime.str(__call__)).orElseThrow(() ->
                 new CafeBabePyException("type " + __call__ + " is not foud")
         ).call(this, args);
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        PyObject[] newArgs = new PyObject[args.length + 1];
+        System.arraycopy(args, 0, newArgs, 1, args.length);
+        newArgs[0] = this;
+
+        return this.runtime.typeOrThrow("builtins.type").getScope().get(this.runtime.str(__call__)).orElseThrow(() ->
+                new CafeBabePyException("type " + __call__ + " is not foud")
+        ).callSubstance(newArgs, keywords);
     }
 }

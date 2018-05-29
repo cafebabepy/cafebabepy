@@ -28,6 +28,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                 return args[0].getType();
 
             } else if (args.length == 3) {
+                // FIXME ?
                 throw new CafeBabePyException("Not implement");
 
             } else {

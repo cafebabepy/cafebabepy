@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class PyProxyObject implements PyObject {
@@ -201,5 +202,10 @@ public class PyProxyObject implements PyObject {
     @Override
     public PyObject call(PyObject... args) {
         return this.source.call(args);
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        return this.source.callSubstance(args, keywords);
     }
 }

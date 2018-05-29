@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
@@ -36,6 +37,12 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
         }
 
         getScope().put(this.runtime.str(__call__), this);
+    }
+
+    @Override
+    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        // FIXME keywords
+        return this.call(args);
     }
 
     @Override

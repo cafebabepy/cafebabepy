@@ -114,9 +114,6 @@ public class InterpretEvaluator {
             case "GeneratorExp":
                 return evalGeneratorExp(context, node);
 
-            case "Starred":
-                return evalStarred(context, node);
-
             case "BinOp":
                 return evalBinOp(context, node);
 
@@ -295,14 +292,17 @@ public class InterpretEvaluator {
 
         List<PyObject> elements = new ArrayList<>();
         this.runtime.iter(elts, elt -> {
-            PyObject evalElt = eval(context, elt);
-
             PyObject type = elt.getType();
             if (type instanceof PyStarredType) {
-                this.runtime.iter(evalElt, elements::add);
+                PyObject value = this.runtime.getattr(elt, "value");
+                PyObject evalValue = eval(context, value);
+
+                this.runtime.iter(evalValue, elements::add);
 
             } else {
-                elements.add(evalElt);
+                PyObject evalValue = eval(context, elt);
+
+                elements.add(evalValue);
             }
         });
 
@@ -372,12 +372,6 @@ public class InterpretEvaluator {
         });
     }
 
-    private PyObject evalStarred(PyObject context, PyObject node) {
-        PyObject value = this.runtime.getattr(node, "value");
-
-        return eval(context, value);
-    }
-
     private PyObject evalExpr(PyObject context, PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
 
@@ -398,7 +392,7 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
-    private void assign(PyObject context, PyObject target, PyObject evalValue) {
+    void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
             context.getScope().put(id, evalValue);
@@ -545,32 +539,63 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
+    @SuppressWarnings("unchecked")
     private PyObject evalCall(PyObject context, PyObject node) {
         PyObject func = this.runtime.getattr(node, "func");
         PyObject funcEval = eval(context, func);
 
         PyObject args = this.runtime.getattr(node, "args");
+        PyObject keywords = this.runtime.getattr(node, "keywords");
 
-        PyObject[] argArray;
-        if (args.isNone()) {
-            argArray = new PyObject[0];
+        PyObject[] argsArray;
+        LinkedHashMap<String, PyObject> keywordsMap = new LinkedHashMap<>();
 
-        } else {
-            // FIXME array direct
-            List<PyObject> argList = new ArrayList<>();
-            this.runtime.iter(args, arg -> {
+        List<PyObject> argList = new ArrayList<>();
+        this.runtime.iter(args, arg -> {
+            if (this.runtime.isInstance(arg, "_ast.Starred")) {
+                PyObject value = this.runtime.getattr(arg, "value");
+                PyObject evalValue = eval(context, value);
+
+                if (!this.runtime.isIterable(evalValue)) {
+                    String name = this.runtime.getattr(func, "id").toJava(String.class);
+
+                    throw this.runtime.newRaiseTypeError(name + "() argument after * must be an iterable, not " + evalValue.getFullName());
+                }
+
+                this.runtime.iter(evalValue, argList::add);
+
+            } else {
                 PyObject evalArg = eval(context, arg);
 
                 argList.add(evalArg);
-            });
+            }
+        });
 
-            argArray = new PyObject[argList.size()];
-            argList.toArray(argArray);
-        }
+        LinkedHashMap<String, PyObject> doubleStarKeywordsMap = new LinkedHashMap<>();
+        this.runtime.iter(keywords, keyword -> {
+            PyObject arg = this.runtime.getattr(keyword, "arg");
+            PyObject value = this.runtime.getattr(keyword, "value");
+            PyObject evalValue = eval(context, value);
+
+            if (arg.isNone()) {
+                LinkedHashMap<PyObject, PyObject> dictMap = evalValue.toJava(LinkedHashMap.class);
+                for (PyObject key : dictMap.keySet()) {
+                    doubleStarKeywordsMap.put(key.toJava(String.class), dictMap.get(key));
+                }
+
+            } else {
+                keywordsMap.put(arg.toJava(String.class), evalValue);
+            }
+        });
+
+        keywordsMap.putAll(doubleStarKeywordsMap);
+
+        argsArray = new PyObject[argList.size()];
+        argList.toArray(argsArray);
 
         PyObject result;
         try {
-            result = funcEval.call(argArray);
+            result = funcEval.callSubstance(argsArray, keywordsMap);
 
         } catch (InterpretReturn re) {
             result = re.getValue();
@@ -833,6 +858,7 @@ public class InterpretEvaluator {
         return node;
     }
 
+    @SuppressWarnings("unchecked")
     private PyObject evalDict(PyObject context, PyObject node) {
         PyObject keys = this.runtime.getattr(node, "keys");
         PyObject values = this.runtime.getattr(node, "values");
@@ -867,14 +893,17 @@ public class InterpretEvaluator {
 
         List<PyObject> elements = new ArrayList<>();
         this.runtime.iter(elts, elt -> {
-            PyObject evalElt = eval(context, elt);
-
             PyObject type = elt.getType();
             if (type instanceof PyStarredType) {
-                this.runtime.iter(evalElt, elements::add);
+                PyObject value = this.runtime.getattr(elt, "value");
+                PyObject evalValue = eval(context, value);
+
+                this.runtime.iter(evalValue, elements::add);
 
             } else {
-                elements.add(evalElt);
+                PyObject evalValue = eval(context, elt);
+
+                elements.add(evalValue);
             }
         });
 

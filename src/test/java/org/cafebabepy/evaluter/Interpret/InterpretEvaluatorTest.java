@@ -229,6 +229,19 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void tuple4() {
+            PyObject result = Python.eval("*range(10),");
+
+            List<PyObject> list = new ArrayList<>();
+            for (int i = 0; i < 10; i++) {
+                list.add(result.getRuntime().number(i));
+            }
+
+            assertEquals(result.toJava(List.class), list);
+            assertEquals(result.toJava(String.class), "(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)");
+        }
+
+        @Test
         void dict() {
             PyObject result = Python.eval("{\"test1\":1 , \"test2\": 2}");
 
@@ -971,6 +984,81 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void functionVariableArguments1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*a):\n"
+                    + "  print(a)\n"
+                    + "a()", result -> {
+                assertEquals(result, "()" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionVariableArguments2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*a):\n"
+                    + "  print(a)\n"
+                    + "a(1, 2, 3)", result -> {
+                assertEquals(result, "(1, 2, 3)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionVariableArguments3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(a, *b):\n"
+                    + "  print(a)\n"
+                    + "  print(b)\n"
+                    + "a(1, 2, 3)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionVariableArguments4() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(a, *b):\n"
+                    + "  print(a)\n"
+                    + "  print(b)\n"
+                    + "a(1)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "()" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKeywordOnlyArguments1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*b, a):\n"
+                    + "  print(a)\n"
+                    + "  print(b)\n"
+                    + "a(2, 3, a = 1)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKeywordOnlyArguments2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*b, a = 99):\n"
+                    + "  print(a)\n"
+                    + "  print(b)\n"
+                    + "a(1, 2, 3)", result -> {
+                assertEquals(result, "99" + System.lineSeparator() + "(1, 2, 3)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKeywordOnlyArguments3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *, c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(1, c = 3)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "3" + System.lineSeparator());
+            });
+        }
+
+        @Test
         void functionDefaultArgumentsScope() throws IOException {
             evalStdOutToResult(""
                     + "def a(b = []):\n"
@@ -979,6 +1067,217 @@ public class InterpretEvaluatorTest {
                     + "print(a())\n"
                     + "print(a())", result -> {
                 assertEquals(result, "[1]" + System.lineSeparator() + "[1, 1]" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwarg1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(b = 1, c = 2)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "2" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwarg2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(1, c = 2)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "2" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwarg3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(c = 2, b = 1)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "2" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwargs1() {
+            PyObject result = Python.eval(""
+                    + "def a(**kwargs):\n"
+                    + "  return kwargs\n"
+                    + "a(a = 1, b = 2)");
+
+            Python runtime = result.getRuntime();
+
+            LinkedHashMap<PyObject, PyObject> actual = new LinkedHashMap<>();
+            actual.put(runtime.str("a"), runtime.number(1));
+            actual.put(runtime.str("b"), runtime.number(2));
+
+            assertEquals(result, runtime.dict(actual));
+        }
+
+        @Test
+        void functionKwargs2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(kwargs)\n"
+                    + "a(b = 1, c = 2)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "{'c': 2}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwargs3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*b, c, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(kwargs)\n"
+                    + "a(1, 2, c = 3, d = 99, e = 999)", result -> {
+                assertEquals(result, "(1, 2)" + System.lineSeparator() + "3" + System.lineSeparator() + "{'d': 99, 'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwargs4() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(kwargs)\n"
+                    + "a(1, 2, 3, 4, d = 99, e = 999)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3, 4)" + System.lineSeparator() + "{'d': 99, 'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionKwargs5() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c, d, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(d)\n"
+                    + "  print(kwargs)\n"
+                    + "a(1, 2, 3, 4, d = 99, e = 999)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3, 4)" + System.lineSeparator() + "99" + System.lineSeparator() + "{'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallStarred1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c, d, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(d)\n"
+                    + "  print(kwargs)\n"
+                    + "a(1, *(2, 3, 4), d = 99, e = 999)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3, 4)" + System.lineSeparator() + "99" + System.lineSeparator() + "{'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallStarred2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*b):\n"
+                    + "  print(b)\n"
+                    + "a(*(1, 2), *(3, 4))", result -> {
+                assertEquals(result, "(1, 2, 3, 4)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallStarred3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(*(1, 2), *(3, 4))", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "(2, 3, 4)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallStarred4() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(*b, c):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "a(*(1, 2), *(3, 4), c = 99)", result -> {
+                assertEquals(result, "(1, 2, 3, 4)" + System.lineSeparator() + "99" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallNotStarred() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c, d, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(d)\n"
+                    + "  print(kwargs)\n"
+                    + "a(1, (2, 3, 4), d = 99, e = 999)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "((2, 3, 4),)" + System.lineSeparator() + "99" + System.lineSeparator() + "{'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallDoubleStarred1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, *c, d, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(c)\n"
+                    + "  print(d)\n"
+                    + "  print(kwargs)\n"
+                    + "a(**{'e': 999}, b = 1, d = 99)", result -> {
+                assertEquals(result, "1" + System.lineSeparator() + "()" + System.lineSeparator() + "99" + System.lineSeparator() + "{'e': 999}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallDoubleStarred2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(**kwargs):\n"
+                    + "  print(kwargs)\n"
+                    + "a(**{'1': 2}, **{'3': 4})", result -> {
+                assertEquals(result, "{'1': 2, '3': 4}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallDoubleStarred3() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(kwargs)\n"
+                    + "a(**{'1': 2}, **{'3': 4}, b = 99)", result -> {
+                assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallDoubleStarred4() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(kwargs)\n"
+                    + "a(**{'1': 2},b = 99, **{'3': 4})", result -> {
+                assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionCallDoubleStarred5() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(kwargs)\n"
+                    + "a(99, **{'1': 2}, **{'3': 4})", result -> {
+                assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
             });
         }
     }
