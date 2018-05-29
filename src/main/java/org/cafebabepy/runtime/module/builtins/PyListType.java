@@ -245,6 +245,24 @@ public class PyListType extends AbstractCafeBabePyType {
         list.getRawList().add(x);
     }
 
+    @DefinePyFunction(name = "insert")
+    public void insert(PyObject self, PyObject i, PyObject x) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor 'insert' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        if (!this.runtime.isInstance(i, "builtins.int")) {
+            throw this.runtime.newRaiseTypeError(" '" + i.getFullName() + "' object cannot be interpreted as an integer ");
+        }
+
+        PyListObject list = (PyListObject) self;
+
+        list.getRawList().add(i.toJava(int.class), x);
+    }
+
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         List<String> jlist = new ArrayList<>();
