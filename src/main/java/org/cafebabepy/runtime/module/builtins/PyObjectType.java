@@ -9,7 +9,6 @@ import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyDictObject;
 import org.cafebabepy.runtime.object.java.PyMappingProxyTypeObject;
 import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
-import org.cafebabepy.util.StringUtils;
 
 import java.util.Optional;
 
@@ -119,17 +118,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         if (self.isType()) {
-            String str;
-
-            String[] fullName = StringUtils.splitLastDot(self.getFullName());
-            if ("builtins".equals(fullName[0])) {
-                str = "<class '" + fullName[1] + "'>";
-
-            } else {
-                str = "<class '" + fullName[0] + "." + fullName[1] + "'>";
-            }
-
-            return this.runtime.str(str);
+            return this.runtime.str("<class '" + getFullName() + "'>");
 
         } else if (self.isModule()) {
             String str;
@@ -146,16 +135,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         } else {
             String hashCode = Integer.toHexString(System.identityHashCode(self));
 
-            String str;
-
-            String[] fullName = StringUtils.splitLastDot(self.getFullName());
-            if ("builtins".equals(fullName[0])) {
-                str = "<" + fullName[1] + " object at 0x" + hashCode + ">";
-            } else {
-                str = "<" + fullName[0] + "." + fullName[1] + " object at 0x" + hashCode + ">";
-            }
-
-            return this.runtime.str(str);
+            return this.runtime.str("<" + self.getFullName() + " object at 0x" + hashCode + ">");
         }
     }
 
