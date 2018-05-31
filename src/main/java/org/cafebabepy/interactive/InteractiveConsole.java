@@ -1,16 +1,15 @@
 package org.cafebabepy.interactive;
 
-import jline.Terminal;
-import jline.TerminalFactory;
-import jline.console.ConsoleReader;
 import org.cafebabepy.evaluter.Interpret.InterpretEvaluator;
 import org.cafebabepy.parser.InteractiveParser;
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
-import org.cafebabepy.runtime.object.java.PyStrObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  * Created by yotchang4s on 2017/07/15.
@@ -20,8 +19,6 @@ public class InteractiveConsole {
     private final static String PROMPT_READLINE = ">>> ";
     private final static String PROMPT_INCOMPLETE = "... ";
 
-    private ConsoleReader consoleReader;
-
     private Status status = Status.READLINE;
 
     private Python runtime;
@@ -30,51 +27,19 @@ public class InteractiveConsole {
         this.runtime = runtime;
     }
 
-    private void printBanner() throws IOException {
-        String banner1 = String.format("%s %s",
-                Python.APPLICATION_NAME, Python.VERSION);
-
-        String banner2 = String.format("[%s (%s)] on Java %s",
-                System.getProperty("java.vm.name"),
-                System.getProperty("java.vm.specification.vendor"),
-                System.getProperty("java.runtime.version"));
-
-        String banner3 = "Type :help for help, :quit for quit";
-
-        this.consoleReader.println(banner1);
-        this.consoleReader.println(banner2);
-        this.consoleReader.println(banner3);
-    }
-
-    private String readLine() throws IOException {
-        String prompt = status == Status.READLINE ? PROMPT_READLINE : PROMPT_INCOMPLETE;
-
-        return this.consoleReader.readLine(prompt);
-    }
-
     public void interact() {
         InteractiveParser parser = new InteractiveParser(this.runtime);
         InterpretEvaluator evaluator = new InterpretEvaluator(this.runtime);
 
-        Terminal terminal = TerminalFactory.get();
-        terminal.setEchoEnabled(false);
+        printBanner();
 
         try {
-            terminal.init();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
-        try (ConsoleReader consoleReader = new ConsoleReader(System.in, System.out, terminal)) {
-            this.consoleReader = consoleReader;
-
-            printBanner();
+            // not close
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
             StringBuilder buffer = new StringBuilder();
             while (status != Status.QUIT) {
-                consoleReader.flush();
-                String line = readLine();
+                String line = readLine(reader);
                 if (line == null) {
                     break;
                 }
@@ -94,7 +59,7 @@ public class InteractiveConsole {
 
                 } catch (RaiseException e) {
                     e.printStackTrace();
-                    this.consoleReader.println(e.getException().toJava(String.class));
+                    println(e.getException().toJava(String.class));
                     this.status = Status.READLINE;
                     buffer.setLength(0);
                     continue;
@@ -108,24 +73,50 @@ public class InteractiveConsole {
                 try {
                     result = evaluator.eval(this.runtime.getMainModule(), ast);
                     if (!result.isNone()) {
-                        if (result instanceof PyStrObject) {
-                            this.consoleReader.println(result.toString());
-
-                        } else {
-                            this.consoleReader.println(result.toJava(String.class));
-                        }
+                        println(result.toJava(String.class));
                     }
 
                 } catch (RaiseException e) {
                     PyObject exception = e.getException();
-                    this.consoleReader.println(exception.toJava(String.class));
-                    this.consoleReader.println(e.getMessage());
+                    println(exception.toJava(String.class));
+                    println(e.getMessage());
                 }
             }
 
-        } catch (Exception e) {
+        } catch (CafeBabePyException e) {
+            // FIXME
+            e.printStackTrace();
+
+        } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    private void printBanner() {
+        String banner1 = String.format("%s %s",
+                Python.APPLICATION_NAME, Python.VERSION);
+
+        String banner2 = String.format("[%s (%s)] on Java %s",
+                System.getProperty("java.vm.name"),
+                System.getProperty("java.vm.specification.vendor"),
+                System.getProperty("java.runtime.version"));
+
+        String banner3 = "Type :help for help, :quit for quit";
+
+        println(banner1);
+        println(banner2);
+        println(banner3);
+    }
+
+    private String readLine(BufferedReader reader) throws IOException {
+        String prompt = status == Status.READLINE ? PROMPT_READLINE : PROMPT_INCOMPLETE;
+
+        System.out.print(prompt);
+        return reader.readLine();
+    }
+
+    private void println(String s) {
+        System.out.println(s);
     }
 
     private enum Status {

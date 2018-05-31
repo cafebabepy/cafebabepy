@@ -35,7 +35,7 @@ ext.antlr = [
 ]
 
 ext.python = [
-        sourceDir : 'src/main/python',
+        sourceDir    : 'src/main/python',
         testSourceDir: 'src/test/python'
 ]
 
@@ -55,7 +55,6 @@ sourceSets.test.resources.srcDirs = [python.testSourceDir] + sourceSets.test.res
 
 dependencies {
     compile group: 'org.antlr', name: 'antlr4-runtime', version: '4.7'
-    compile group: 'jline', name: 'jline', version: '2.14.5'
     antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7'
 
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.0.2'
