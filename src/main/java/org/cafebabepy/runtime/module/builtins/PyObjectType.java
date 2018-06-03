@@ -118,7 +118,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
         if (self.isType()) {
-            return this.runtime.str("<class '" + getFullName() + "'>");
+            return this.runtime.str("<class '" + self.getFullName() + "'>");
 
         } else if (self.isModule()) {
             String str;
