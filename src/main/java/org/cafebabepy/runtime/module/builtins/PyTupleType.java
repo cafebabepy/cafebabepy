@@ -88,18 +88,14 @@ public class PyTupleType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        List<String> jlist = new ArrayList<>();
-        this.runtime.iter(self, v -> {
-            String jv = v.toJava(String.class);
-            jlist.add(jv);
-        });
+        List<PyObject> jlist = new ArrayList<>();
+        this.runtime.iter(self, jlist::add);
 
         if (jlist.size() == 1) {
             return this.runtime.str("(" + jlist.get(0) + ",)");
 
         } else {
-
-            String jstr = jlist.stream().collect(Collectors.joining(", ", "(", ")"));
+            String jstr = jlist.stream().map(Object::toString).collect(Collectors.joining(", ", "(", ")"));
 
             return this.runtime.str(jstr);
         }
