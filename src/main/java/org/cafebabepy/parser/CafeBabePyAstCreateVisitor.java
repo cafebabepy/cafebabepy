@@ -371,6 +371,21 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitRaise_stmt(PythonParser.Raise_stmtContext ctx) {
+        PyObject exc = this.runtime.None();
+        PyObject cause = this.runtime.None();
+
+        if (ctx.test().size() > 0) {
+            exc = ctx.test().get(0).accept(this);
+            if (ctx.test().size() == 2) {
+                cause = ctx.test(1).accept(this);
+            }
+        }
+
+        return this.runtime.newPyObject("_ast.Raise", exc, cause);
+    }
+
+    @Override
     public PyObject visitImport_name(PythonParser.Import_nameContext ctx) {
         PyObject names = ctx.dotted_as_names().accept(this);
 
@@ -524,6 +539,53 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         return this.runtime.newPyObject("_ast.For", target, iter, body, orelse);
+    }
+
+    @Override
+    public PyObject visitTry_stmt(PythonParser.Try_stmtContext ctx) {
+        int suiteIndex = 0;
+        PyObject tryBody = ctx.suite(suiteIndex++).accept(this);
+
+        List<PyObject> exceptHandlerList = new ArrayList<>();
+        for (int i = 0; i < ctx.except_clause().size(); i++) {
+            PyObject except_cause = ctx.except_clause(i).accept(this);
+
+            PyObject type = this.runtime.getitem(except_cause, this.runtime.number(0));
+            PyObject name = this.runtime.getitem(except_cause, this.runtime.number(1));
+            PyObject exceptHandlerBody = ctx.suite(suiteIndex++).accept(this);
+
+            PyObject exceptHandler = this.runtime.newPyObject("_ast.ExceptHandler", type, name, exceptHandlerBody);
+
+            exceptHandlerList.add(exceptHandler);
+        }
+
+        PyObject handlers = this.runtime.list(exceptHandlerList);
+        PyObject orelse = this.runtime.None();
+        if (ctx.ELSE() != null) {
+            orelse = ctx.suite(suiteIndex++).accept(this);
+        }
+        PyObject finalbody = this.runtime.None();
+        if (ctx.FINALLY() != null) {
+            finalbody = ctx.suite(suiteIndex++).accept(this);
+        }
+
+        return this.runtime.newPyObject("_ast.Try", tryBody, handlers, orelse, finalbody);
+    }
+
+    @Override
+    public PyObject visitExcept_clause(PythonParser.Except_clauseContext ctx) {
+        PyObject type = this.runtime.None();
+        PyObject name = this.runtime.None();
+
+        if (ctx.test() != null) {
+            type = ctx.test().accept(this);
+        }
+
+        if (ctx.NAME() != null) {
+            name = this.runtime.str(ctx.NAME().getSymbol().getText());
+        }
+
+        return this.runtime.tuple(type, name);
     }
 
     @Override

@@ -84,6 +84,28 @@ public class PyObjectScope {
         }
     }
 
+    public final Optional<PyObject> remove(PyObject name) {
+        return remove(name, true);
+    }
+
+    public final Optional<PyObject> remove(PyObject name, boolean appear) {
+        Map<PyObject, PyObject> map;
+        if (appear) {
+            map = this.objectMap;
+
+        } else {
+            map = this.notAppearObjectMap;
+        }
+
+        if (map != null) {
+            PyObject removeElement = map.remove(name);
+
+            return Optional.ofNullable(removeElement);
+        }
+
+        return Optional.empty();
+    }
+
     public final Optional<PyObjectScope> getParent() {
         return Optional.ofNullable(this.parent);
     }

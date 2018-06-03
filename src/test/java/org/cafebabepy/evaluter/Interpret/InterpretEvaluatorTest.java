@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InterpretEvaluatorTest {
 
@@ -35,6 +36,81 @@ public class InterpretEvaluatorTest {
             } finally {
                 System.setOut(defaultOut);
             }
+        }
+    }
+
+    @Nested
+    class Try {
+        @Test
+        void tryExcept() {
+            PyObject result = Python.eval("" +
+                    "try:\n" +
+                    "  raise Exception('arg1', 'arg2')\n" +
+                    "except BaseException as e:\n" +
+                    "  e"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertTrue(runtime.isInstance(result, "builtins.Exception"));
+            //assertEquals(runtime.getattr(result, "args"), runtime.tuple(runtime.str("arg1"), runtime.str("arg2")));
+        }
+
+        @Test
+        void tryElse() throws IOException {
+            evalStdOutToResult("" +
+                            "try:\n" +
+                            "  print(1)\n" +
+                            "except Exception:\n" +
+                            "  print(99)\n" +
+                            "else:\n" +
+                            "  print(2)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void tryElseFinally() throws IOException {
+            evalStdOutToResult("" +
+                            "try:\n" +
+                            "  print(1)\n" +
+                            "except Exception:\n" +
+                            "  print(99)\n" +
+                            "else:\n" +
+                            "  print(2)\n" +
+                            "finally:\n" +
+                            "  print(3)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "3" + System.lineSeparator()
+                        );
+                    });
+        }
+
+
+        @Test
+        void tryFinally() throws IOException {
+            evalStdOutToResult("" +
+                            "try:\n" +
+                            "  raise Exception()\n" +
+                            "except Exception:\n" +
+                            "  print(1)\n" +
+                            "else:\n" +
+                            "  print(99)\n" +
+                            "finally:\n" +
+                            "  print(2)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                        );
+                    });
         }
     }
 

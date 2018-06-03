@@ -302,18 +302,29 @@ public final class Python {
     public PyObject typeOrThrow(String name, boolean appear) {
         String[] splitLastDot = StringUtils.splitLastDot(name);
 
+        PyObject module;
+
         if (StringUtils.isEmpty(splitLastDot[0])) {
-            throw new CafeBabePyException("'" + name + "' is not type");
+            module = moduleOrThrow("builtins");
+            Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
+            if (typeOpt.isPresent()) {
+                return typeOpt.get();
+            }
+
+            throw newRaiseException("builtins.NameError", "name '" + name + "' is not defined");
+
+        } else {
+            module = moduleOrThrow(splitLastDot[0]);
+            Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
+            if (typeOpt.isPresent()) {
+                return typeOpt.get();
+            }
+
+            throw newRaiseException("builtins.AttributeError",
+                    "module '" + module.getName() + "' has no attribute '" + name + "'");
         }
 
-        PyObject module = moduleOrThrow(splitLastDot[0]);
-        Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
-        if (typeOpt.isPresent()) {
-            return typeOpt.get();
-        }
 
-        throw newRaiseException("builtins.AttributeError",
-                "module '" + module.getName() + "' has no attribute '" + name + "'");
     }
 
     public PyObject type(PyObject object) {

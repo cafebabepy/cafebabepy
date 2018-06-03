@@ -3,6 +3,7 @@ package org.cafebabepy.evaluter.Interpret;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.RaiseException;
 import org.cafebabepy.runtime.module._ast.*;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
@@ -86,6 +87,12 @@ public class InterpretEvaluator {
 
             case "If":
                 return evalIfAndIfExp(context, node);
+
+            case "Raise":
+                return evalRaise(context, node);
+
+            case "Try":
+                return evalTry(context, node);
 
             case "For":
                 return evalFor(context, node);
@@ -267,6 +274,73 @@ public class InterpretEvaluator {
 
         } else {
             return eval(context, orElse);
+        }
+    }
+
+    private PyObject evalRaise(PyObject context, PyObject node) {
+        PyObject exc = this.runtime.getattr(node, "exc");
+
+        // FIXME raise Exception from xxx
+        PyObject cause = this.runtime.getattr(node, "cause");
+
+        PyObject evalExc = eval(context, exc);
+        if (!this.runtime.isInstance(evalExc, "BaseException")) {
+            throw this.runtime.newRaiseTypeError("exceptions must derive from BaseException");
+        }
+
+        throw this.runtime.newRaiseException(evalExc);
+    }
+
+    private PyObject evalTry(PyObject context, PyObject node) {
+        PyObject body = this.runtime.getattr(node, "body");
+        PyObject handlers = this.runtime.getattr(node, "handlers");
+        PyObject orelse = this.runtime.getattr(node, "orelse");
+        PyObject finalbody = this.runtime.getattr(node, "finalbody");
+
+        try {
+            PyObject result = eval(context, body);
+            if (!orelse.isNone()) {
+                return eval(context, orelse);
+            }
+
+            return result;
+
+        } catch (RaiseException e) {
+            PyObject exception = e.getException();
+
+            List<PyObject> handlerList = new ArrayList<>();
+            this.runtime.iter(handlers, handlerList::add);
+
+            for (int i = 0; i < handlerList.size(); i++) {
+                PyObject handler = handlerList.get(i);
+
+                PyObject type = this.runtime.getattr(handler, "type");
+                PyObject evalType = eval(context, type);
+
+                if (this.runtime.isInstance(exception, evalType)) {
+                    PyObject name = this.runtime.getattr(handler, "name");
+
+                    PyObject exceptBody = this.runtime.getattr(handler, "body");
+                    try {
+                        if (!name.isNone()) {
+                            context.getScope().put(name, exception);
+                        }
+                        return eval(context, exceptBody);
+
+                    } finally {
+                        if (!name.isNone()) {
+                            context.getScope().remove(name);
+                        }
+                    }
+                }
+            }
+
+            throw e;
+
+        } finally {
+            if (!finalbody.isNone()) {
+                return eval(context, finalbody);
+            }
         }
     }
 
