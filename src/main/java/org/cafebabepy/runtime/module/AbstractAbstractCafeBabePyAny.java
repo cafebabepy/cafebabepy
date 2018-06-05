@@ -56,10 +56,23 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                     List<PyObject> bases = new ArrayList<>(baseNames.length);
 
                     for (String baseName : getBaseNames()) {
-                        PyObject base = this.runtime.type(baseName, false).orElseThrow(() ->
-                                new CafeBabePyException(
-                                        "type '" + getName() + "' parent '" + baseName + "' is not found")
-                        );
+                        PyObject base;
+
+                        Optional<PyObject> typeOpt;
+                        typeOpt = this.runtime.type(baseName, true);
+                        if (typeOpt.isPresent()) {
+                            base = typeOpt.get();
+
+                        } else {
+                            typeOpt = this.runtime.type(baseName, false);
+                            if (typeOpt.isPresent()) {
+                                base = typeOpt.get();
+
+                            } else {
+                                throw new CafeBabePyException(
+                                        "type '" + getName() + "' parent '" + baseName + "' is not found");
+                            }
+                        }
 
                         bases.add(base);
                     }
@@ -112,10 +125,9 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
                     definePyFunction.name(),
                     method);
 
-            if (__call__.equals(f.getName())) {
-                f.getScope().put(this.runtime.str(__call__), f);
-            }
+            f.initialize();
 
+            f.getScope().put(this.runtime.str(__call__), f);
             getScope().put(this.runtime.str(f.getName()), f);
 
             defineClassMemberNamesSet.add(definePyFunction.name());

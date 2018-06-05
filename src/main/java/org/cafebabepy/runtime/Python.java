@@ -30,9 +30,15 @@ import static org.cafebabepy.util.ProtocolNames.*;
  */
 public final class Python {
 
-    public static final String VERSION = "3.6.2.0";
-
     public static final String APPLICATION_NAME = "cafebabepy";
+
+    public static final int MAJOR = 3;
+    public static final int MINOR = 6;
+    public static final int MICRO = 5;
+    public static final String RELEASE_LEVEL = "alpha";
+    public static final int SERIAL = 0;
+
+    public static final String VERSION = MAJOR + "." + MINOR + "." + MICRO;
 
     private NormalParser parser;
 
@@ -737,7 +743,11 @@ public final class Python {
     }
 
     public boolean isInstance(PyObject instance, String typeName) {
-        return isInstance(instance, typeOrThrow(typeName));
+        return isInstance(instance, typeOrThrow(typeName, true));
+    }
+
+    public boolean isInstance(PyObject instance, String typeName, boolean appear) {
+        return isInstance(instance, typeOrThrow(typeName, appear));
     }
 
     public boolean isIterable(PyObject object) {

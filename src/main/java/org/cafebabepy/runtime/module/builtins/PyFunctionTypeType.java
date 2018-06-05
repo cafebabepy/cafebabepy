@@ -12,7 +12,7 @@ import static org.cafebabepy.util.ProtocolNames.__get__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.FunctionType")
+@DefinePyType(name = "builtins.FunctionType", appear = false)
 public class PyFunctionTypeType extends AbstractCafeBabePyType {
 
     public PyFunctionTypeType(Python runtime) {

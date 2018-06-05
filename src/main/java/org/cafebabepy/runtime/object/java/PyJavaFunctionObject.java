@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
-import static org.cafebabepy.util.ProtocolNames.__call__;
-
 /**
  * Created by yotchang4s on 2017/05/31.
  */
@@ -35,8 +33,6 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
         if (!Modifier.isPublic(method.getModifiers())) {
             this.method.setAccessible(true);
         }
-
-        getScope().put(this.runtime.str(__call__), this);
     }
 
     @Override

@@ -934,7 +934,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "function");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType"));
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType", false));
         }
 
         @Test
