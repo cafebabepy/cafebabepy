@@ -297,13 +297,19 @@ public class InterpretEvaluator {
         PyObject orelse = this.runtime.getattr(node, "orelse");
         PyObject finalbody = this.runtime.getattr(node, "finalbody");
 
-        try {
-            PyObject result = eval(context, body);
-            if (!orelse.isNone()) {
-                return eval(context, orelse);
-            }
+        PyObject result;
+        RaiseException elseException = null;
 
-            return result;
+        try {
+            result = eval(context, body);
+            if (!orelse.isNone()) {
+                try {
+                    result = eval(context, orelse);
+
+                } catch (RaiseException e) {
+                    elseException = e;
+                }
+            }
 
         } catch (RaiseException e) {
             PyObject exception = e.getException();
@@ -342,6 +348,12 @@ public class InterpretEvaluator {
                 return eval(context, finalbody);
             }
         }
+
+        if (elseException != null) {
+            throw elseException;
+        }
+
+        return result;
     }
 
     private PyObject evalFor(PyObject context, PyObject node) {
