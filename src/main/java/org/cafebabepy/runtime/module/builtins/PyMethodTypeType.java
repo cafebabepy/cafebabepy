@@ -24,12 +24,8 @@ public class PyMethodTypeType extends AbstractCafeBabePyType {
     }
 
     @DefinePyFunction(name = __init__)
-    public void __init__(PyObject self, PyObject instance/*, PyObject owner */) {
-
-    }
-
-    @Override
-    public PyObject call(PyObject... args) {
-        return super.call(args);
+    public void __init__(PyObject self, PyObject func, PyObject instance) {
+        self.getScope().put(this.runtime.str("func"), func, false);
     }
 }
+

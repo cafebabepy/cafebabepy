@@ -34,16 +34,16 @@ public final class PyTypeType extends AbstractCafeBabePyType {
             } else {
                 throw this.runtime.newRaiseTypeError("type() takes 1 or 3 arguments");
             }
-
         }
-        PyObject object = this.runtime.getattr(self, __new__).call();
+
+        PyObject object = this.runtime.getattr(self, __new__).call(self);
         this.runtime.getattr(object, __init__).call(args);
 
         return object;
     }
 
     @DefinePyFunction(name = __new__)
-    public PyObject __new__(PyObject cls) {
+    public PyObject __new__(PyObject self, PyObject cls) {
         if (!cls.isType()) {
             throw this.runtime.newRaiseTypeError(
                     "object.__new__(X): X is not a type object ("
@@ -56,5 +56,13 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         }
 
         return new PyObjectObject(this.runtime, cls);
+    }
+
+    @DefinePyFunction(name = __getattribute__)
+    public PyObject __getattribute__(PyObject cls, PyObject key) {
+        return this.runtime.builtins_type__getattribute__(cls, key).orElseThrow(() ->
+                this.runtime.newRaiseException("builtins.AttributeError",
+                        "type object '" + cls.getName() + "' object has no attribute '" + key + "'")
+        );
     }
 }

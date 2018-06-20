@@ -497,33 +497,27 @@ public final class Python {
             return getattributeOpt.get().call(object, str(name));
         }
 
-        Optional<PyObject> getattributeTypeOpt = object.getType().getScope().get(str(__getattribute__));
-        if (getattributeTypeOpt.isPresent()) {
-            return getattributeTypeOpt.get().call(object, str(name));
+        Optional<PyObject> getattributeMROOpt = lookupType(object, str(__getattribute__));
+        if (getattributeMROOpt.isPresent()) {
+            return getattributeMROOpt.get().call(object, str(name));
         }
 
-        for (PyObject typesType : object.getType().getTypes()) {
-            Optional<PyObject> getattributeTypesTypeOpt = typesType.getScope().get(str(__getattribute__));
-            if (getattributeTypesTypeOpt.isPresent()) {
-                return getattributeTypesTypeOpt.get().call(object, str(name));
-            }
-        }
-
-        if (object.isModule()) {
-            throw newRaiseException("builtins.AttributeError",
-                    "module '" + object.getName() + "' has no attribute '" + name + "'");
-
-        } else if (object.isType()) {
-            throw newRaiseException("builtins.AttributeError",
-                    "type object '" + object.getName() + "' has no attribute '" + name + "'");
-
-        } else {
-            throw newRaiseException("builtins.AttributeError",
-                    "'" + object.getName() + "' object has no attribute '" + name + "'");
-        }
+        // FIXME module
+        throw newRaiseException("builtins.AttributeError",
+                "module '" + object.getName() + "' has no attribute '" + name + "'");
     }
 
     public boolean hasattr(PyObject object, String name) {
+        // FIXME remove code
+        if (object.getModule().getName().equals("builtins")) {
+            if (object.isType()) {
+                return builtins_type__getattribute__(object, str(name)).isPresent();
+
+            } else {
+                return builtins_object__getattribute__(object, str(name)).isPresent();
+            }
+        }
+
         try {
             getattr(object, name);
             return true;
@@ -763,9 +757,12 @@ public final class Python {
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
-        PyObject e = newPyObject(exceptionType, str(message));
+        PyObject exception = newPyObject(exceptionType, str(message));
+        if (!exception.isException()) {
+            throw new CafeBabePyException("'" + exception.getFullName() + "' is not exception");
+        }
 
-        return new RaiseException(e, message);
+        return new RaiseException(exception, message);
     }
 
     public RaiseException newRaiseException(PyObject exception) {
@@ -803,5 +800,102 @@ public final class Python {
                 this.sysModules.put(str(moduleBuilder.toString()), module);
             }
         }
+    }
+
+    public Optional<PyObject> builtins_object__getattribute__(PyObject self, PyObject key) {
+        PyObject type = self.getType();
+        Optional<PyObject> attrOpt = lookupType(type, key);
+        if (attrOpt.isPresent()) {
+            PyObject attr = attrOpt.get();
+            if (self != attr) {
+                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class)) ||
+                        hasattr(attr, __set__) && !__set__.equals(key.toJava(String.class))) {
+                    return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                }
+            }
+        }
+
+        Optional<PyObject> objectOpt = lookup(self, key);
+        if (objectOpt.isPresent()) {
+            return objectOpt;
+        }
+
+        if (attrOpt.isPresent()) {
+            PyObject attr = attrOpt.get();
+            if (self != attr) {
+                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                    return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                }
+            }
+
+            return Optional.of(attr);
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<PyObject> builtins_type__getattribute__(PyObject cls, PyObject key) {
+        PyObject meta = cls.getType();
+        Optional<PyObject> metaattrOpt = lookupType(meta, key);
+        if (metaattrOpt.isPresent()) {
+            PyObject metaattr = metaattrOpt.get();
+            if (cls != metaattr) {
+                if (hasattr(metaattr, __get__) && !__get__.equals(key.toJava(String.class)) ||
+                        hasattr(metaattr, __set__) && !__set__.equals(key.toJava(String.class))) {
+                    return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                }
+            }
+        }
+
+        Optional<PyObject> attrOpt = lookupType(cls, key);
+        if (attrOpt.isPresent()) {
+            PyObject attr = attrOpt.get();
+            if (cls != attr) {
+                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                    return Optional.of(getattr(attr, __get__).call(attr, None(), cls));
+                }
+            }
+        }
+
+        if (metaattrOpt.isPresent()) {
+            PyObject metaattr = metaattrOpt.get();
+            if (cls != metaattr) {
+                if (hasattr(metaattr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                    return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                }
+            }
+
+            return Optional.of(metaattr);
+        }
+
+        throw newRaiseException("builtins.AttributeError",
+                "type object '" + cls.getName() + "' object has no attribute '" + key + "'");
+    }
+
+    public static Optional<PyObject> lookupType(PyObject object, PyObject name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public static Optional<PyObject> lookup(PyObject object, PyObject name) {
+        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
+        while (parentOpt.isPresent()) {
+            PyObjectScope parent = parentOpt.get();
+            Optional<PyObject> result = parent.get(name);
+
+            if (result.isPresent()) {
+                return result;
+            }
+
+            parentOpt = parent.getParent();
+        }
+
+        return Optional.empty();
     }
 }

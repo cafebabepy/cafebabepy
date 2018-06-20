@@ -31,7 +31,6 @@ class PyInterpretClassObject extends AbstractPyObject {
 
         List<PyObject> mutableBases = new ArrayList<>(bases);
         if (mutableBases.isEmpty()) {
-            mutableBases.add(runtime.typeOrThrow("builtins.type"));
             mutableBases.add(runtime.typeOrThrow("builtins.object"));
         }
         this.bases = Collections.unmodifiableList(mutableBases);
@@ -96,8 +95,7 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        PyObject type = this.runtime.typeOrThrow("builtins.type");
-        return this.runtime.getattr(type, __call__).call(this, args);
+        return this.runtime.getattr(this, __call__).call(this, args);
     }
 
     @Override

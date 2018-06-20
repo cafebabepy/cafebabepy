@@ -154,7 +154,7 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.FunctionType");
+        return this.runtime.typeOrThrow("builtins.FunctionType", false);
     }
 
     @Override

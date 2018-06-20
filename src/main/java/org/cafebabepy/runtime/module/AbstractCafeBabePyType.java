@@ -2,10 +2,12 @@ package org.cafebabepy.runtime.module;
 
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.util.StringUtils;
 
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 

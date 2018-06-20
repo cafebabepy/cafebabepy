@@ -17,12 +17,11 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
 
     private final PyObject function;
 
-    public PyMethodTypeObject(Python runtime, PyObject source, PyObject function) {
+    public PyMethodTypeObject(Python runtime, PyObject function, PyObject source) {
         super(runtime);
 
-        this.source = source;
         this.function = function;
-        ;
+        this.source = source;
 
         getScope().put(this.runtime.str(__call__), this);
     }
@@ -37,7 +36,7 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        return this.function.call(this.source, args);
+        return callSubstance(args, new LinkedHashMap<>());
     }
 
     @Override
