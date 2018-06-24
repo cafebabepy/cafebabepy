@@ -74,6 +74,42 @@ public final class Python {
         return runtime;
     }
 
+    private static Optional<PyObject> lookup(PyObject object, PyObject name) {
+        Optional<PyObject> attrOpt = lookupScope(object, name);
+        if (attrOpt.isPresent()) {
+            return attrOpt;
+        }
+
+        return lookupType(object, name);
+    }
+
+    private static Optional<PyObject> lookupScope(PyObject object, PyObject name) {
+        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
+        while (parentOpt.isPresent()) {
+            PyObjectScope parent = parentOpt.get();
+            Optional<PyObject> result = parent.get(name);
+
+            if (result.isPresent()) {
+                return result;
+            }
+
+            parentOpt = parent.getParent();
+        }
+
+        return Optional.empty();
+    }
+
+    private static Optional<PyObject> lookupType(PyObject object, PyObject name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getScope().get(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public PyObject eval(PyObject context, String input) {
         PyObject ast = this.parser.parse(input);
 
@@ -190,7 +226,13 @@ public final class Python {
             return value;
         }
 
-        return getattr(value, __str__).call();
+        PyObject str = getattr(value, __str__);
+        if (value.isType()) {
+            return str.call(value);
+
+        } else {
+            return str.call();
+        }
     }
 
     public PyStrObject str(String value) {
@@ -429,27 +471,22 @@ public final class Python {
     }
 
     public void iter(PyObject object, Consumer<PyObject> action) {
-
         if (object instanceof PyListObject) {
             iter((PyListObject) object, action);
             return;
         }
 
         PyObject next;
-        PyObject obj;
 
         Optional<PyObject> nextOpt = getNext(object);
         if (nextOpt.isPresent()) {
             next = nextOpt.get();
-            obj = object;
 
         } else {
             PyObject iterType = getIterType(object);
             PyObject iter = iterType.call();
             next = getIterNext(iter);
-            obj = iter;
         }
-
 
         do {
             PyObject value;
@@ -488,18 +525,12 @@ public final class Python {
 
             throw e;
         }
-
     }
 
     public PyObject getattr(PyObject object, String name) {
-        Optional<PyObject> getattributeOpt = object.getScope().get(str(__getattribute__));
+        Optional<PyObject> getattributeOpt = lookupType(object.getType(), str(__getattribute__));
         if (getattributeOpt.isPresent()) {
             return getattributeOpt.get().call(object, str(name));
-        }
-
-        Optional<PyObject> getattributeMROOpt = lookupType(object, str(__getattribute__));
-        if (getattributeMROOpt.isPresent()) {
-            return getattributeMROOpt.get().call(object, str(name));
         }
 
         // FIXME module
@@ -702,11 +733,23 @@ public final class Python {
                         + y.getType().getFullName()
                         + "'")
         );
-        PyObject result = operator.call(y);
+
+        PyObject result;
+        if (x.isType()) {
+            result = operator.call(x, y);
+
+        } else {
+            result = operator.call(y);
+        }
 
         if (result.isNotImplemented()) {
             PyObject rop = getattr(y, ropFunctionName);
-            result = rop.call(x);
+            if (y.isType()) {
+                result = rop.call(y, x);
+
+            } else {
+                result = rop.call(x);
+            }
         }
 
         return result;
@@ -728,20 +771,28 @@ public final class Python {
         return getattrOptional(object, __next__);
     }
 
-    public boolean isInstance(PyObject instance, PyObject type) {
-        return callFunction("builtins.isinstance", instance, type).isTrue();
-    }
-
-    public boolean isSubClass(PyObject clazz, PyObject classInfo) {
-        return callFunction("builtins.issubclass", clazz, classInfo).isTrue();
-    }
-
     public boolean isInstance(PyObject instance, String typeName) {
         return isInstance(instance, typeOrThrow(typeName, true));
     }
 
     public boolean isInstance(PyObject instance, String typeName, boolean appear) {
         return isInstance(instance, typeOrThrow(typeName, appear));
+    }
+
+    public boolean isInstance(PyObject instance, PyObject classInfo) {
+        return callFunction("builtins.isinstance", instance, classInfo).isTrue();
+    }
+
+    public boolean isSubClass(PyObject instance, String typeName) {
+        return isSubClass(instance, typeOrThrow(typeName, true));
+    }
+
+    public boolean isSubClass(PyObject instance, String typeName, boolean appear) {
+        return isSubClass(instance, typeOrThrow(typeName, appear));
+    }
+
+    public boolean isSubClass(PyObject clazz, PyObject classInfo) {
+        return callFunction("builtins.issubclass", clazz, classInfo).isTrue();
     }
 
     public boolean isIterable(PyObject object) {
@@ -804,18 +855,19 @@ public final class Python {
 
     public Optional<PyObject> builtins_object__getattribute__(PyObject self, PyObject key) {
         PyObject type = self.getType();
-        Optional<PyObject> attrOpt = lookupType(type, key);
+        Optional<PyObject> attrOpt = lookup(type, key);
         if (attrOpt.isPresent()) {
             PyObject attr = attrOpt.get();
             if (self != attr) {
-                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class)) ||
-                        hasattr(attr, __set__) && !__set__.equals(key.toJava(String.class))) {
-                    return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                if (hasattr(attr, __get__) && hasattr(attr, __set__)) {
+                    if (!__get__.equals(key.toJava(String.class))) {
+                        return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                    }
                 }
             }
         }
 
-        Optional<PyObject> objectOpt = lookup(self, key);
+        Optional<PyObject> objectOpt = lookupScope(self, key);
         if (objectOpt.isPresent()) {
             return objectOpt;
         }
@@ -836,18 +888,19 @@ public final class Python {
 
     public Optional<PyObject> builtins_type__getattribute__(PyObject cls, PyObject key) {
         PyObject meta = cls.getType();
-        Optional<PyObject> metaattrOpt = lookupType(meta, key);
+        Optional<PyObject> metaattrOpt = lookup(meta, key);
         if (metaattrOpt.isPresent()) {
             PyObject metaattr = metaattrOpt.get();
             if (cls != metaattr) {
-                if (hasattr(metaattr, __get__) && !__get__.equals(key.toJava(String.class)) ||
-                        hasattr(metaattr, __set__) && !__set__.equals(key.toJava(String.class))) {
-                    return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                if (hasattr(metaattr, __get__) && hasattr(metaattr, __set__)) {
+                    if (!__get__.equals(key.toJava(String.class))) {
+                        return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                    }
                 }
             }
         }
 
-        Optional<PyObject> attrOpt = lookupType(cls, key);
+        Optional<PyObject> attrOpt = lookup(cls, key);
         if (attrOpt.isPresent()) {
             PyObject attr = attrOpt.get();
             if (cls != attr) {
@@ -855,6 +908,8 @@ public final class Python {
                     return Optional.of(getattr(attr, __get__).call(attr, None(), cls));
                 }
             }
+
+            return Optional.of(attr);
         }
 
         if (metaattrOpt.isPresent()) {
@@ -870,32 +925,5 @@ public final class Python {
 
         throw newRaiseException("builtins.AttributeError",
                 "type object '" + cls.getName() + "' object has no attribute '" + key + "'");
-    }
-
-    public static Optional<PyObject> lookupType(PyObject object, PyObject name) {
-        for (PyObject type : object.getTypes()) {
-            Optional<PyObject> typeObject = type.getScope().get(name);
-            if (typeObject.isPresent()) {
-                return typeObject;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    public static Optional<PyObject> lookup(PyObject object, PyObject name) {
-        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
-        while (parentOpt.isPresent()) {
-            PyObjectScope parent = parentOpt.get();
-            Optional<PyObject> result = parent.get(name);
-
-            if (result.isPresent()) {
-                return result;
-            }
-
-            parentOpt = parent.getParent();
-        }
-
-        return Optional.empty();
     }
 }

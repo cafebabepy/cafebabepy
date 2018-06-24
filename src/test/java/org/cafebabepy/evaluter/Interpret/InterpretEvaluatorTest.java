@@ -949,7 +949,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "method");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("builtins.MethodType"));
+            assertEquals(result.getType(), runtime.typeOrThrow("builtins.MethodType", false));
         }
 
         @Test

@@ -26,7 +26,6 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
     private List<PyObject> kw_defaults;
     private List<PyObject> defaultArgs;
 
-
     PyInterpretFunctionObject(Python runtime, InterpretEvaluator evaluator, PyObject context, PyObject name, PyObject arguments, PyObject body) {
         super(runtime);
 
@@ -69,9 +68,7 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        PyObject lexicalContext = new PyLexicalScopeProxyObject(this.context);
-
-        PyObjectScope scope = lexicalContext.getScope();
+        PyObjectScope scope = this.context.getScope();
 
         PyObject vararg = this.runtime.getattr(this.arguments, "vararg");
         PyObject kwarg = this.runtime.getattr(this.arguments, "kwarg");
@@ -201,6 +198,6 @@ class PyInterpretFunctionObject extends AbstractPyObjectObject {
             scope.put(arg, this.runtime.dict(kwargsMap));
         }
 
-        return this.evaluator.eval(lexicalContext, body);
+        return this.evaluator.eval(this.context, body);
     }
 }

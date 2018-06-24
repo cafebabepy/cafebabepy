@@ -38,9 +38,6 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
                     "issubclass() arg 2 must be a type or tuple of types");
         }
 
-        List<PyObject> types = new ArrayList<>();
-        types.addAll(clazz.getTypes());
-
         /*
         // FIXME 再帰的にtupleを見る
         if (classInfo instanceof PyTupleType) {
@@ -48,7 +45,7 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         }
         */
 
-        for (PyObject type : types) {
+        for (PyObject type : clazz.getTypes()) {
             if (type == classInfo) {
                 return this.runtime.True();
             }

@@ -1,4 +1,4 @@
-package org.cafebabepy.runtime.object.proxy;
+package org.cafebabepy.runtime.object.java;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
@@ -9,15 +9,15 @@ import java.util.LinkedHashMap;
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
- * Created by yotchang4s on 2017/06/23.
+ * Created by yotchang4s on 2018/06/24.
  */
-public class PyMethodTypeObject extends AbstractPyObjectObject {
+public class PyMethodWrapperObject extends AbstractPyObjectObject {
 
     private final PyObject source;
 
     private final PyObject function;
 
-    public PyMethodTypeObject(Python runtime, PyObject function, PyObject source) {
+    public PyMethodWrapperObject(Python runtime, PyObject function, PyObject source) {
         super(runtime);
 
         this.function = function;
@@ -50,6 +50,6 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.MethodType", false);
+        return this.runtime.typeOrThrow("builtins.method-wrapper", false);
     }
 }

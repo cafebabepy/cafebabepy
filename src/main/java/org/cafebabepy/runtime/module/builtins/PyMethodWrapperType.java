@@ -1,29 +1,26 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
 import static org.cafebabepy.util.ProtocolNames.__init__;
-import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
- * Created by yotchang4s on 2017/05/13.
+ * Created by yotchang4s on 2018/06/24.
  */
-@DefinePyType(name = "builtins.MethodType", appear = false)
-public class PyMethodTypeType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.method-wrapper")
+public class PyMethodWrapperType extends AbstractCafeBabePyType {
 
-    public PyMethodTypeType(Python runtime) {
+    public PyMethodWrapperType(Python runtime) {
         super(runtime);
     }
 
     @Override
     public String getName() {
-        return "method";
+        return "method-wrapper";
     }
 
     @DefinePyFunction(name = __init__)
@@ -31,4 +28,3 @@ public class PyMethodTypeType extends AbstractCafeBabePyType {
         self.getScope().put(this.runtime.str("func"), func, false);
     }
 }
-

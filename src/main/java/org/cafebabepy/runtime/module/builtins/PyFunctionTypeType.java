@@ -41,6 +41,10 @@ public class PyFunctionTypeType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("expected at most 2 arguments, got " + args.length);
         }
 
+        if(args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
+            return self;
+        }
+
         //return this.runtime.newPyObject("builtins.MethodType", self, args[0]);
         return new PyMethodTypeObject(this.runtime, self, args[0]);
     }
