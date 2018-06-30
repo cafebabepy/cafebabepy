@@ -31,11 +31,11 @@ public class PyBoolType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        if (self.getType() instanceof PyBoolType) {
+        if (this.runtime.isInstance(self, "builtins.bool")) {
             if (self.isTrue()) {
                 return this.runtime.str("True");
-            } else {
 
+            } else {
                 return this.runtime.str("False");
             }
 

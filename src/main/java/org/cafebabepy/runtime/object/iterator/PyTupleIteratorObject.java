@@ -12,7 +12,7 @@ import java.util.Collection;
 public class PyTupleIteratorObject extends AbstractPyIteratorObject {
 
     public PyTupleIteratorObject(Python runtime, PyTupleObject tuple) {
-        this(runtime, tuple.getRawList());
+        this(runtime, tuple.getRawValues());
     }
 
     public PyTupleIteratorObject(Python runtime, Collection<PyObject> collection) {

@@ -64,6 +64,58 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitDecorator(PythonParser.DecoratorContext ctx) {
+        PyObject dotted_name = ctx.dotted_name().accept(this);
+
+        PyObject load = this.runtime.newPyObject("_ast.Load");
+        PyObject name = this.runtime.newPyObject("_ast.Name", dotted_name, load);
+
+        if (ctx.arglist() != null) {
+            PyObject call = createCall(ctx.arglist());
+            call.getScope().put(this.runtime.str("func"), name);
+
+            return call;
+        }
+
+        return name;
+    }
+
+    @Override
+    public PyObject visitDecorators(PythonParser.DecoratorsContext ctx) {
+        int count = ctx.decorator().size();
+        PyObject[] decoratorArray = new PyObject[count];
+
+        for (int i = 0; i < count; i++) {
+            decoratorArray[i] = ctx.decorator(i).accept(this);
+        }
+
+        return this.runtime.list(decoratorArray);
+    }
+
+    @Override
+    public PyObject visitDecorated(PythonParser.DecoratedContext ctx) {
+        PyObject decorator_list = ctx.decorators().accept(this);
+
+        PyObject def;
+        if (ctx.classdef() != null) {
+            def = ctx.classdef().accept(this);
+
+        } else if (ctx.funcdef() != null) {
+            def = ctx.funcdef().accept(this);
+
+        } else if (ctx.async_funcdef() != null) {
+            def = ctx.async_funcdef().accept(this);
+
+        } else {
+            throw new CafeBabePyException("def is not found");
+        }
+
+        def.getScope().put(this.runtime.str("decorator_list"), decorator_list);
+
+        return def;
+    }
+
+    @Override
     public PyObject visitStmt(PythonParser.StmtContext ctx) {
         PythonParser.Simple_stmtContext simple_stmtContext = ctx.simple_stmt();
         if (simple_stmtContext != null) {
@@ -190,8 +242,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             args = visitParameters(parametersContext);
         }
         PyObject body = visitSuite(ctx.suite());
-        PyObject decorator_list = this.runtime.None(); // FIXME 未実装
-        PyObject returns = this.runtime.None();// 無視
+        PyObject decorator_list = this.runtime.list();
+        PyObject returns = this.runtime.None();// FIXME 未実装
 
         PythonParser.TestContext testContext = ctx.test();
         if (testContext != null) {
@@ -1191,32 +1243,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         String lastText = ctx.getChild(ctx.getChildCount() - 1).getText();
 
         if ("(".equals(firstText) && ")".equals(lastText)) {
-            PythonParser.ArglistContext arglistContext = ctx.arglist();
-            PyObject args;
-            PyObject keywords;
-
-            if (arglistContext != null) {
-                List<PyObject> argsJList = new ArrayList<>();
-                List<PyObject> keywordJList = new ArrayList<>();
-                this.runtime.iter(arglistContext.accept(this), arg -> {
-                    if (this.runtime.isInstance(arg, "_ast.keyword")) {
-                        keywordJList.add(arg);
-
-                    } else {
-                        argsJList.add(arg);
-                    }
-                });
-
-                args = this.runtime.list(argsJList);
-                keywords = this.runtime.list(keywordJList);
-
-            } else {
-                args = this.runtime.list();
-                keywords = this.runtime.list();
-            }
-
-            // FIXME args
-            return this.runtime.newPyObject("_ast.Call", this.runtime.list(), args, keywords);
+            return createCall(ctx.arglist());
 
         } else if ("[".equals(firstText) && "]".equals(lastText)) {
             PythonParser.SubscriptlistContext subscriptlistContext = ctx.subscriptlist();
@@ -1230,9 +1257,36 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             return this.runtime.newPyObject("_ast.Subscript", this.runtime.None(), subscriptlist, load);
 
-        } else {
-            throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
         }
+
+        throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
+    }
+
+    private PyObject createCall(PythonParser.ArglistContext ctx) {
+        PyObject args;
+        PyObject keywords;
+
+        if (ctx != null) {
+            List<PyObject> argsJList = new ArrayList<>();
+            List<PyObject> keywordJList = new ArrayList<>();
+            this.runtime.iter(ctx.accept(this), arg -> {
+                if (this.runtime.isInstance(arg, "_ast.keyword")) {
+                    keywordJList.add(arg);
+
+                } else {
+                    argsJList.add(arg);
+                }
+            });
+
+            args = this.runtime.list(argsJList);
+            keywords = this.runtime.list(keywordJList);
+
+        } else {
+            args = this.runtime.list();
+            keywords = this.runtime.list();
+        }
+
+        return this.runtime.newPyObject("_ast.Call", this.runtime.None(), args, keywords);
     }
 
     @Override

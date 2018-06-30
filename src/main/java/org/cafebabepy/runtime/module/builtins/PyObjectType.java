@@ -40,7 +40,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     public PyObject __getattribute__(PyObject self, PyObject key) {
         return this.runtime.builtins_object__getattribute__(self, key).orElseThrow(() ->
                 this.runtime.newRaiseException("builtins.AttributeError",
-                        "'" + self.getName() + "' object has no attribute '" + key + "'")
+                        "'" + self.getName() + "' object has no attribute " + key)
         );
     }
 

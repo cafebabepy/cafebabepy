@@ -226,7 +226,27 @@ public class InterpretEvaluator {
                 this.runtime, this, context, name, args, body);
         function.initialize();
 
-        context.getScope().put(name, function);
+        List<PyObject> decorators = new ArrayList<>();
+        this.runtime.iter(decorator_list, decorators::add);
+        Collections.reverse(decorators);
+
+        PyObject decoratorEvalValue = function;
+
+        int decoratorCount = decorators.size();
+        for (int i = 0; i < decoratorCount; i++) {
+            PyObject decorator = decorators.get(i);
+
+            PyObject decoratorEvalFunction = eval(context, decorator);
+            try {
+                decoratorEvalFunction.call(decoratorEvalValue);
+                decoratorEvalValue = this.runtime.None();
+
+            } catch (InterpretReturn r) {
+                decoratorEvalValue = r.getValue();
+            }
+        }
+
+        context.getScope().put(name, decoratorEvalValue);
 
         return this.runtime.None();
     }

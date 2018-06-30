@@ -14,28 +14,32 @@ import java.util.List;
  */
 public class PyListObject extends AbstractPyObjectObject {
 
-    private final List<PyObject> list;
+    private final List<PyObject> values;
 
     public PyListObject(Python runtime, PyObject... value) {
+        this(runtime, Arrays.asList(value));
+    }
+
+    public PyListObject(Python runtime, List<PyObject> values) {
         super(runtime);
 
-        this.list = new ArrayList<>(Arrays.asList(value));
+        this.values = new ArrayList<>(values);
     }
 
-    public List<PyObject> getList() {
-        return Collections.unmodifiableList(this.list);
+    public List<PyObject> getValues() {
+        return Collections.unmodifiableList(this.values);
     }
 
-    public List<PyObject> getRawList() {
-        return this.list;
+    public List<PyObject> getRawValues() {
+        return this.values;
     }
 
     public PyObject get(PyIntObject i) {
-        return this.list.get(i.getIntValue());
+        return this.values.get(i.getIntValue());
     }
 
     public PyObject getLen() {
-        return this.runtime.number(list.size());
+        return this.runtime.number(values.size());
     }
 
     @Override
@@ -47,7 +51,7 @@ public class PyListObject extends AbstractPyObjectObject {
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
         if (clazz == List.class) {
-            return (T) new ArrayList<>(this.list);
+            return (T) new ArrayList<>(this.values);
         }
 
         return super.toJava(clazz);

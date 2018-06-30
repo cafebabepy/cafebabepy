@@ -63,7 +63,7 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
+        return callSubstance(args, new LinkedHashMap<>());
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.util.Collection;
 public class PyListIteratorObject extends AbstractPyIteratorObject {
 
     public PyListIteratorObject(Python runtime, PyListObject list) {
-        this(runtime, list.getList());
+        this(runtime, list.getValues());
     }
 
     public PyListIteratorObject(Python runtime, Collection<PyObject> collection) {

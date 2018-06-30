@@ -1,5 +1,6 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -37,8 +38,8 @@ public class PyTupleType extends AbstractCafeBabePyType {
         List<PyObject> list = new ArrayList<>();
         this.runtime.iter(iterable, list::add);
 
-        tuple.getRawList().clear();
-        tuple.getRawList().addAll(list);
+        tuple.getRawValues().clear();
+        tuple.getRawValues().addAll(list);
 
         return this.runtime.None();
     }
@@ -59,7 +60,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         PyTupleObject tuple = (PyTupleObject) self;
         PyIntObject index = (PyIntObject) key;
 
-        return tuple.getRawList().get(index.getIntValue());
+        return tuple.getRawValues().get(index.getIntValue());
     }
 
     @DefinePyFunction(name = __len__)
@@ -84,6 +85,29 @@ public class PyTupleType extends AbstractCafeBabePyType {
         }
 
         return new PyTupleIteratorObject(this.runtime, (PyTupleObject) self);
+    }
+
+    @DefinePyFunction(name = __add__)
+    public PyObject __add__(PyObject self, PyObject other) {
+        if (!this.runtime.isInstance(self, "builtins.tuple")) {
+            throw this.runtime.newRaiseTypeError(
+                    "can only concatenate tuple (not \"" + other + "\") to tuple"
+            );
+        }
+
+        // FIXME remove PyTupleObject
+        if (!(self instanceof PyTupleObject) || !(other instanceof PyTupleObject)) {
+            throw new CafeBabePyException("object is not PyTupleObject");
+        }
+
+        PyTupleObject selfTuple = (PyTupleObject) self;
+        PyTupleObject otherTuple = (PyTupleObject) other;
+
+        List<PyObject> tuple = new ArrayList<>();
+        tuple.addAll(selfTuple.getRawValues());
+        tuple.addAll(otherTuple.getRawValues());
+
+        return new PyTupleObject(this.runtime, tuple);
     }
 
     @DefinePyFunction(name = __str__)
@@ -114,7 +138,7 @@ public class PyTupleType extends AbstractCafeBabePyType {
         PyTupleObject v1 = (PyTupleObject) self;
         PyTupleObject v2 = (PyTupleObject) other;
 
-        return this.runtime.bool(v1.getRawList().equals(v2.getRawList()));
+        return this.runtime.bool(v1.getRawValues().equals(v2.getRawValues()));
     }
 
     @DefinePyFunction(name = __hash__)
@@ -125,6 +149,6 @@ public class PyTupleType extends AbstractCafeBabePyType {
 
         PyTupleObject v = (PyTupleObject) self;
 
-        return this.runtime.number(v.getRawList().hashCode());
+        return this.runtime.number(v.getRawValues().hashCode());
     }
 }

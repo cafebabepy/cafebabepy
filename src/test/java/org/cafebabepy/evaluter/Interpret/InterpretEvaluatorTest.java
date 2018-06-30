@@ -1359,6 +1359,122 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
+    class Decorator {
+        @Test
+        void decorator() throws IOException {
+            evalStdOutToResult(""
+                    + "def decorator(function):\n"
+                    + "  def retfunc(*args):\n"
+                    + "    print('decorator_start')\n"
+                    + "    function(*args)\n"
+                    + "    print('decorator_end')\n"
+                    + "  return retfunc\n"
+                    + "@decorator\n"
+                    + "def a(): print('test')\n"
+                    + "a()", result -> {
+                assertEquals(result, ""
+                        + "decorator_start" + System.lineSeparator()
+                        + "test" + System.lineSeparator()
+                        + "decorator_end" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void multiDecorator() throws IOException {
+            evalStdOutToResult(""
+                    + "def decorator1(function):\n"
+                    + "  def retfunc(*args):\n"
+                    + "    print('decorator1_start')\n"
+                    + "    function(*args)\n"
+                    + "    print('decorator1_end')\n"
+
+                    + "  return retfunc\n"
+
+                    + "def decorator2(function):\n"
+                    + "  def retfunc(*args):\n"
+                    + "    print('decorator2_start')\n"
+                    + "    function(*args)\n"
+                    + "    print('decorator2_end')\n"
+
+                    + "  return retfunc\n"
+
+                    + "@decorator1\n"
+                    + "@decorator2\n"
+                    + "def a(): print('test')\n"
+                    + "a()", result -> {
+                assertEquals(result, ""
+                        + "decorator1_start" + System.lineSeparator()
+                        + "decorator2_start" + System.lineSeparator()
+                        + "test" + System.lineSeparator()
+                        + "decorator2_end" + System.lineSeparator()
+                        + "decorator1_end" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void argumentsDecorator1() throws IOException {
+            evalStdOutToResult(""
+                    + "funcs = []\n"
+                    + "def appender(*args, **kwargs):\n"
+                    + "  def decorator(function):\n"
+                    + "    print(args)\n"
+
+                    + "    if kwargs.get('option1'):\n"
+                    + "      print('option1 is True')\n"
+
+                    + "    funcs.append(function)\n"
+
+                    + "  return decorator\n"
+
+                    + "@appender('arg1', option1 = True)\n"
+                    + "def hoge(): print('hoge')\n"
+
+                    + "@appender('arg2', option2 = False)\n"
+                    + "def huga(): print('huga')\n"
+
+                    + "for f in funcs: f()", result -> {
+                assertEquals(result, ""
+                        + "('arg1',)" + System.lineSeparator()
+                        + "option1 is True" + System.lineSeparator()
+                        + "('arg2',)" + System.lineSeparator()
+                        + "hoge" + System.lineSeparator()
+                        + "huga" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void argumentsDecorator2() throws IOException {
+            evalStdOutToResult(""
+                    + "def args_joiner(*dargs, **dkwargs):\n"
+                    + "  def decorator(f):\n"
+                    + "    def wrapper(*args, **kwargs):\n"
+                    + "      newargs = dargs + args\n"
+                    + "      newkwargs = {**kwargs, **dkwargs}\n"
+
+                    + "      f(*newargs, **newkwargs)\n"
+
+                    + "    return wrapper\n"
+
+                    + "  return decorator\n"
+
+                    + "@args_joiner('darg', dkwarg=True)\n"
+                    + "def print_args(*args, **kwargs):\n"
+                    + "  print(args)\n"
+                    + "  print(kwargs)\n"
+
+                    + "print_args('arg', kwarg=False)", result -> {
+                assertEquals(result, ""
+                        + "('darg', 'arg')" + System.lineSeparator()
+                        + "{'kwarg': False, 'dkwarg': True}" + System.lineSeparator()
+                );
+            });
+        }
+    }
+
+    @Nested
     class Comment {
         @Test
         void comment() throws IOException {

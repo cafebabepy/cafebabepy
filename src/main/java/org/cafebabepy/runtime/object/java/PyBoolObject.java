@@ -7,10 +7,10 @@ import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 /**
  * Created by yotchang4s on 2017/06/23.
  */
-public abstract class PyBoolObject extends PyIntObject {
+public abstract class PyBoolObject extends AbstractPyObjectObject {
 
-    PyBoolObject(Python runtime, boolean bool) {
-        super(runtime, bool ? 1 : 0);
+    PyBoolObject(Python runtime) {
+        super(runtime);
     }
 
     @Override

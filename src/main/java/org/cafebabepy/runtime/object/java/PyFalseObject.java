@@ -8,7 +8,7 @@ import org.cafebabepy.runtime.Python;
 public class PyFalseObject extends PyBoolObject {
 
     public PyFalseObject(Python runtime) {
-        super(runtime, false);
+        super(runtime);
     }
 
     @Override

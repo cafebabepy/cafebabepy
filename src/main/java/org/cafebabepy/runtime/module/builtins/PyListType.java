@@ -55,7 +55,7 @@ public class PyListType extends AbstractCafeBabePyType {
                 startInt = getInt(start).getIntValue();
             }
             if (stop.isNone()) {
-                stopInt = list.getRawList().size();
+                stopInt = list.getRawValues().size();
 
             } else {
                 stopInt = getInt(stop).getIntValue();
@@ -70,14 +70,14 @@ public class PyListType extends AbstractCafeBabePyType {
                 }
             }
             if (startInt < 0) {
-                startInt = list.getRawList().size() + startInt;
+                startInt = list.getRawValues().size() + startInt;
             }
             if (stopInt < 0) {
-                stopInt = list.getRawList().size() + stopInt;
+                stopInt = list.getRawValues().size() + stopInt;
             }
             List<PyObject> jlist = new ArrayList<>();
-            for (int i = startInt; i < stopInt && i < list.getRawList().size(); i += stepInt) {
-                jlist.add(list.getRawList().get(i));
+            for (int i = startInt; i < stopInt && i < list.getRawValues().size(); i += stepInt) {
+                jlist.add(list.getRawValues().get(i));
             }
 
             return this.runtime.list(jlist);
@@ -117,7 +117,7 @@ public class PyListType extends AbstractCafeBabePyType {
         PyListObject list = (PyListObject) self;
 
         if (key instanceof PyIntObject) {
-            List<PyObject> jlist = ((PyListObject) self).getRawList();
+            List<PyObject> jlist = ((PyListObject) self).getRawValues();
             PyIntObject index = (PyIntObject) key;
 
             if (jlist.size() <= index.getIntValue()) {
@@ -145,7 +145,7 @@ public class PyListType extends AbstractCafeBabePyType {
                 startInt = getInt(start).getIntValue();
             }
             if (stop.isNone()) {
-                stopInt = list.getRawList().size();
+                stopInt = list.getRawValues().size();
 
             } else {
                 stopInt = getInt(stop).getIntValue();
@@ -160,23 +160,23 @@ public class PyListType extends AbstractCafeBabePyType {
                 }
             }
             if (startInt < 0) {
-                startInt = list.getRawList().size() + startInt;
+                startInt = list.getRawValues().size() + startInt;
             }
             if (stopInt < 0) {
-                stopInt = list.getRawList().size() + stopInt;
+                stopInt = list.getRawValues().size() + stopInt;
             }
 
-            if (stopInt > list.getRawList().size()) {
-                stopInt = list.getRawList().size() - 1;
+            if (stopInt > list.getRawValues().size()) {
+                stopInt = list.getRawValues().size() - 1;
             }
 
             List<PyObject> newList = new ArrayList<>();
 
             for (int i = 0; i < startInt; i += stepInt) {
-                newList.add(list.getRawList().get(i));
+                newList.add(list.getRawValues().get(i));
             }
-            for (int i = stopInt; i < list.getRawList().size(); i += stepInt) {
-                newList.add(list.getRawList().get(i));
+            for (int i = stopInt; i < list.getRawValues().size(); i += stepInt) {
+                newList.add(list.getRawValues().get(i));
             }
 
             List<PyObject> iterList = new ArrayList<>();
@@ -184,8 +184,8 @@ public class PyListType extends AbstractCafeBabePyType {
 
             newList.addAll(startInt, iterList);
 
-            list.getRawList().clear();
-            list.getRawList().addAll(newList);
+            list.getRawValues().clear();
+            list.getRawValues().addAll(newList);
 
         } else {
             throw this.runtime.newRaiseTypeError(
@@ -228,7 +228,7 @@ public class PyListType extends AbstractCafeBabePyType {
 
         PyListObject list = (PyListObject) self;
 
-        return this.runtime.bool(list.getRawList().contains(other));
+        return this.runtime.bool(list.getRawValues().contains(other));
     }
 
     @DefinePyFunction(name = "append")
@@ -242,7 +242,7 @@ public class PyListType extends AbstractCafeBabePyType {
 
         PyListObject list = (PyListObject) self;
 
-        list.getRawList().add(x);
+        list.getRawValues().add(x);
     }
 
     @DefinePyFunction(name = "insert")
@@ -260,7 +260,7 @@ public class PyListType extends AbstractCafeBabePyType {
 
         PyListObject list = (PyListObject) self;
 
-        list.getRawList().add(i.toJava(int.class), x);
+        list.getRawValues().add(i.toJava(int.class), x);
     }
 
     @DefinePyFunction(name = __str__)
@@ -289,7 +289,7 @@ public class PyListType extends AbstractCafeBabePyType {
         PyListObject v1 = (PyListObject) self;
         PyListObject v2 = (PyListObject) other;
 
-        return this.runtime.bool(v1.getRawList().equals(v2.getRawList()));
+        return this.runtime.bool(v1.getRawValues().equals(v2.getRawValues()));
     }
 
     @DefinePyFunction(name = __hash__)
@@ -300,6 +300,6 @@ public class PyListType extends AbstractCafeBabePyType {
 
         PyListObject list = (PyListObject) self;
 
-        return this.runtime.number(list.getRawList().hashCode());
+        return this.runtime.number(list.getRawValues().hashCode());
     }
 }

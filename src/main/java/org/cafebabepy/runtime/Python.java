@@ -464,7 +464,7 @@ public final class Python {
     }
 
     private void iterIndex(PyListObject listObject, BiConsumer<PyObject, Integer> action) {
-        List<PyObject> list = listObject.getRawList();
+        List<PyObject> list = listObject.getRawValues();
         for (int i = 0; i < list.size(); i++) {
             action.accept(list.get(i), i);
         }
@@ -508,7 +508,7 @@ public final class Python {
     }
 
     private void iter(PyListObject listObject, Consumer<PyObject> action) {
-        List<PyObject> list = listObject.getRawList();
+        List<PyObject> list = listObject.getRawValues();
         for (int i = 0; i < list.size(); i++) {
             action.accept(list.get(i));
         }
