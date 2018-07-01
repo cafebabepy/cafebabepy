@@ -1489,9 +1489,32 @@ public class InterpretEvaluatorTest {
                     + "    print('static_method')\n"
 
                     + "t = T()\n"
-                    + "t.a()", result -> {
+                    + "t.a()\n"
+                    + "T.a()", result -> {
                 assertEquals(result, ""
                         + "static_method" + System.lineSeparator()
+                        + "static_method" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void classmethod() throws IOException {
+            evalStdOutToResult(""
+                    + "class T:\n"
+                    + "  @classmethod\n"
+                    + "  def a(klass, arg):\n"
+                    + "    print(klass)\n"
+                    + "    print(arg)\n"
+
+                    + "t = T()\n"
+                    + "t.a('test1')\n"
+                    + "T.a('test2')", result -> {
+                assertEquals(result, ""
+                        + "<class '__main__.T'>" + System.lineSeparator()
+                        + "test1" + System.lineSeparator()
+                        + "<class '__main__.T'>" + System.lineSeparator()
+                        + "test2" + System.lineSeparator()
                 );
             });
         }
