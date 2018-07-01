@@ -238,8 +238,7 @@ public class InterpretEvaluator {
 
             PyObject decoratorEvalFunction = eval(context, decorator);
             try {
-                decoratorEvalFunction.call(decoratorEvalValue);
-                decoratorEvalValue = this.runtime.None();
+               decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
 
             } catch (InterpretReturn r) {
                 decoratorEvalValue = r.getValue();
@@ -924,10 +923,17 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(node, "id");
             String name = id.toJava(String.class);
 
+            return Python.lookup(context, id).orElseThrow(() ->
+                    this.runtime.newRaiseException("builtins.NameError",
+                            "name '" + name + "' is not defined")
+            );
+
+            /*
             return this.runtime.getattrOptional(context, name).orElseThrow(() ->
                     this.runtime.newRaiseException("builtins.NameError",
                             "name '" + name + "' is not defined")
             );
+            */
 
         } else if (ctxType instanceof PyStoreType) {
             return context;

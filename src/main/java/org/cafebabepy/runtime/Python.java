@@ -74,7 +74,7 @@ public final class Python {
         return runtime;
     }
 
-    private static Optional<PyObject> lookup(PyObject object, PyObject name) {
+    public static Optional<PyObject> lookup(PyObject object, PyObject name) {
         Optional<PyObject> attrOpt = lookupScope(object, name);
         if (attrOpt.isPresent()) {
             return attrOpt;
@@ -539,17 +539,17 @@ public final class Python {
     }
 
     public boolean hasattr(PyObject object, String name) {
-        // FIXME remove code
-        if (object.getModule().getName().equals("builtins")) {
-            if (object.isType()) {
-                return builtins_type__getattribute__(object, str(name)).isPresent();
-
-            } else {
-                return builtins_object__getattribute__(object, str(name)).isPresent();
-            }
-        }
-
         try {
+            // FIXME remove code
+            if (object.getModule().getName().equals("builtins")) {
+                if (object.isType()) {
+                    return builtins_type__getattribute__(object, str(name)).isPresent();
+
+                } else {
+                    return builtins_object__getattribute__(object, str(name)).isPresent();
+                }
+            }
+
             getattr(object, name);
             return true;
 

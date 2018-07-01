@@ -20,6 +20,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class InterpretEvaluatorTest {
 
     private void evalStdOutToResult(String input, Consumer<String> consumer) throws IOException {
+        System.out.println("========================= Test code satrt =========================");
+        System.out.print(input);
+        System.out.println();
+        System.out.println("========================= Test code end   =========================");
+        System.out.println();
+        System.out.println();
+
         try (
                 ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
                 PrintStream out = new PrintStream(byteArrayOut)) {
@@ -1469,6 +1476,22 @@ public class InterpretEvaluatorTest {
                 assertEquals(result, ""
                         + "('darg', 'arg')" + System.lineSeparator()
                         + "{'kwarg': False, 'dkwarg': True}" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void staticmethod() throws IOException {
+            evalStdOutToResult(""
+                    + "class T:\n"
+                    + "  @staticmethod\n"
+                    + "  def a():\n"
+                    + "    print('static_method')\n"
+
+                    + "t = T()\n"
+                    + "t.a()", result -> {
+                assertEquals(result, ""
+                        + "static_method" + System.lineSeparator()
                 );
             });
         }
