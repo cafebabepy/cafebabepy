@@ -6,11 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by yotchang4s on 2018/06/03.
+ * Created by yotchang4s on 2017/07/08.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface DefinePyVariable {
+public @interface DefinePyFunctionDefaultValue {
 
-    String name();
+    String methodName();
+
+    String parameterName();
 }

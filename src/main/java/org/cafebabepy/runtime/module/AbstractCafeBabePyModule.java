@@ -73,7 +73,7 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
-    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         throw getRuntime().newRaiseTypeError("'" + getFullName() + "' object is not callable");
     }
 }

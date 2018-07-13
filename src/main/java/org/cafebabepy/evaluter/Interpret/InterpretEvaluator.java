@@ -220,10 +220,10 @@ public class InterpretEvaluator {
         PyObject args = this.runtime.getattr(node, "args");
         PyObject body = this.runtime.getattr(node, "body");
         PyObject decorator_list = this.runtime.getattr(node, "decorator_list");
-        PyObject returns = this.runtime.getattr(node, "returns");
+        PyObject returns = this.runtime.getattr(node, "returns"); // FIXME ???
 
         PyObject function = new PyInterpretFunctionObject(
-                this.runtime, this, context, name, args, body);
+                this.runtime, name.toJava(String.class), context, args, body);
         function.initialize();
 
         List<PyObject> decorators = new ArrayList<>();
@@ -238,7 +238,7 @@ public class InterpretEvaluator {
 
             PyObject decoratorEvalFunction = eval(context, decorator);
             try {
-               decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
+                decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
 
             } catch (InterpretReturn r) {
                 decoratorEvalValue = r.getValue();
@@ -700,7 +700,7 @@ public class InterpretEvaluator {
 
         PyObject result;
         try {
-            result = funcEval.callSubstance(argsArray, keywordsMap);
+            result = funcEval.call(argsArray, keywordsMap);
 
         } catch (InterpretReturn re) {
             result = re.getValue();
@@ -908,8 +908,7 @@ public class InterpretEvaluator {
         PyObject args = this.runtime.getattr(node, "args");
         PyObject body = this.runtime.getattr(node, "body");
 
-        PyObject function = new PyInterpretFunctionObject(
-                this.runtime, this, context, this.runtime.str("<lambda>"), args, body);
+        PyObject function = new PyInterpretFunctionObject(this.runtime, "<lambda>", context, args, body);
         function.initialize();
 
         return function;

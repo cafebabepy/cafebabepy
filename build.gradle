@@ -63,6 +63,7 @@ dependencies {
 
 tasks.withType(JavaCompile) {
     options.encoding = defaultEncoding
+    options.compilerArgs << '-parameters'
 }
 
 tasks.withType(Test) {

@@ -36,16 +36,16 @@ public class PyMethodWrapperObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        return callSubstance(args, new LinkedHashMap<>());
+        return call(args, new LinkedHashMap<>());
     }
 
     @Override
-    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         PyObject[] newArgs = new PyObject[args.length + 1];
         System.arraycopy(args, 0, newArgs, 1, args.length);
         newArgs[0] = this.source;
 
-        return this.function.callSubstance(newArgs, keywords);
+        return this.function.call(newArgs, keywords);
     }
 
     @Override

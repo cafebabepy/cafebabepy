@@ -63,11 +63,11 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        return callSubstance(args, new LinkedHashMap<>());
+        return call(args, new LinkedHashMap<>());
     }
 
     @Override
-    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
     }
 }

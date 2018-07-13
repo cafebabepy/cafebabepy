@@ -3,31 +3,29 @@ package org.cafebabepy.runtime.object.java;
 import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.AbstractPyObjectObject;
+import org.cafebabepy.runtime.RaiseException;
+import org.cafebabepy.runtime.internal.AbstractFunction;
+import org.cafebabepy.runtime.object.PyObjectObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.lang.reflect.Parameter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Created by yotchang4s on 2017/05/31.
  */
-public class PyJavaFunctionObject extends AbstractPyObjectObject {
+public class PyJavaFunctionObject extends AbstractFunction {
 
-    private final PyObject targetType;
-
-    private final String name;
-
+    private final PyObject target;
     private final Method method;
 
-    public PyJavaFunctionObject(Python runtime, PyObject targetType, String name, Method method) {
-        super(runtime);
+    public PyJavaFunctionObject(Python runtime, String name, PyObject target, Method method, Map<String, Method> defaultArgumentMap) {
+        super(runtime, new PyObjectObject(runtime), name, createArguments(runtime, target, method, new HashMap<>(defaultArgumentMap)));
 
-        this.targetType = targetType;
-        this.name = name;
+        this.target = target;
         this.method = method;
 
         if (!Modifier.isPublic(method.getModifiers())) {
@@ -35,130 +33,174 @@ public class PyJavaFunctionObject extends AbstractPyObjectObject {
         }
     }
 
-    @Override
-    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        // FIXME keywords
-        return this.call(args);
+    private static PyObject createArguments(Python runtime, Object target, Method method, Map<String, Method> defaultArgumentMap) {
+        PyObject arguments = new PyObjectObject(runtime);
+        arguments.initialize();
+
+        PyObject vararg = runtime.None();
+        PyObject kwarg = runtime.None();
+
+        List<PyObject> argList = new ArrayList<>();
+        List<PyObject> kwonlyargList = new ArrayList<>();
+
+        List<PyObject> argDefaultValueList = new ArrayList<>();
+        List<PyObject> kwonlyargDefaultList = new ArrayList<>();
+
+        boolean defineVararg = false;
+        boolean defineKwarg = false;
+
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter parameter = parameters[i];
+
+            PyObject defaultValue = null;
+            Method defaultValueMethod = defaultArgumentMap.get(parameter.getName());
+            if (defaultValueMethod != null) {
+                try {
+                    defaultValue = (PyObject) defaultValueMethod.invoke(target);
+                    defaultArgumentMap.remove(parameter.getName());
+
+                    if (defaultValue == null) {
+                        defaultValue = runtime.None();
+                    }
+
+                } catch (IllegalAccessException | InvocationTargetException | ClassCastException e) {
+                    throw new CafeBabePyException("" +
+                            "Fail invoke defalut value " + defaultValueMethod.getDeclaringClass().getName() + "#" + defaultValueMethod.getName() + "method ");
+                }
+            }
+
+            PyObject arg = new PyObjectObject(runtime);
+            arg.initialize();
+
+            arg.getScope().put(runtime.str("arg"), runtime.str(parameter.getName()));
+            arg.getScope().put(runtime.str("annotation"), runtime.None());
+
+            Class<?> type = parameter.getType();
+            if (PyObject.class.isAssignableFrom(type)) {
+                if (defineKwarg) {
+                    throw runtime.newRaiseException("SyntaxError", "invalid syntax");
+                }
+
+                if (defineVararg) {
+                    kwonlyargList.add(arg);
+                    if (defaultValue != null) {
+                        kwonlyargDefaultList.add(defaultValue);
+                    }
+
+                } else {
+                    argList.add(arg);
+                    if (defaultValue != null) {
+                        argDefaultValueList.add(defaultValue);
+                    }
+                }
+
+            } else if (PyObject[].class.isAssignableFrom(type)) {
+                if (defineVararg || defineKwarg || defaultValue != null) {
+                    throw runtime.newRaiseException("SyntaxError", "invalid syntax");
+                }
+
+                vararg = arg;
+                defineVararg = true;
+
+            } else if (Map.class.isAssignableFrom(type)) {
+                if (defineKwarg || defaultValue != null) {
+                    throw runtime.newRaiseException("SyntaxError", "invalid syntax");
+                }
+
+                kwarg = arg;
+                defineKwarg = true;
+            }
+        }
+
+        if (!defaultArgumentMap.isEmpty()) {
+            throw runtime.newRaiseException("SyntaxError", "invalid syntax");
+        }
+
+        arguments.getScope().put(runtime.str("defaults"), runtime.list(argDefaultValueList));
+        arguments.getScope().put(runtime.str("kw_defaults"), runtime.list(kwonlyargDefaultList));
+        arguments.getScope().put(runtime.str("vararg"), vararg);
+        arguments.getScope().put(runtime.str("kwarg"), kwarg);
+        arguments.getScope().put(runtime.str("kwonlyargs"), runtime.list(kwonlyargList));
+        arguments.getScope().put(runtime.str("args"), runtime.list(argList));
+
+        return arguments;
     }
 
     @Override
-    public PyObject call(PyObject... args) {
-        PyObject target = this.targetType;
+    protected PyObject evalDefaultValue(PyObject defaultValue) {
+        return defaultValue.call(new PyObject[]{defaultValue}, new LinkedHashMap<>());
+    }
 
-        Class<?> methodClass = this.method.getDeclaringClass();
+    @Override
+    protected PyObject getattr(PyObject object, String key) {
+        return object.getScope().get(this.runtime.str(key)).orElseThrow(() ->
+                new CafeBabePyException(object + " key '" + key + "' is not found")
+        );
+    }
 
-        for (PyObject type : target.getTypes()) {
-            Class<?> typeClass = type.getClass();
-            if (methodClass.isAssignableFrom(typeClass)) {
-                target = type;
-                break;
+    @Override
+    protected PyObject callImpl(PyObject context) {
+        Map<PyObject, PyObject> pyArgumentMap = context.getScope().gets();
+        Map<String, PyObject> argumentMap = new LinkedHashMap<>(pyArgumentMap.size());
+
+        for (Map.Entry<PyObject, PyObject> entry : pyArgumentMap.entrySet()) {
+            argumentMap.put(entry.getKey().toJava(String.class), entry.getValue());
+        }
+
+        Object[] arguments = new Object[argumentMap.size()];
+
+        Parameter[] parameters = this.method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            PyObject argument = argumentMap.get(parameters[i].getName());
+            Parameter parameter = parameters[i];
+
+            if (PyObject.class.isAssignableFrom(parameter.getType())) {
+                arguments[i] = argument;
+
+            } else if (Map.class.isAssignableFrom(parameter.getType())) {
+                arguments[i] = argument.toJava(LinkedHashMap.class);
+
+            } else if (List.class.isAssignableFrom(parameter.getType())) {
+                arguments[i] = argument.toJava(List.class);
+
+            } else if (PyObject[].class.isAssignableFrom(parameter.getType())) {
+                List<PyObject> list = argument.toJava(List.class);
+                arguments[i] = list.toArray(new PyObject[0]);
+
+            } else {
+                throw new CafeBabePyException("Illegal argument");
             }
         }
 
         try {
-            Object[] compArgs;
-            Class<?>[] paramClasses = this.method.getParameterTypes();
+            Object result = this.method.invoke(this.target, (Object[]) arguments);
+            if (result == null) {
+                return this.runtime.None();
+            }
 
-            if (paramClasses.length == 0) {
-                compArgs = new Object[0];
+            return (PyObject) result;
 
-            } else {
-                if (paramClasses.length == 1 && paramClasses[0].isArray()) {
-                    compArgs = new Object[]{args};
-
-                } else if (paramClasses[paramClasses.length - 1].isArray()) {
-                    // Split argument and variable argument from args array
-                    if (args.length > 0) {
-                        if (args.length - paramClasses.length >= 0) {
-                            // Last argument is variable argument
-                            compArgs = new Object[paramClasses.length];
-
-                            PyObject[] lastArrayArg = new PyObject[args.length - compArgs.length + 1];
-                            System.arraycopy(args, 0, compArgs, 0, compArgs.length - 1);
-
-                            for (int i = 0; i < lastArrayArg.length; i++) {
-                                lastArrayArg[i] = args[i + compArgs.length - 1];
-                            }
-
-                            compArgs[paramClasses.length - 1] = lastArrayArg;
-
-                        } else {
-                            compArgs = new Object[args.length + 1];
-
-                            for (int i = 0; i < args.length; i++) {
-                                if (args[i].getClass().isArray()) {
-                                    compArgs[i] = new PyObject[]{args[i]};
-
-                                } else {
-                                    compArgs[i] = args[i];
-                                }
-                            }
-
-                            compArgs[compArgs.length - 1] = new PyObject[0];
-                        }
-
-                    } else {
-                        compArgs = new Object[]{new PyObject[0]};
-                    }
-
-                } else if (paramClasses.length != args.length) {
-                    throw this.runtime.newRaiseException("builtins.TypeError",
-                            this.name + "() takes at most "
-                                    + paramClasses.length + " arguments (" + args.length + " given)");
-
-                } else {
-                    compArgs = new Object[args.length];
-                    for (int i = 0; i < args.length; i++) {
-                        Class<?> paramClass = args[i].getClass();
-                        if (paramClass.isArray()) {
-                            compArgs[i] = new PyObject[]{args[i]};
-
-                        } else {
-                            compArgs[i] = args[i];
-                        }
-                    }
+        } catch (ClassCastException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | UnsupportedOperationException e) {
+            if (e instanceof InvocationTargetException) {
+                Throwable t = ((InvocationTargetException) e).getTargetException();
+                if (t instanceof RaiseException) {
+                    throw (RaiseException) t;
                 }
             }
 
-            Object result = this.method.invoke(target, compArgs);
-            if (result == null) {
-                return this.runtime.None();
-
-            } else if (result instanceof PyObject) {
-                return (PyObject) result;
-
-            } else {
-                // FIXME Java object to Python object
-                throw new UnsupportedOperationException(
-                        "FIXME Java object to Python object !!!!!!!!");
-            }
-
-        } catch (IllegalAccessException | IllegalArgumentException e) {
-            // FIXME CPython message???
-            throw new CafeBabePyException("Not accessible method "
+            throw new CafeBabePyException("Fail invoke Java method "
                     + this.method.getDeclaringClass().getName()
                     + "#" + this.method.getName()
                     + Arrays.stream(this.method.getParameterTypes())
                     .map(Class::getName)
                     .collect(Collectors.joining(", ", " (", ")")), e);
 
-        } catch (InvocationTargetException e) {
-            Throwable targetException = e.getTargetException();
-            if (targetException instanceof RuntimeException) {
-                throw (RuntimeException) targetException;
-            }
-
-            throw new CafeBabePyException(targetException);
         }
     }
 
     @Override
     public PyObject getType() {
         return this.runtime.typeOrThrow("builtins.wrapper_descriptor", false);
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
     }
 }

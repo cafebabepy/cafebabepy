@@ -9,6 +9,8 @@ import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.PyObjectObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
 
+import java.util.LinkedHashMap;
+
 import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
@@ -22,7 +24,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
     }
 
     @DefinePyFunction(name = __call__)
-    public PyObject __call__(PyObject self, PyObject... args) {
+    public PyObject __call__(PyObject self, PyObject[] args, LinkedHashMap<String, PyObject> kwargs) {
         if (self == this) {
             if (args.length == 1) {
                 return args[0].getType();
@@ -37,7 +39,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         }
 
         PyObject object = this.runtime.getattr(self, __new__).call(self);
-        this.runtime.getattr(object, __init__).call(args);
+        this.runtime.getattr(object, __init__).call(args, kwargs);
 
         return object;
     }

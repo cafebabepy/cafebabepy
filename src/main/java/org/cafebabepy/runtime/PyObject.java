@@ -49,54 +49,7 @@ public interface PyObject {
 
     <T> T toJava(Class<T> clazz);
 
-    PyObject call();
-
-    PyObject call(PyObject arg1);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3,
-                  PyObject arg4);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3,
-                  PyObject arg4,
-                  PyObject arg5);
-
-    PyObject call(PyObject arg1,
-                  PyObject... args);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject... args);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3,
-                  PyObject... args);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3,
-                  PyObject arg4,
-                  PyObject... args);
-
-    PyObject call(PyObject arg1,
-                  PyObject arg2,
-                  PyObject arg3,
-                  PyObject arg4,
-                  PyObject arg5,
-                  PyObject... args);
-
     PyObject call(PyObject... args);
 
-    PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords);
+    PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords);
 }

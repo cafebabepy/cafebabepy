@@ -110,6 +110,10 @@ public final class Python {
         return Optional.empty();
     }
 
+    public InterpretEvaluator getEvaluator() {
+        return this.evaluator;
+    }
+
     public PyObject eval(PyObject context, String input) {
         PyObject ast = this.parser.parse(input);
 
@@ -136,22 +140,26 @@ public final class Python {
         this.evaluator = new InterpretEvaluator(this);
         this.sysModules = new LinkedHashMap<>();
 
-        initializeModuleAndTypes(PySysModule.class);
-        initializeModuleAndTypes(PyBuiltinsModule.class);
-        initializeModuleAndTypes(PyAstModule.class);
-
         initializeObjects();
+
+        initializeModuleAndTypes(PyBuiltinsModule.class);
+        initializeModuleAndTypes(PySysModule.class);
+        initializeModuleAndTypes(PyAstModule.class);
     }
 
     @SuppressWarnings("unchecked")
     private void initializeModuleAndTypes(Class<? extends PyObject> moduleClass) {
         PyObject module = createType(moduleClass);
         module.initialize();
-        initializeTypes(moduleClass);
+        List<PyObject> types = createTypes(moduleClass);
+
+        for (PyObject type : types) {
+            type.initialize();
+        }
     }
 
     @SuppressWarnings("unchecked")
-    private void initializeTypes(Class<? extends PyObject> module, Class<? extends PyObject>... ignores) {
+    private List<PyObject> createTypes(Class<? extends PyObject> module, Class<? extends PyObject>... ignores) {
         Set<Class<?>> builtinsClasses;
         try {
             builtinsClasses = ReflectionUtils.getClasses(module.getPackage().getName());
@@ -160,6 +168,7 @@ public final class Python {
             throw new CafeBabePyException("Fail initialize package '" + module.getPackage().getName() + "'");
         }
 
+        List<PyObject> types = new ArrayList<>();
         Set<String> checkDuplicateTypes = new HashSet<>();
 
         BuiltinsClass:
@@ -174,17 +183,17 @@ public final class Python {
                 }
             }
 
-            Class<PyObject> clazz = (Class<PyObject>) c;
-
-            PyObject type = createType(clazz);
-            type.initialize();
-
             if (checkDuplicateTypes.contains(definePyType.name())) {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
 
+            PyObject type = createType((Class<PyObject>) c);
+            types.add(type);
+
             checkDuplicateTypes.add(definePyType.name());
         }
+
+        return types;
     }
 
     private PyObject createType(Class<? extends PyObject> clazz) {

@@ -10,6 +10,12 @@ public class PyObjectObject extends AbstractPyObjectObject {
 
     private final PyObject type;
 
+    public PyObjectObject(Python runtime) {
+        super(runtime);
+
+        this.type = null;
+    }
+
     public PyObjectObject(Python runtime, PyObject type) {
         super(runtime);
 
@@ -18,6 +24,10 @@ public class PyObjectObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
+        if (this.type == null) {
+            return this.runtime.typeOrThrow("builtins.object");
+        }
+
         return this.type;
     }
 }

@@ -9,8 +9,6 @@ import org.cafebabepy.runtime.object.java.PyJavaFunctionObject;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static org.cafebabepy.util.ProtocolNames.__call__;
-
 /**
  * Created by yotchang4s on 2017/05/30.
  */
@@ -100,8 +98,9 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
     }
 
     private void defineClassMember(Class<?> clazz) {
-        // Check duplicate
-        Set<String> defineClassMemberNamesSet = new HashSet<>();
+
+        Map<String, Method> functionMap = new HashMap<>();
+        Map<String, Map<String, Method>> defaultArgumentMap = new HashMap<>();
 
         for (Method method : clazz.getMethods()) {
             // Same class method only
@@ -110,27 +109,54 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
             }
 
             DefinePyFunction definePyFunction = method.getAnnotation(DefinePyFunction.class);
-            if (definePyFunction == null) {
-                continue;
+            if (definePyFunction != null) {
+                String functionName = definePyFunction.name();
+                if (functionMap.containsKey(functionName)) {
+                    throw new CafeBabePyException(
+                            "Duplicate function '" + functionName + "' method");
+                }
+
+                functionMap.put(definePyFunction.name(), method);
             }
 
-            if (defineClassMemberNamesSet.contains(definePyFunction.name())) {
-                throw new CafeBabePyException(
-                        "Duplicate '" + definePyFunction.name() + "' function");
+            DefinePyFunctionDefaultValue definePyFunctionDefaultValue = method.getAnnotation(DefinePyFunctionDefaultValue.class);
+            if (definePyFunctionDefaultValue != null) {
+                String methodName = definePyFunctionDefaultValue.methodName();
+                String argumentName = definePyFunctionDefaultValue.parameterName();
+
+                Map<String, Method> defineArgumentMethodMap = defaultArgumentMap.get(methodName);
+                if (defineArgumentMethodMap == null) {
+                    defineArgumentMethodMap = new HashMap<>();
+                    defaultArgumentMap.put(methodName, defineArgumentMethodMap);
+
+                } else if (defineArgumentMethodMap.containsKey(argumentName)) {
+                    throw new CafeBabePyException(
+                            "Duplicate default value '" + methodName + "." + argumentName + "' method");
+                }
+
+                defineArgumentMethodMap.put(argumentName, method);
+            }
+        }
+
+        for (Map.Entry<String, Method> entry : functionMap.entrySet()) {
+            String functionName = entry.getKey();
+            Method functionMethod = entry.getValue();
+
+            Map<String, Method> defaultValueMethodMap = defaultArgumentMap.get(functionName);
+            if (defaultValueMethodMap == null) {
+                defaultValueMethodMap = new HashMap<>();
             }
 
             PyJavaFunctionObject f = new PyJavaFunctionObject(
                     getRuntime(),
+                    functionName,
                     this,
-                    definePyFunction.name(),
-                    method);
+                    functionMethod,
+                    defaultValueMethodMap);
 
             f.initialize();
 
-            f.getScope().put(this.runtime.str(__call__), f);
             getScope().put(this.runtime.str(f.getName()), f);
-
-            defineClassMemberNamesSet.add(definePyFunction.name());
         }
     }
 }

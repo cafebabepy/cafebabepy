@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class InterpretEvaluatorTest {
 
     private void evalStdOutToResult(String input, Consumer<String> consumer) throws IOException {
-        System.out.println("========================= Test code satrt =========================");
+        System.out.println("========================= Test code start =========================");
         System.out.print(input);
         System.out.println();
         System.out.println("========================= Test code end   =========================");
@@ -934,11 +934,11 @@ public class InterpretEvaluatorTest {
         void defineMethodClass() {
             PyObject result = Python.eval(""
                     + "class T:\n"
-                    + "  def a(self):\n"
+                    + "  def abc(self):\n"
                     + "    pass\n"
-                    + "T.a");
+                    + "T.abc");
 
-            assertEquals(result.getName(), "function");
+            assertEquals(result.getName(), "abc");
 
             Python runtime = result.getRuntime();
             assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType", false));

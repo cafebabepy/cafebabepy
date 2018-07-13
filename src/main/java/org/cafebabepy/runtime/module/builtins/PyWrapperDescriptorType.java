@@ -36,12 +36,12 @@ public class PyWrapperDescriptorType extends AbstractCafeBabePyType {
     }
 
     @Override
-    public PyObject callSubstance(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         // FIXME ???
         if (args.length == 0) {
             throw this.runtime.newRaiseTypeError("descriptor '???' of 'object' object needs an argument");
         }
 
-        return super.callSubstance(args, keywords);
+        return super.call(args, keywords);
     }
 }
