@@ -52,6 +52,8 @@ public final class ProtocolNames {
     public static final String __contains__ = "__contains__";
     public static final String __code__ = "__code__";
     public static final String __dict__ = "__dict__";
+    public static final String __exit__ = "__exit__";
+    public static final String __enter__ = "__enter__";
 
     private ProtocolNames() {
     }

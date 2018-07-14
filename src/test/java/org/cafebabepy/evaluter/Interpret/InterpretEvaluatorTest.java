@@ -2,6 +2,7 @@ package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
+import org.cafebabepy.runtime.RaiseException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -14,8 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InterpretEvaluatorTest {
 
@@ -1362,6 +1362,155 @@ public class InterpretEvaluatorTest {
                     + "a(99, **{'1': 2}, **{'3': 4})", result -> {
                 assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
             });
+        }
+    }
+
+    @Nested
+    class With {
+        @Test
+        void with() throws IOException {
+            evalStdOutToResult(""
+                    + "class A:\n"
+                    + "  def __enter__(self):\n"
+                    + "    print('enter')\n"
+                    + "    return self\n"
+                    + "  def __exit__(self, ex_type, ex_value, trace):\n"
+                    + "    print('exit')\n"
+
+                    + "with A() as a:\n"
+                    + "  print('with')", result -> {
+                assertEquals(result, ""
+                        + "enter" + System.lineSeparator()
+                        + "with" + System.lineSeparator()
+                        + "exit" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void withRaise() throws IOException {
+            evalStdOutToResult(""
+                    + "class A:\n"
+                    + "  def __init__(self):\n"
+                    + "    self.a = 1\n"
+                    + "  def __enter__(self):\n"
+                    + "    print('enterA')\n"
+                    + "    return self\n"
+                    + "  def __exit__(self, ex_type, ex_value, trace):\n"
+                    + "    print('exitA')\n"
+
+                    + "class B:\n"
+                    + "  def __init__(self):\n"
+                    + "    self.b = 2\n"
+                    + "  def __enter__(self):\n"
+                    + "    print('enterB')\n"
+                    + "    return self\n"
+                    + "  def __exit__(self, ex_type, ex_value, trace):\n"
+                    + "    print('exitB')\n"
+
+                    + "try:\n"
+                    + "  with A() as a, B() as b:\n"
+                    + "    print('with')\n"
+                    + "    print(a.a)\n"
+                    + "    print(b.b)\n"
+                    + "    raise Exception(1, 2, 3)\n"
+                    + "  print('fail')\n"
+                    + "except Exception as e:\n"
+                    + "  print('exception')\n"
+                    + "  print(e.args)", result -> {
+                assertEquals(result, ""
+                        + "enterA" + System.lineSeparator()
+                        + "enterB" + System.lineSeparator()
+                        + "with" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "2" + System.lineSeparator()
+                        + "exitB" + System.lineSeparator()
+                        + "exitA" + System.lineSeparator()
+                        + "exception" + System.lineSeparator()
+                        + "(1, 2, 3)" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void withExit() throws IOException {
+            evalStdOutToResult(""
+                    + "class A:\n"
+                    + "  def __enter__(self):\n"
+                    + "    print('enter')\n"
+                    + "    return self\n"
+                    + "  def __exit__(self, ex_type, ex_value, trace):\n"
+                    + "    print(ex_type)\n"
+                    + "    print(ex_value)\n"
+
+                    + "try:\n"
+                    + "  with A():\n"
+                    + "    print('with')\n"
+                    + "    raise Exception(1, 2, 3)\n"
+                    + "  print('fail')\n"
+                    + "except Exception as e:\n"
+                    + "  print('exception')", result -> {
+                assertEquals(result, ""
+                        + "enter" + System.lineSeparator()
+                        + "with" + System.lineSeparator()
+                        + "<class 'Exception'>" + System.lineSeparator()
+                        + "(1, 2, 3)" + System.lineSeparator()
+                        + "exception" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void withNotFoundEnter() {
+            try {
+                Python.eval(""
+                        + "class A:\n"
+                        + "  def __enter__(self):\n"
+                        + "    pass\n"
+
+                        + "with A() as a:\n"
+                        + "  print('with')");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                Python runtime = e.getException().getRuntime();
+                assertEquals(e.getException().getType(), runtime.typeOrThrow("AttributeError"));
+            }
+        }
+
+        @Test
+        void withNotFoundExit() {
+            try {
+                Python.eval(""
+                        + "class A:\n"
+                        + "  def __exit__(self, ex_type, ex_value, trace):\n"
+                        + "    pass\n"
+
+                        + "with A() as a:\n"
+                        + "  print('with')");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                Python runtime = e.getException().getRuntime();
+                assertEquals(e.getException().getType(), runtime.typeOrThrow("AttributeError"));
+            }
+        }
+
+        @Test
+        void withNotFountEnterAndExit() {
+            try {
+                Python.eval(""
+                        + "class A:\n"
+                        + "  pass\n"
+
+                        + "with A() as a:\n"
+                        + "  print('with')");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                Python runtime = e.getException().getRuntime();
+                assertEquals(e.getException().getType(), runtime.typeOrThrow("AttributeError"));
+            }
         }
     }
 

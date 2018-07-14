@@ -95,11 +95,7 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        PyObject[] newArgs = new PyObject[args.length + 1];
-        System.arraycopy(args, 0, newArgs, 1, args.length);
-        newArgs[0] = this;
-
-        return this.runtime.getattr(this, __call__).call(newArgs);
+        return this.runtime.getattr(this, __call__).call(args);
     }
 
     @Override

@@ -625,6 +625,35 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitWith_stmt(PythonParser.With_stmtContext ctx) {
+        List<PythonParser.With_itemContext> withItemsContextList = ctx.with_item();
+
+        List<PyObject> withItemList = new ArrayList<>(withItemsContextList.size());
+
+        for (int i = 0; i < withItemsContextList.size(); i++) {
+            PyObject withItem = withItemsContextList.get(i).accept(this);
+
+            withItemList.add(withItem);
+        }
+
+        PyObject withItems = this.runtime.list(withItemList);
+        PyObject withSuite = ctx.suite().accept(this);
+
+        return this.runtime.newPyObject("_ast.With", withItems, withSuite);
+    }
+
+    @Override
+    public PyObject visitWith_item(PythonParser.With_itemContext ctx) {
+        PyObject context_expr = ctx.test().accept(this);
+        PyObject optional_vars = this.runtime.None();
+        if (ctx.expr() != null) {
+            optional_vars = ctx.expr().accept(this);
+        }
+
+        return this.runtime.newPyObject("_ast.withitem", context_expr, optional_vars);
+    }
+
+    @Override
     public PyObject visitExcept_clause(PythonParser.Except_clauseContext ctx) {
         PyObject type = this.runtime.None();
         PyObject name = this.runtime.None();

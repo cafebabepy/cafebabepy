@@ -23,6 +23,11 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject callImpl(PyObject context) {
-        return this.runtime.getEvaluator().eval(this.context, body);
+        try {
+            return this.runtime.getEvaluator().eval(this.context, body);
+
+        } catch (InterpretReturn e) {
+            return e.getValue();
+        }
     }
 }

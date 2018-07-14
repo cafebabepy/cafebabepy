@@ -817,12 +817,16 @@ public final class Python {
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
-        PyObject exception = newPyObject(exceptionType, str(message));
+        return newRaiseException(exceptionType, new PyObject[]{str(message)});
+    }
+
+    public RaiseException newRaiseException(String exceptionType, PyObject[] args) {
+        PyObject exception = newPyObject(exceptionType, args);
         if (!exception.isException()) {
             throw new CafeBabePyException("'" + exception.getFullName() + "' is not exception");
         }
 
-        return new RaiseException(exception, message);
+        return new RaiseException(exception);
     }
 
     public RaiseException newRaiseException(PyObject exception) {
