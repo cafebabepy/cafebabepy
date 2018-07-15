@@ -20,12 +20,38 @@ public class PyObjectScope {
 
     private volatile Map<PyObject, PyObject> notAppearObjectMap;
 
+    private volatile Map<String, Object> javaObjectMap;
+
     public PyObjectScope() {
         this.parent = null;
     }
 
     public PyObjectScope(PyObjectScope parent) {
         this.parent = parent;
+    }
+
+    public final void putJavaObject(String key, Object value) {
+        if (this.javaObjectMap == null) {
+            synchronized (this) {
+                if (this.javaObjectMap == null) {
+                    this.javaObjectMap = Collections.synchronizedMap(new LinkedHashMap<>());
+                }
+            }
+        }
+
+        this.javaObjectMap.put(key, value);
+    }
+
+    public final Optional<Object> getJavaObject(String key) {
+        if (this.javaObjectMap == null) {
+            synchronized (this) {
+                if (this.javaObjectMap == null) {
+                    return Optional.empty();
+                }
+            }
+        }
+
+        return Optional.ofNullable(this.javaObjectMap.get(key));
     }
 
     public final void put(PyObjectScope scope) {

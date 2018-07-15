@@ -1,7 +1,5 @@
 package org.cafebabepy.runtime.module.builtins;
 
-import org.cafebabepy.evaluter.Interpret.InterpretReturn;
-import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -43,16 +41,9 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
         scope.getScope().put(this.runtime.str("self"), self);
         scope.getScope().put(this.runtime.str("klass"), klass);
 
-        try {
-            this.runtime.eval(scope, ""
-                    + "def newfunc(*args):\n"
-                    + "  return self.f(klass, *args)\n"
-                    + "return newfunc");
-
-        } catch (InterpretReturn e) {
-            return e.getValue();
-        }
-
-        throw new CafeBabePyException("Return value is not found");
+        return this.runtime.eval(scope, ""
+                + "def newfunc(*args):\n"
+                + "  return self.f(klass, *args)\n"
+                + "newfunc");
     }
 }

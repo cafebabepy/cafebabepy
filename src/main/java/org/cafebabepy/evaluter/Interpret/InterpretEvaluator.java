@@ -106,6 +106,12 @@ public class InterpretEvaluator {
             case "Pass":
                 return evalPass(context, node);
 
+            case "Break":
+                return evalBreak(context, node);
+
+            case "Continue":
+                return evalContinue(context, node);
+
             case "Assign":
                 return evalAssign(context, node);
 
@@ -459,12 +465,21 @@ public class InterpretEvaluator {
         PyObject orelse = this.runtime.getattr(node, "orelse");
 
         PyObject evalIter = eval(context, iter);
-        this.runtime.iter(evalIter, next -> {
-            assign(context, target, next);
-            eval(context, body);
-        });
 
-        eval(context, orelse);
+        try {
+            this.runtime.iter(evalIter, next -> {
+                assign(context, target, next);
+                try {
+                    eval(context, body);
+
+                } catch (InterpretContinue ignore) {
+                }
+            });
+
+            eval(context, orelse);
+
+        } catch (InterpretBreak ignore) {
+        }
 
         return this.runtime.None();
     }
@@ -562,6 +577,14 @@ public class InterpretEvaluator {
 
     private PyObject evalPass(PyObject context, PyObject node) {
         return this.runtime.None();
+    }
+
+    private PyObject evalBreak(PyObject context, PyObject node) {
+        throw new InterpretBreak();
+    }
+
+    private PyObject evalContinue(PyObject context, PyObject node) {
+        throw new InterpretContinue();
     }
 
     private PyObject evalAssign(PyObject context, PyObject node) {

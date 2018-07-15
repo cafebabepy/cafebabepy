@@ -787,6 +787,37 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void forBreak() throws IOException {
+            evalStdOutToResult(""
+                    + "for x in range(5):\n"
+                    + "  if x == 3:\n"
+                    + "    break\n"
+                    + "  print(x)", result -> {
+                assertEquals(result, ""
+                        + "0" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "2" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
+        void forContinue() throws IOException {
+            evalStdOutToResult(""
+                    + "for i in range(5):\n"
+                    + "  if i == 2:\n"
+                    + "    continue\n"
+                    + "  print(i)", result -> {
+                assertEquals(result, ""
+                        + "0" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "3" + System.lineSeparator()
+                        + "4" + System.lineSeparator()
+                );
+            });
+        }
+
+        @Test
         void forStmtUnpack1() throws IOException {
             evalStdOutToResult(""
                             + "for x, y in [(1, 2), (3, 4)]:\n"
@@ -798,6 +829,31 @@ public class InterpretEvaluatorTest {
                                 + "2" + System.lineSeparator()
                                 + "3" + System.lineSeparator()
                                 + "4" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void forStmt2() throws IOException {
+            evalStdOutToResult(""
+                            + "list1 = [ [1,5,7], [10,3, 4], [6, 8, 5]]\n"
+
+                            + "for list1_item in list1:\n"
+                            + "  for item in list1_item:\n"
+                            + "    print(item)\n"
+                            + "    if(item >= 10):\n"
+                            + "      print('over 10')\n"
+                            + "      break\n"
+                            + "  else:\n"
+                            + "    continue\n"
+                            + "  break",
+                    result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "5" + System.lineSeparator()
+                                + "7" + System.lineSeparator()
+                                + "10" + System.lineSeparator()
+                                + "over 10" + System.lineSeparator()
                         );
                     });
         }
@@ -1510,6 +1566,62 @@ public class InterpretEvaluatorTest {
             } catch (RaiseException e) {
                 Python runtime = e.getException().getRuntime();
                 assertEquals(e.getException().getType(), runtime.typeOrThrow("AttributeError"));
+            }
+        }
+    }
+
+    @Nested
+    class InvalidStatement {
+        @Test
+        void invalidReturn1() {
+            try {
+                Python.eval(""
+                        + "return 1");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"), runtime.tuple(new PyObject[]{runtime.str("'return' outside function")}));
+            }
+        }
+
+        @Test
+        void invalidReturn2() {
+            try {
+                Python.eval(""
+                        + "def a():\n"
+                        + "  class T:\n"
+                        + "    return 1");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"), runtime.tuple(new PyObject[]{runtime.str("'return' outside function")}));
+            }
+        }
+
+        @Test
+        void invalidBreak() {
+            try {
+                Python.eval(""
+                        + "break");
+
+                fail("with error");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"), runtime.tuple(new PyObject[]{runtime.str("'break' outside loop")}));
             }
         }
     }

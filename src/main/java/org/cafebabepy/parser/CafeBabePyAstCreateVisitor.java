@@ -23,6 +23,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     private final Python runtime;
 
+    private boolean function;
+
+    private boolean loop;
+
     CafeBabePyAstCreateVisitor(Python runtime) {
         this.runtime = runtime;
     }
@@ -235,6 +239,11 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitFuncdef(PythonParser.FuncdefContext ctx) {
+        boolean loop = this.loop;
+        boolean function = this.function;
+        this.loop = false;
+        this.function = true;
+
         PyObject name = this.runtime.str(ctx.NAME().getText());
         PyObject args = this.runtime.None();
         PythonParser.ParametersContext parametersContext = ctx.parameters();
@@ -249,6 +258,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         if (testContext != null) {
             returns = visitTest(testContext);
         }
+
+        this.function = function;
+        this.loop = loop;
 
         return this.runtime.newPyObject("_ast.FunctionDef", name, args, body, decorator_list, returns);
     }
@@ -579,6 +591,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitFor_stmt(PythonParser.For_stmtContext ctx) {
+        boolean loop = this.loop;
+        this.loop = true;
+
         PyObject target = visitExprlist(ctx.exprlist());
         PyObject iter = visitTestlist(ctx.testlist());
         PyObject body;
@@ -589,6 +604,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         if (suiteContextList.size() == 2) {
             orelse = visitSuite(suiteContextList.get(1));
         }
+
+        this.loop = loop;
 
         return this.runtime.newPyObject("_ast.For", target, iter, body, orelse);
     }
@@ -777,7 +794,28 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitBreak_stmt(PythonParser.Break_stmtContext ctx) {
+        if (!this.loop) {
+            throw this.runtime.newRaiseException("SyntaxError", "'break' outside loop");
+        }
+
+        return this.runtime.newPyObject("_ast.Break");
+    }
+
+    @Override
+    public PyObject visitContinue_stmt(PythonParser.Continue_stmtContext ctx) {
+        if (!this.loop) {
+            throw this.runtime.newRaiseException("SyntaxError", "'continue' not properly in loop");
+        }
+
+        return this.runtime.newPyObject("_ast.Continue");
+    }
+
+    @Override
     public PyObject visitReturn_stmt(PythonParser.Return_stmtContext ctx) {
+        if (!this.function) {
+            throw this.runtime.newRaiseException("SyntaxError", "'return' outside function");
+        }
         PyObject value = this.runtime.None();
 
         PythonParser.TestlistContext testlistContext = ctx.testlist();
@@ -1389,6 +1427,11 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitClassdef(PythonParser.ClassdefContext ctx) {
+        boolean loop = this.loop;
+        boolean function = this.function;
+        this.loop = false;
+        this.function = false;
+
         PyObject name = this.runtime.str(ctx.NAME().getText());
 
         PyObject bases;
@@ -1407,6 +1450,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
         // TODO 何これ？
         PyObject decorator_list = this.runtime.list();
+
+        this.function = function;
+        this.loop = loop;
 
         return this.runtime.newPyObject("_ast.ClassDef",
                 name, bases, keywords, body, decorator_list);
