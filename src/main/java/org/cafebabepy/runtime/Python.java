@@ -148,12 +148,32 @@ public final class Python {
     }
 
     @SuppressWarnings("unchecked")
-    private void initializeModuleAndTypes(Class<? extends PyObject> moduleClass) {
-        PyObject module = createType(moduleClass);
-        module.initialize();
-        List<PyObject> types = createTypes(moduleClass);
+    private void initializeModuleAndTypes(Class<? extends PyObject>... moduleClasses) {
+        Map<Class<? extends PyObject>, PyObject> moduleMap = new LinkedHashMap<>();
+        for (Class<? extends PyObject> moduleClass : moduleClasses) {
+            PyObject module = createModuleOrType(moduleClass);
 
-        for (PyObject type : types) {
+            defineModule(module);
+            moduleMap.put(moduleClass, module);
+        }
+
+        List<PyObject> allTypes = new ArrayList<>();
+        for (Class<? extends PyObject> moduleClass : moduleClasses) {
+            PyObject module = moduleMap.get(moduleClass);
+
+            List<PyObject> types = createTypes(moduleClass);
+            for (PyObject type : types) {
+                module.getScope().put(str(type.getName()), type);
+            }
+
+            allTypes.addAll(types);
+        }
+
+        for (PyObject module : moduleMap.values()) {
+            module.initialize();
+        }
+
+        for (PyObject type : allTypes) {
             type.initialize();
         }
     }
@@ -187,7 +207,7 @@ public final class Python {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
 
-            PyObject type = createType((Class<PyObject>) c);
+            PyObject type = createModuleOrType((Class<PyObject>) c);
             types.add(type);
 
             checkDuplicateTypes.add(definePyType.name());
@@ -196,7 +216,7 @@ public final class Python {
         return types;
     }
 
-    private PyObject createType(Class<? extends PyObject> clazz) {
+    private PyObject createModuleOrType(Class<? extends PyObject> clazz) {
         try {
             Constructor<? extends PyObject> constructor = clazz.getConstructor(Python.class);
             constructor.setAccessible(true);
@@ -937,6 +957,6 @@ public final class Python {
         }
 
         throw newRaiseException("builtins.AttributeError",
-                "type object '" + cls.getName() + "' object has no attribute '" + key + "'");
+                "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'");
     }
 }

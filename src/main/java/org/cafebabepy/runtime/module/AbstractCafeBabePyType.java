@@ -21,20 +21,12 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     private String[] baseNames;
 
     protected AbstractCafeBabePyType(Python runtime) {
-        super(runtime);
+        this(runtime, true);
     }
 
     protected AbstractCafeBabePyType(Python runtime, boolean dict) {
         super(runtime, dict);
-    }
 
-    @Override
-    final String[] getBaseNames() {
-        return this.baseNames;
-    }
-
-    @Override
-    public void defineClass() {
         Class<?> clazz = getClass();
 
         DefinePyType definePyType = clazz.getAnnotation(DefinePyType.class);
@@ -55,7 +47,11 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
 
         this.module = this.runtime.moduleOrThrow(splitStr[0]);
         this.name = splitStr[1];
-        this.module.getScope().put(this.runtime.str(this.name), this, definePyType.appear());
+    }
+
+    @Override
+    final String[] getBaseNames() {
+        return this.baseNames;
     }
 
     @Override

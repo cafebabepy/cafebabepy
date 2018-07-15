@@ -148,7 +148,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void importName_ast() {
+        void importName_this() {
             PyObject result = Python.eval("" +
                     "import this\n" +
                     "this"
@@ -941,7 +941,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "abc");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("builtins.FunctionType", false));
+            assertEquals(result.getType(), runtime.typeOrThrow("function", false));
         }
 
         @Test
@@ -956,7 +956,7 @@ public class InterpretEvaluatorTest {
             assertEquals(result.getName(), "method");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("builtins.MethodType", false));
+            assertEquals(result.getType(), runtime.typeOrThrow("method", false));
         }
 
         @Test

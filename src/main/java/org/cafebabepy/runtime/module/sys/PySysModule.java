@@ -1,6 +1,6 @@
 package org.cafebabepy.runtime.module.sys;
 
-import org.cafebabepy.runtime.PyObjectProvider;
+import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
 import org.cafebabepy.runtime.module.DefinePyModule;
@@ -17,17 +17,19 @@ public class PySysModule extends AbstractCafeBabePyModule {
     }
 
     protected void defineModule() {
-        PyDictObject modules = new PyDictObject(this.runtime, this.runtime.getSysModuleMap());
-        getScope().put(this.runtime.str("modules"), modules);
 
-        this.runtime.defineModule(this);
     }
 
     @Override
     public void initialize() {
         super.initialize();
 
-        PyObjectProvider provider = () -> this.runtime.newPyObject("sys.version_info", false);
-        getScope().put(this.runtime.str("version_info"), provider);
+        PyDictObject modules = new PyDictObject(this.runtime, this.runtime.getSysModuleMap());
+        getScope().put(this.runtime.str("modules"), modules);
+
+        this.runtime.defineModule(this);
+
+        PyObject version_info = this.runtime.newPyObject("sys.version_info", false);
+        getScope().put(this.runtime.str("version_info"), version_info);
     }
 }

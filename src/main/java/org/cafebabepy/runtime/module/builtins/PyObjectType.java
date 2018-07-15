@@ -8,6 +8,8 @@ import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyDictObject;
 import org.cafebabepy.runtime.object.java.PyMappingProxyTypeObject;
 
+import java.util.Map;
+
 import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
@@ -20,20 +22,26 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         super(runtime);
     }
 
-    @DefinePyFunction(name = __init__)
-    public void __init__(PyObject self, PyObject... args) {
-        if (self.existsDict()) {
+    @Override
+    public void initialize() {
+        super.initialize();
+
+        if (existsDict()) {
             PyObject dict;
 
-            if (self.isType()) {
-                dict = new PyMappingProxyTypeObject(this.runtime, self.getScope().getsRaw());
+            if (isType()) {
+                dict = new PyMappingProxyTypeObject(this.runtime, getScope().getsRaw());
 
             } else {
-                dict = new PyDictObject(this.runtime, self.getScope().getsRaw());
+                dict = new PyDictObject(this.runtime, getScope().getsRaw());
             }
 
-            self.getScope().put(this.runtime.str(__dict__), dict);
+            getScope().put(this.runtime.str(__dict__), dict);
         }
+    }
+
+    @DefinePyFunction(name = __init__)
+    public void __init__(PyObject self, PyObject[] args, Map<String, PyObject> kwargs) {
     }
 
     @DefinePyFunction(name = __getattribute__)

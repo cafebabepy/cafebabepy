@@ -13,10 +13,10 @@ import static org.cafebabepy.util.ProtocolNames.__get__;
 /**
  * Created by yotchang4s on 2017/05/13.
  */
-@DefinePyType(name = "builtins.FunctionType", appear = false)
-public class PyFunctionTypeType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.function", appear = false)
+public class PyFunctionType extends AbstractCafeBabePyType {
 
-    public PyFunctionTypeType(Python runtime) {
+    public PyFunctionType(Python runtime) {
         super(runtime);
     }
 
@@ -24,12 +24,7 @@ public class PyFunctionTypeType extends AbstractCafeBabePyType {
     public void initialize() {
         super.initialize();
 
-        getScope().put(this.runtime.str(__code__), this.runtime.typeOrThrow("builtins.CodeType", false));
-    }
-
-    @Override
-    public String getName() {
-        return "function";
+        getScope().put(this.runtime.str(__code__), this.runtime.typeOrThrow("builtins.code", false));
     }
 
     @DefinePyFunction(name = __get__)
@@ -41,11 +36,11 @@ public class PyFunctionTypeType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("expected at most 2 arguments, got " + args.length);
         }
 
-        if(args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
+        if (args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
             return self;
         }
 
-        //return this.runtime.newPyObject("builtins.MethodType", self, args[0]);
+        //return this.runtime.newPyObject("method", self, args[0]);
         return new PyMethodTypeObject(this.runtime, self, args[0]);
     }
 }

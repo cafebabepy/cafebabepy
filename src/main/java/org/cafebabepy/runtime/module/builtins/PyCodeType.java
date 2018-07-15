@@ -7,16 +7,11 @@ import org.cafebabepy.runtime.module.DefinePyType;
 /**
  * Created by yotchang4s on 2018/05/18.
  */
-@DefinePyType(name = "builtins.CodeType", appear = false)
-public class PyCodeTypeType extends AbstractCafeBabePyType {
+@DefinePyType(name = "builtins.code", appear = false)
+public class PyCodeType extends AbstractCafeBabePyType {
 
     // FIXME code is unknown
-    public PyCodeTypeType(Python runtime) {
+    public PyCodeType(Python runtime) {
         super(runtime, false);
-    }
-
-    @Override
-    public String getName() {
-        return "code";
     }
 }

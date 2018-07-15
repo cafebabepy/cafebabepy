@@ -64,7 +64,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
     public PyObject __getattribute__(PyObject cls, PyObject key) {
         return this.runtime.builtins_type__getattribute__(cls, key).orElseThrow(() ->
                 this.runtime.newRaiseException("builtins.AttributeError",
-                        "type object '" + cls.getName() + "' object has no attribute '" + key + "'")
+                        "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'")
         );
     }
 }

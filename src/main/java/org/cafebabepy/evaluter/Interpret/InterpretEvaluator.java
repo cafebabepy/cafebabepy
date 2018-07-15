@@ -628,7 +628,7 @@ public class InterpretEvaluator {
             setattrOpt.get().call(evalKey, evalValue);
             return;
 
-        } else if (this.runtime.isInstance(target, "FunctionType", false)) {
+        } else if (this.runtime.isInstance(target, "function", false)) {
             throw this.runtime.newRaiseTypeError("can't assign to function");
 
         } else {

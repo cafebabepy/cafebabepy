@@ -60,7 +60,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.FunctionType", false);
+        return this.runtime.typeOrThrow("function", false);
     }
 
     protected PyObject getattr(PyObject object, String key) {

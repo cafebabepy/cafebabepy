@@ -13,19 +13,11 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
 
     private final static String[] BASE_NAMES = {"builtins.ModuleType"};
 
-    protected String name;
+    protected final String name;
 
     protected AbstractCafeBabePyModule(Python runtime) {
         super(runtime);
-    }
 
-    @Override
-    final String[] getBaseNames() {
-        return BASE_NAMES;
-    }
-
-    @Override
-    public void defineClass() {
         Class<?> clazz = getClass();
 
         DefinePyModule definePyModule = clazz.getAnnotation(DefinePyModule.class);
@@ -35,11 +27,11 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
         }
 
         this.name = definePyModule.name();
-        defineModule();
     }
 
-    protected void defineModule() {
-        this.runtime.defineModule(this);
+    @Override
+    final String[] getBaseNames() {
+        return BASE_NAMES;
     }
 
     @Override
