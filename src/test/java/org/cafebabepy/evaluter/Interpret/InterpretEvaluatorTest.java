@@ -266,6 +266,132 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void fstring() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{abc}'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringSpace() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{ abc }'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringStartEndString() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'yyy{ abc }zzz'\n");
+
+            assertEquals(result.toJava(String.class), "yyytestzzz");
+        }
+
+        @Test
+        void fstringConversionR() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{ abc !r}'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringConversionS() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{ abc !s}'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringDouble() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "xyz = 10\n"
+                    + "f'{abc:<{xyz}}'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringConversionA() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{ abc !a}'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringFormatSpec() {
+            PyObject result = Python.eval(""
+                    + "abc = 'test'\n"
+                    + "f'{ abc !s:>10 }'\n");
+
+            assertEquals(result.toJava(String.class), "test");
+        }
+
+        @Test
+        void fstringException1() {
+            try {
+                Python.eval(""
+                        + "abc = 'test'\n"
+                        + "f'{abc!s :>}'\n");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"),
+                        runtime.tuple(new PyObject[]{runtime.str("f-string: expecting '}'")}));
+            }
+        }
+
+        @Test
+        void fstringException2() {
+            try {
+                PyObject result = Python.eval(""
+                        + "abc = 'test'\n"
+                        + "f'{ abc !:>10 }'\n");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"),
+                        runtime.tuple(new PyObject[]{runtime.str(
+                                "f-string: invalid conversion character: expected 's', 'r', or 'a'")}));
+            }
+        }
+
+        @Test
+        void fstringException3() {
+            try {
+                PyObject result = Python.eval(""
+                        + "abc = 'test'\n"
+                        + "f'{ abc !}'\n");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"),
+                        runtime.tuple(new PyObject[]{runtime.str(
+                                "f-string: invalid conversion character: expected 's', 'r', or 'a'")}));
+            }
+        }
+
+        @Test
         void list() {
             PyObject result = Python.eval("[1, 2]");
 

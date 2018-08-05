@@ -1,6 +1,6 @@
 package org.cafebabepy.parser;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.cafebabepy.parser.antlr.PythonParser;
@@ -10,10 +10,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by yotchang4s on 2017/05/29.
@@ -1090,18 +1087,35 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
         List<PythonParser.StrContext> strContextList = ctx.str();
         if (!strContextList.isEmpty()) {
-            PyObject str;
-            if (strContextList.size() == 1) {
-                str = visitStr(strContextList.get(0));
+            PyObject str = visitStr(strContextList.get(0));
+            for (int i = 1; i < strContextList.size(); i++) {
+                PyObject newStr = visitStr(strContextList.get(i));
+                if (this.runtime.isInstance(newStr, "_ast.JoinedStr")) {
+                    List<PyObject> joinedStrList = new ArrayList<>(visitStr(strContextList.get(i)).toJava(List.class));
+                    PyObject joinedLastStr = joinedStrList.get(joinedStrList.size() - 1);
 
-            } else {
-                str = visitStr(strContextList.get(0));
-                for (int i = 1; i < strContextList.size(); i++) {
-                    str = this.runtime.add(str, visitStr(strContextList.get(i)));
+                    if (this.runtime.isInstance(newStr, "_ast.Str") && this.runtime.isInstance(joinedLastStr, "_ast.Str")) {
+                        PyObject joinedStrStr = addASTStr(newStr, joinedLastStr);
+
+                        if (joinedStrList.isEmpty()) {
+                            joinedStrList.add(joinedStrStr);
+
+                        } else {
+                            joinedStrList.set(joinedStrList.size() - 1, joinedStrStr);
+                        }
+
+                    } else {
+                        joinedStrList.add(newStr);
+                    }
+
+                    str.getScope().put(this.runtime.str("values"), this.runtime.list(joinedStrList));
+
+                } else {
+                    str = addASTStr(str, newStr);
                 }
             }
 
-            return this.runtime.newPyObject("_ast.Str", str);
+            return str;
         }
 
         String open = ctx.getChild(0).getText();
@@ -1178,6 +1192,22 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         return super.visitAtom(ctx);
+    }
+
+    private PyObject addASTStr(PyObject str1, PyObject str2) {
+        String javaStr = "";
+
+        Optional<PyObject> str1Opt = str1.getScope().get(this.runtime.str("s"));
+        if (str1Opt.isPresent()) {
+            javaStr += str1Opt.get().toJava(String.class);
+        }
+
+        Optional<PyObject> str2Opt = str2.getScope().get(this.runtime.str("s"));
+        if (str2Opt.isPresent()) {
+            javaStr += str2Opt.get().toJava(String.class);
+        }
+
+        return this.runtime.newPyObject("_ast.Str", this.runtime.str(javaStr));
     }
 
     @Override
@@ -1613,18 +1643,140 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitStr(PythonParser.StrContext ctx) {
-        String rawString = ctx.STRING_LITERAL().getSymbol().getText();
-
+        String rawString = ctx.STRING_LITERAL().getText();
         String str;
-        if (rawString.indexOf("\"\"\"") == 0) {
+
+        boolean fstring = false;
+
+        int tripleDoubleIndex = rawString.indexOf("\"\"\"");
+        if (tripleDoubleIndex == 1) {
+            fstring = (rawString.charAt(0) == 'f');
+            str = rawString.substring(4, rawString.length() - 3);
+
+        } else if (tripleDoubleIndex == 0) {
             str = rawString.substring(3, rawString.length() - 3);
 
         } else {
-            str = rawString.substring(1, rawString.length() - 1);
+            int tripleSingleIndex = rawString.indexOf("'''");
+            if (tripleSingleIndex == 1) {
+                fstring = (rawString.charAt(0) == 'f');
+                str = rawString.substring(4, rawString.length() - 3);
+
+            } else if (tripleSingleIndex == 0) {
+                str = rawString.substring(3, rawString.length() - 3);
+
+            } else {
+                fstring = (rawString.charAt(0) == 'f');
+                if (fstring) {
+                    str = rawString.substring(2, rawString.length() - 1);
+
+                } else {
+                    str = rawString.substring(1, rawString.length() - 1);
+                }
+            }
         }
 
-        // TODO prefix
+        if (fstring) {
+            return fstring(str, 0);
 
-        return this.runtime.str(str);
+        } else {
+            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
+        }
+    }
+
+    // FIXME move compile
+    private PyObject fstring(String fstring, int depth) {
+        if (depth >= 2) {
+            throw this.runtime.newRaiseException("SyntaxError", "f-string: expressions nested too deeply");
+        }
+
+        List<PyObject> joinStr = new ArrayList<>();
+
+        int startIndex = fstring.indexOf('{');
+        int endIndex = fstring.lastIndexOf('}');
+        if (startIndex == -1 && endIndex == -1) {
+            return this.runtime.newPyObject("_ast.Str", this.runtime.str(fstring));
+
+        } else if ((startIndex != -1 && endIndex == -1)) {
+            throw this.runtime.newRaiseException("SyntaxError", "f-string: expecting '}'");
+
+        } else if (startIndex == -1 && endIndex != -1) {
+            throw this.runtime.newRaiseException("SyntaxError", "single '}' is not allowed");
+        }
+
+        if (startIndex > 0) {
+            PyObject str = this.runtime.str(fstring.substring(0, startIndex));
+            PyObject startStr = this.runtime.newPyObject("_ast.Str", str);
+
+            joinStr.add(startStr);
+        }
+
+        String replacementField = fstring.substring(startIndex + 1, endIndex);
+        if (replacementField.isEmpty()) {
+            throw this.runtime.newRaiseException("SyntaxError", "f-string: empty expression not allowed");
+        }
+
+        int conversion = -1;
+        int formatSpecIndex = replacementField.indexOf(':');
+
+        int conversionIndex = replacementField.indexOf('!');
+        if (conversionIndex != -1) {
+            // Example f'{a:{b!s}}' and f'{a}'
+            int secondStartIndex = replacementField.indexOf('{', formatSpecIndex);
+            if (secondStartIndex == -1) {
+                if (conversionIndex + 1 != replacementField.length()
+                        && (replacementField.charAt(conversionIndex + 1) == 's'
+                        || replacementField.charAt(conversionIndex + 1) == 'r'
+                        || replacementField.charAt(conversionIndex + 1) == 'a')) {
+
+                    // Example f'{a!s :>}'
+                    if (conversionIndex + 1 == replacementField.length()) {
+                        throw this.runtime.newRaiseException("SyntaxError", "f-string: expecting '}'");
+                    }
+                    conversion = replacementField.charAt(conversionIndex + 1);
+
+                } else {
+                    throw this.runtime.newRaiseException("SyntaxError", "f-string: invalid conversion character: expected 's', 'r', or 'a'");
+                }
+            }
+        }
+
+        String test;
+        if (conversionIndex != -1) {
+            test = replacementField.substring(0, conversionIndex);
+
+        } else if (formatSpecIndex != -1) {
+            test = replacementField.substring(0, formatSpecIndex);
+
+        } else {
+            test = replacementField.substring(0, endIndex - startIndex - 1);
+        }
+
+        CodePointCharStream stream = CharStreams.fromString(test);
+        CafeBabePyLexer lexer = new CafeBabePyLexer(stream);
+        TokenStream tokens = new CommonTokenStream(lexer);
+        CafeBabePyParser parser = new CafeBabePyParser(tokens);
+        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime);
+
+        PyObject value = creator.visit(parser.or_test());
+
+        PyObject formatSpec = this.runtime.None();
+
+        if (formatSpecIndex != -1) {
+            formatSpec = fstring(replacementField.substring(formatSpecIndex + 1), depth + 1);
+        }
+
+        PyObject formattedValue = this.runtime.newPyObject("_ast.FormattedValue", value, this.runtime.number(conversion), formatSpec);
+        joinStr.add(formattedValue);
+
+        // Example f'{a} {b}c'
+        if ((endIndex + 2) <= fstring.length()) {
+            String endString = fstring.substring(endIndex + 1);
+            if (!fstring.equals(endString)) {
+                joinStr.add(fstring(endString, 0));
+            }
+        }
+
+        return this.runtime.newPyObject("_ast.JoinedStr", this.runtime.list(joinStr));
     }
 }

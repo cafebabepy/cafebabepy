@@ -6,9 +6,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
 import org.cafebabepy.runtime.object.iterator.PyStrIteratorObject;
-import org.cafebabepy.runtime.object.java.PyListObject;
 import org.cafebabepy.runtime.object.java.PyStrObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;
@@ -59,6 +57,19 @@ public final class PyStrType extends AbstractCafeBabePyType {
         }
 
         return new PyStrIteratorObject(this.runtime, (PyStrObject) self);
+    }
+
+    @DefinePyFunction(name = __format__)
+    public PyObject __format__(PyObject self, PyObject format_spec) {
+        if (!this.runtime.isInstance(self, "str")) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__format__' requires a 'str' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        // TODO format
+        return self;
     }
 
     @DefinePyFunction(name = __eq__)

@@ -157,6 +157,12 @@ public class InterpretEvaluator {
             case "Str":
                 return evalStr(context, node);
 
+            case "FormattedValue":
+                return evalFormattedValue(context, node);
+
+            case "JoinedStr":
+                return evalJoinedStr(context, node);
+
             case "Attribute":
                 return evalAttribute(context, node);
 
@@ -1043,6 +1049,26 @@ public class InterpretEvaluator {
 
     private PyObject evalStr(PyObject context, PyObject node) {
         return this.runtime.getattr(node, "s");
+    }
+
+    private PyObject evalFormattedValue(PyObject context, PyObject node) {
+        PyObject value = this.runtime.getattr(node, "value");
+        PyObject conversion = this.runtime.getattr(node, "conversion");
+        PyObject format_spec = this.runtime.getattr(node, "format_spec");
+
+        PyObject evalValue = eval(context, value);
+        // FIXME conversion
+
+        return this.runtime.getattr(evalValue, __format__).call(format_spec);
+    }
+
+    private PyObject evalJoinedStr(PyObject context, PyObject node) {
+        PyObject values = this.runtime.getattr(node, "values");
+
+        StringBuilder builder = new StringBuilder();
+        this.runtime.iter(values, value -> builder.append(eval(context, value).toJava(String.class)));
+
+        return this.runtime.str(builder.toString());
     }
 
     private PyObject evalAttribute(PyObject context, PyObject node) {

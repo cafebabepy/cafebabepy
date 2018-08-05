@@ -21,7 +21,7 @@ public class PyStrObject extends AbstractPyObjectObject {
         return this.value;
     }
 
-    public PyStrObject add(PyStrObject str) {
+    public PyObject add(PyStrObject str) {
         return this.runtime.str(this.value + str.value);
     }
 

@@ -264,11 +264,18 @@ public final class Python {
         }
     }
 
-    public PyStrObject str(String value) {
+    public PyObject str(String value) {
         PyStrObject object = new PyStrObject(this, value);
         object.initialize();
 
         return object;
+    }
+
+    public PyObject format(PyObject value, String formatSpecOpt) {
+        // FIXME not dict
+        PyObject format = getattr(type(value), __format__);
+
+        return format.call(value, str(formatSpecOpt));
     }
 
     public PyIntObject number(int value) {
