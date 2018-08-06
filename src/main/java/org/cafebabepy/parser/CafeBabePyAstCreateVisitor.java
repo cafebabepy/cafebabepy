@@ -1524,6 +1524,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             }
         }
 
+        boolean generator = false;
+        for (PyObject argument : argumentArray) {
+            if (generator) {
+                throw this.runtime.newRaiseException("SyntaxError", "Generator expression must be parenthesized");
+            }
+            if (this.runtime.isInstance(argument, "_ast.GeneratorExp")) {
+                generator = true;
+            }
+        }
+
         return this.runtime.list(argumentArray);
     }
 
@@ -1532,8 +1542,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject argument;
         if (ctx.test().size() == 1) {
             if (ctx.comp_for() != null) {
-                // FIXME for
-                throw new CafeBabePyException("Not implement");
+                PyObject elt = ctx.test().get(0).accept(this);
+                PyObject generators = ctx.comp_for().accept(this);
+
+                return this.runtime.newPyObject("_ast.GeneratorExp", elt, generators);
 
             } else {
                 String text = ctx.getChild(0).getText();

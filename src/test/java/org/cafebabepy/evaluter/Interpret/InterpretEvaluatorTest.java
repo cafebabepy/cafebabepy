@@ -1545,6 +1545,70 @@ public class InterpretEvaluatorTest {
                 assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
             });
         }
+
+        @Test
+        void functionCallDouble() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b, **kwargs):\n"
+                    + "  print(b)\n"
+                    + "  print(kwargs)\n"
+                    + "a(99, **{'1': 2}, **{'3': 4})", result -> {
+                assertEquals(result, "99" + System.lineSeparator() + "{'1': 2, '3': 4}" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionArgumentFor1() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(b):\n"
+                    + "  for x in b:\n"
+                    + "    print(x)\n"
+                    + "a(x for x in range(5))", result -> {
+                assertEquals(result, ""
+                        + "0" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "2" + System.lineSeparator()
+                        + "3" + System.lineSeparator()
+                        + "4" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionArgumentFor2() throws IOException {
+            evalStdOutToResult(""
+                    + "b = 1\n"
+                    + "def a(b):\n"
+                    + "  for x in b:\n"
+                    + "    print(x)\n"
+                    + "a(b for x in range(5))", result -> {
+                assertEquals(result, ""
+                        + "1" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "1" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void functionArgumentForException() throws IOException {
+            try {
+                Python.eval(""
+                        + "def a(b, c):\n"
+                        + "  for x in b:\n"
+                        + "    print(x)\n"
+                        + "    print(c)\n"
+                        + "a(x for x in range(5), 10)");
+
+            } catch (RaiseException e) {
+                PyObject exception = e.getException();
+                Python runtime = exception.getRuntime();
+
+                assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
+                assertEquals(runtime.getattr(exception, "args"),
+                        runtime.tuple(new PyObject[]{runtime.str("Generator expression must be parenthesized")}));
+            }
+        }
     }
 
     @Nested
