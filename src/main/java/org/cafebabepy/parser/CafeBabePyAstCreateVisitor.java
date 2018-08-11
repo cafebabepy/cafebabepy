@@ -344,7 +344,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             } else if (",".equals(text)) {
                 if (i < ctx.getChildCount() - 1) { // last comma
-                    if (defineDefaultArgument && !defaultArgument) {
+                    if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument) {
                         throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
                     }
                     argument = true;
@@ -362,7 +362,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             beforeText = text;
         }
 
-        if (defineDefaultArgument && !defaultArgument) {
+        if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument) {
             throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
         }
 
