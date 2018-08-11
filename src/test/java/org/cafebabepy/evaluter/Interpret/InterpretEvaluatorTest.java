@@ -150,8 +150,8 @@ public class InterpretEvaluatorTest {
         @Test
         void importName_this() {
             PyObject result = Python.eval("" +
-                    "import this\n" +
-                    "this"
+                    "import csv\n" +
+                    "ast"
             );
 
             Python runtime = result.getRuntime();
@@ -234,14 +234,14 @@ public class InterpretEvaluatorTest {
         void integer() {
             PyObject result = Python.eval("99");
 
-            assertEquals((int) result.toJava(Integer.class), 99);
+            assertEquals((int) result.toJava(int.class), 99);
         }
 
         @Test
         void integer16() {
             PyObject result = Python.eval("0x99");
 
-            assertEquals((int) result.toJava(Integer.class), 0x99);
+            assertEquals((int) result.toJava(int.class), 0x99);
         }
 
         @Test
