@@ -1818,7 +1818,13 @@ public class InterpretEvaluatorTest {
                 Python runtime = exception.getRuntime();
 
                 assertEquals(exception.getType(), runtime.typeOrThrow("SyntaxError"));
-                assertEquals(runtime.getattr(exception, "args"), runtime.tuple(new PyObject[]{runtime.str("'break' outside loop")}));
+                assertEquals(runtime.getattr(exception, "args"),
+                        runtime.tuple(
+                                runtime.str("'break' outside loop"),
+                                runtime.str("<string>"),
+                                runtime.number(1),
+                                runtime.number(0),
+                                runtime.str("break")));
             }
         }
     }

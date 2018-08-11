@@ -62,7 +62,7 @@ public final class Python {
     public static PyObject eval(String input) {
         Python runtime = Python.createRuntime();
 
-        PyObject ast = runtime.parser.parse(input);
+        PyObject ast = runtime.parser.parse("<string>",input);
 
         return runtime.evaluator.eval(runtime.getMainModule(), ast);
     }
@@ -114,8 +114,8 @@ public final class Python {
         return this.evaluator;
     }
 
-    public PyObject eval(PyObject context, String input) {
-        PyObject ast = this.parser.parse(input);
+    public PyObject eval(PyObject context, String file, String input) {
+        PyObject ast = this.parser.parse(file, input);
 
         return this.evaluator.eval(context, ast);
     }

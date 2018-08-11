@@ -15,14 +15,14 @@ abstract class AbstractParser implements Parser {
     }
 
     @Override
-    public PyObject parse(String input) throws RaiseException {
+    public PyObject parse(String file, String input) throws RaiseException {
         CodePointCharStream stream = CharStreams.fromString(input);
 
         CafeBabePyLexer lexer = new CafeBabePyLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         CafeBabePyParser parser = new CafeBabePyParser(tokens);
 
-        ANTLRErrorStrategy errorHandler = new CafeBabePyErrorStrategy(this.runtime);
+        ANTLRErrorStrategy errorHandler = new CafeBabePyErrorStrategy(this.runtime, file, input);
         parser.setErrorHandler(errorHandler);
 
         Optional<ParserRuleContext> rootContext = parse(input, lexer, parser);
@@ -30,7 +30,7 @@ abstract class AbstractParser implements Parser {
             return this.runtime.None();
         }
 
-        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime);
+        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime, file, input);
         return creator.visit(rootContext.get());
     }
 

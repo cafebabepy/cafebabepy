@@ -134,7 +134,7 @@ class ImportManager {
         File initFile = new File(baseFile, initPath);
 
         try (InputStream in = new FileInputStream(initFile)) {
-            return loadModuleFromInputStream(moduleName, in);
+            return loadModuleFromInputStream(moduleName, initFile.getAbsolutePath(), in);
 
         } catch (FileNotFoundException e) {
             // Nothing
@@ -145,7 +145,7 @@ class ImportManager {
         File file = new File(baseFile, pyPath);
 
         try (InputStream in = new FileInputStream(file)) {
-            return loadModuleFromInputStream(moduleName, in);
+            return loadModuleFromInputStream(moduleName, file.getAbsolutePath(), in);
 
         } catch (FileNotFoundException e) {
             // Nothing
@@ -168,19 +168,23 @@ class ImportManager {
 
         InputStream in;
 
+        String file = path + "/__init.__.py";
+
         // __init__.py
-        in = classLoader.getResourceAsStream(path + "/__init.__.py");
+        in = classLoader.getResourceAsStream(file);
         if (in != null) {
             try (InputStream tmpIn = in) {
-                return loadModuleFromInputStream(moduleName, tmpIn);
+                return loadModuleFromInputStream(file, moduleName, tmpIn);
             }
         }
 
+        file = path + ".py";
+
         // module.py
-        in = classLoader.getResourceAsStream(path + ".py");
+        in = classLoader.getResourceAsStream(file);
         if (in != null) {
             try (InputStream tmpIn = in) {
-                return loadModuleFromInputStream(moduleName, tmpIn);
+                return loadModuleFromInputStream(file, moduleName, tmpIn);
             }
         }
 
@@ -191,7 +195,7 @@ class ImportManager {
         return Optional.empty();
     }
 
-    private Optional<PyObject> loadModuleFromInputStream(String moduleName, InputStream in) throws IOException {
+    private Optional<PyObject> loadModuleFromInputStream(String file, String moduleName, InputStream in) throws IOException {
         StringBuilder builder = new StringBuilder();
 
         // TODO UTF-8固定はまずいか？
@@ -212,7 +216,7 @@ class ImportManager {
         this.runtime.setitem(modules, this.runtime.str(moduleName), module);
 
         try {
-            this.runtime.eval(module, builder.toString());
+            this.runtime.eval(module, file, builder.toString());
 
         } catch (RaiseException e) {
             this.runtime.del(modules, this.runtime.str(moduleName));

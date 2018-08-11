@@ -51,7 +51,7 @@ public class InteractiveConsole {
 
                 PyObject ast;
                 try {
-                    ast = parser.parse(buffer.toString());
+                    ast = parser.parse("<stdin>", buffer.toString());
                     if (ast.isNone()) {
                         this.status = Status.INCOMPLETE;
                         continue;

@@ -43,9 +43,6 @@ public class InteractiveParser extends AbstractParser {
         TokenStream tokens = new CommonTokenStream(lexer);
         PythonInteractiveValidateParser parser = new PythonInteractiveValidateParser(tokens);
 
-        ANTLRErrorStrategy errorHandler = new CafeBabePyErrorStrategy(this.runtime);
-        parser.setErrorHandler(errorHandler);
-
         try {
             parser.single_input();
             return true;

@@ -41,7 +41,7 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
         scope.getScope().put(this.runtime.str("self"), self);
         scope.getScope().put(this.runtime.str("klass"), klass);
 
-        return this.runtime.eval(scope, ""
+        return this.runtime.eval(scope, "<classmethod>", ""
                 + "def newfunc(*args):\n"
                 + "  return self.f(klass, *args)\n"
                 + "newfunc");

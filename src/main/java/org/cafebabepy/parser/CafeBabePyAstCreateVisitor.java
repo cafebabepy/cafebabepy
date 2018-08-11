@@ -20,12 +20,18 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     private final Python runtime;
 
+    private final String file;
+    private final String input;
+
     private boolean function;
 
     private boolean loop;
 
-    CafeBabePyAstCreateVisitor(Python runtime) {
+    CafeBabePyAstCreateVisitor(Python runtime, String file, String input) {
         this.runtime = runtime;
+
+        this.file = file;
+        this.input = input;
     }
 
     @Override
@@ -793,7 +799,18 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     @Override
     public PyObject visitBreak_stmt(PythonParser.Break_stmtContext ctx) {
         if (!this.loop) {
-            throw this.runtime.newRaiseException("SyntaxError", "'break' outside loop");
+            Token currentToken = ctx.getStop();
+            int line = currentToken.getLine();
+            int position = currentToken.getCharPositionInLine();
+
+            String lineInput = this.input.split("(\r\n|\r|\n)")[line - 1];
+
+            throw this.runtime.newRaiseException("builtins.SyntaxError",
+                    this.runtime.str("'break' outside loop"),
+                    this.runtime.str(this.file),
+                    this.runtime.number(line),
+                    this.runtime.number(position),
+                    this.runtime.str(lineInput));
         }
 
         return this.runtime.newPyObject("_ast.Break");
@@ -1771,7 +1788,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         CafeBabePyLexer lexer = new CafeBabePyLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         CafeBabePyParser parser = new CafeBabePyParser(tokens);
-        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime);
+        CafeBabePyAstCreateVisitor creator = new CafeBabePyAstCreateVisitor(this.runtime, this.file, this.input);
 
         PyObject value = creator.visit(parser.or_test());
 
