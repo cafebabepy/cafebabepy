@@ -245,6 +245,13 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void float_() {
+            PyObject result = Python.eval("10.999");
+
+            assertEquals((float) result.toJava(float.class), 10.999f);
+        }
+
+        @Test
         void stringSingleQuote() {
             PyObject result = Python.eval("'abc'");
 

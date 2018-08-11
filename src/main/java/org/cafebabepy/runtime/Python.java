@@ -278,8 +278,17 @@ public final class Python {
         return format.call(value, str(formatSpecOpt));
     }
 
+    // FIXME int over max value
     public PyIntObject number(int value) {
         PyIntObject object = new PyIntObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
+    // FIXME float over max value
+    public PyFloatObject number(float value) {
+        PyFloatObject object = new PyFloatObject(this, value);
         object.initialize();
 
         return object;

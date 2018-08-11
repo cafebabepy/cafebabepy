@@ -1646,6 +1646,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         if (text.startsWith("0x")) {
             number = this.runtime.number(Integer.decode(text));
 
+        } else if (text.contains(".")) {
+            number = this.runtime.number(Float.parseFloat(text));
+
         } else {
             number = this.runtime.number(Integer.parseInt(text));
         }
