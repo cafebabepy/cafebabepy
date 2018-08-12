@@ -89,6 +89,15 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         }
     }
 
+    @DefinePyFunction(name = __repr__)
+    public PyObject __repr__(PyObject self) {
+        if (this == self) {
+            return this.runtime.getattr(this, __repr__).call();
+        }
+
+        return this.runtime.getattr(self, __repr__).call();
+    }
+
     @DefinePyFunction(name = __eq__)
     public PyObject __eq__(PyObject self, PyObject other) {
         if (self == other) {

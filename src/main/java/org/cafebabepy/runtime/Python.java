@@ -264,8 +264,25 @@ public final class Python {
         }
     }
 
+    public PyObject repr(PyObject value) {
+        PyObject str = getattr(value, __repr__);
+        if (value.isType()) {
+            return str.call(value);
+
+        } else {
+            return str.call();
+        }
+    }
+
     public PyObject str(String value) {
         PyStrObject object = new PyStrObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
+    public PyObject repr(String value) {
+        PyStrObject object = new PyStrObject(this, "'" + value + "'");
         object.initialize();
 
         return object;

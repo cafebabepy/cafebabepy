@@ -13,6 +13,7 @@ public final class ProtocolNames {
     public static final String __init__ = "__init__";
     public static final String __name__ = "__name__";
     public static final String __str__ = "__str__";
+    public static final String __repr__ = "__repr__";
     public static final String __int__ = "__int__";
     public static final String __add__ = "__add__";
     public static final String __radd__ = "__radd__";
