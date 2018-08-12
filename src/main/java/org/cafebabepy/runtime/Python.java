@@ -467,6 +467,14 @@ public final class Python {
         return typeOrThrow(typeName, appear).call(args);
     }
 
+    public PyObject newPyObject(String typeName, PyObject[] args, LinkedHashMap<String, PyObject> kwargs) {
+        return newPyObject(typeName, true, args, kwargs);
+    }
+
+    public PyObject newPyObject(String typeName, boolean appear, PyObject[] args, LinkedHashMap<String, PyObject> kwargs) {
+        return typeOrThrow(typeName, appear).call(args, kwargs);
+    }
+
     private PyObject callFunction(String name, PyObject... args) {
         String[] splitLastDot = StringUtils.splitLastDot(name);
         if (StringUtils.isEmpty(splitLastDot[0])) {
