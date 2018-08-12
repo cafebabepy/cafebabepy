@@ -159,7 +159,12 @@ public class PyJavaFunctionObject extends AbstractFunction {
                 arguments[i] = argument;
 
             } else if (Map.class.isAssignableFrom(parameter.getType())) {
-                arguments[i] = argument.toJava(LinkedHashMap.class);
+                LinkedHashMap<PyObject, PyObject> pyArgumentTmpMap = argument.toJava(LinkedHashMap.class);
+
+                LinkedHashMap<String, PyObject> argumentTmpMap = new LinkedHashMap<>();
+                pyArgumentTmpMap.forEach((k, v) -> argumentTmpMap.put(k.toJava(String.class), v));
+
+                arguments[i] = argumentTmpMap;
 
             } else if (List.class.isAssignableFrom(parameter.getType())) {
                 arguments[i] = argument.toJava(List.class);
