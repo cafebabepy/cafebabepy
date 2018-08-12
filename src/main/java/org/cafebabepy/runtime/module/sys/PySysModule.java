@@ -18,10 +18,6 @@ public class PySysModule extends AbstractCafeBabePyModule {
         super(runtime);
     }
 
-    protected void defineModule() {
-
-    }
-
     @Override
     public void initialize() {
         super.initialize();

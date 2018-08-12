@@ -1,7 +1,12 @@
 package org.cafebabepy.util;
 
+import org.cafebabepy.runtime.PyObject;
+import org.cafebabepy.runtime.Python;
+
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.Enumeration;

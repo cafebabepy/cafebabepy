@@ -150,8 +150,8 @@ public class InterpretEvaluatorTest {
         @Test
         void importName_this() {
             PyObject result = Python.eval("" +
-                    "import csv\n" +
-                    "ast"
+                    "import this\n" +
+                    "this"
             );
 
             Python runtime = result.getRuntime();

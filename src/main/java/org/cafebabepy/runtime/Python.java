@@ -62,7 +62,7 @@ public final class Python {
     public static PyObject eval(String input) {
         Python runtime = Python.createRuntime();
 
-        PyObject ast = runtime.parser.parse("<string>",input);
+        PyObject ast = runtime.parser.parse("<string>", input);
 
         return runtime.evaluator.eval(runtime.getMainModule(), ast);
     }
@@ -151,7 +151,7 @@ public final class Python {
     private void initializeModuleAndTypes(Class<? extends PyObject>... moduleClasses) {
         Map<Class<? extends PyObject>, PyObject> moduleMap = new LinkedHashMap<>();
         for (Class<? extends PyObject> moduleClass : moduleClasses) {
-            PyObject module = createModuleOrType(moduleClass);
+            PyObject module = createJavaPyObject(moduleClass);
 
             defineModule(module);
             moduleMap.put(moduleClass, module);
@@ -207,7 +207,7 @@ public final class Python {
                 throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
             }
 
-            PyObject type = createModuleOrType((Class<PyObject>) c);
+            PyObject type = createJavaPyObject((Class<PyObject>) c);
             types.add(type);
 
             checkDuplicateTypes.add(definePyType.name());
@@ -216,7 +216,7 @@ public final class Python {
         return types;
     }
 
-    private PyObject createModuleOrType(Class<? extends PyObject> clazz) {
+    public PyObject createJavaPyObject(Class<? extends PyObject> clazz) {
         try {
             Constructor<? extends PyObject> constructor = clazz.getConstructor(Python.class);
             constructor.setAccessible(true);
@@ -885,10 +885,10 @@ public final class Python {
     }
 
     public RaiseException newRaiseException(String exceptionType, String message) {
-        return newRaiseException(exceptionType, new PyObject[]{str(message)});
+        return newRaiseException(exceptionType, str(message));
     }
 
-    public RaiseException newRaiseException(String exceptionType, PyObject[] args) {
+    public RaiseException newRaiseException(String exceptionType, PyObject... args) {
         PyObject exception = newPyObject(exceptionType, args);
         if (!exception.isException()) {
             throw new CafeBabePyException("'" + exception.getFullName() + "' is not exception");
