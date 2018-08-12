@@ -60,7 +60,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
     }
 
     @Override
-    public final PyObject getModule() {
+    public PyObject getModule() {
         return this.module;
     }
 

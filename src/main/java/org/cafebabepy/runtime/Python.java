@@ -358,6 +358,13 @@ public final class Python {
         return dict(new LinkedHashMap<>());
     }
 
+    public PyObject dictStringKey(LinkedHashMap<String, PyObject> map) {
+        LinkedHashMap<PyObject, PyObject> pymap = new LinkedHashMap<>();
+        map.forEach((k, v) -> pymap.put(str(k), v));
+
+        return dict(pymap);
+    }
+
     public PyObject dict(LinkedHashMap<PyObject, PyObject> map) {
         PyDictObject object = new PyDictObject(this, map);
         object.initialize();
