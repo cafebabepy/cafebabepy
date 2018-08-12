@@ -1,16 +1,20 @@
 package org.cafebabepy.evaluter.Interpret;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
+import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.PyModuleObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Created by yotchang4s on 2018/04/28.
@@ -20,6 +24,10 @@ class ImportManager {
 
     ImportManager(Python runtime) {
         this.runtime = runtime;
+    }
+
+    void importSimple(PyObject context, PyObject name) {
+        importAsName(context, name, this.runtime.None());
     }
 
     void importAsName(PyObject context, PyObject name, PyObject asName) {
@@ -102,26 +110,60 @@ class ImportManager {
         return moduleName;
     }
 
+    @SuppressWarnings("unchecked")
     private PyObject loadModule(String moduleName) {
         try {
             Optional<PyObject> moduleOpt;
 
             moduleOpt = loadModuleFromClassPath(moduleName);
-            if (moduleOpt.isPresent()) {
-                return moduleOpt.get();
+            if (!moduleOpt.isPresent()) {
+                moduleOpt = loadModuleFromFile(moduleName);
             }
 
-            moduleOpt = loadModuleFromFile(moduleName);
             if (moduleOpt.isPresent()) {
-                return moduleOpt.get();
-            }
+                PyObject module = moduleOpt.get();
 
-            throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
+                Set<Class<?>> classes = ReflectionUtils.getClasses("org.cafebabepy.runtime.module." + moduleName);
+                Set<String> checkDuplicateTypes = new HashSet<>();
+                for (Class<?> c : classes) {
+                    DefinePyType definePyType = c.getAnnotation(DefinePyType.class);
+                    if (definePyType == null || !PyObject.class.isAssignableFrom(c)) {
+                        continue;
+                    }
+
+                    String javaObjectModuleName;
+                    String[] splitDot = StringUtils.splitDot(definePyType.name());
+                    if (splitDot.length == 1) {
+                        javaObjectModuleName = definePyType.name();
+
+                    } else {
+                        String[] moduleSplitDotArray = new String[splitDot.length - 1];
+                        System.arraycopy(splitDot, 0, moduleSplitDotArray, 0, splitDot.length - 1);
+                        javaObjectModuleName = String.join(".", moduleSplitDotArray);
+                    }
+
+                    if (!moduleName.equals(javaObjectModuleName)) {
+                        throw new CafeBabePyException("Invalid module '" + javaObjectModuleName + "'");
+                    }
+
+                    if (checkDuplicateTypes.contains(definePyType.name())) {
+                        throw new CafeBabePyException("Duplicate type '" + definePyType.name() + "'");
+                    }
+
+                    PyObject type = this.runtime.createJavaPyObject((Class<PyObject>) c);
+                    module.getScope().put(this.runtime.str(type.getName()), type);
+
+                    checkDuplicateTypes.add(definePyType.name());
+                }
+
+                return module;
+            }
 
         } catch (IOException e) {
-            e.printStackTrace();
-            throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
+            throw new CafeBabePyException("Internal Error", e);
         }
+
+        throw this.runtime.newRaiseException("builtins.ImportError", "No module named '" + moduleName + "'");
     }
 
     private Optional<PyObject> loadModuleFromFile(String moduleName) throws IOException {

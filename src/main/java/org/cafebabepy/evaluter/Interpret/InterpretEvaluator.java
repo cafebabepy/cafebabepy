@@ -185,6 +185,18 @@ public class InterpretEvaluator {
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
     }
 
+    public void importSimple(PyObject context, PyObject name) {
+        this.importManager.importSimple(context, name);
+    }
+
+    public void importAsName(PyObject context, PyObject name, PyObject asName) {
+        this.importManager.importAsName(context, name, asName);
+    }
+
+    public void importFrom(PyObject context, PyObject moduleName, PyObject names, PyObject level) {
+        this.importManager.importFrom(context, moduleName, names, level);
+    }
+
     private PyObject evalModule(PyObject context, PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
         return eval(context, body);
@@ -214,7 +226,7 @@ public class InterpretEvaluator {
             PyObject name = this.runtime.getattr(n, "name");
             PyObject asname = this.runtime.getattr(n, "asname");
 
-            this.importManager.importAsName(context, name, asname);
+            importAsName(context, name, asname);
         });
 
         return this.runtime.None();
@@ -225,7 +237,7 @@ public class InterpretEvaluator {
         PyObject names = this.runtime.getattr(node, "names");
         PyObject level = this.runtime.getattr(node, "level");
 
-        this.importManager.importFrom(context, module, names, level);
+        importFrom(context, module, names, level);
 
         return this.runtime.None();
     }
