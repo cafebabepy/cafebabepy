@@ -8,7 +8,7 @@ import org.cafebabepy.runtime.module.DefinePyType;
  * Created by yotchang4s on 2018/07/15.
  */
 @DefinePyType(name = "_ast.Break", parent = {"_ast.stmt"})
-public class PyBreakType extends AbstractCafeBabePyType {
+public class PyBreakType extends AbstractAST {
 
     public PyBreakType(Python runtime) {
         super(runtime);

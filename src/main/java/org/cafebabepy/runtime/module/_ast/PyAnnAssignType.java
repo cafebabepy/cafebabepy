@@ -2,7 +2,6 @@ package org.cafebabepy.runtime.module._ast;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 
@@ -12,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
  * Created by yotchang4s on 2017/05/29.
  */
 @DefinePyType(name = "_ast.Annassign", parent = {"_ast.stmt"})
-public class PyAnnAssignType extends AbstractCafeBabePyType {
+public class PyAnnAssignType extends AbstractAST {
 
     public PyAnnAssignType(Python runtime) {
         super(runtime);
@@ -28,5 +27,10 @@ public class PyAnnAssignType extends AbstractCafeBabePyType {
         self.getScope().put(this.runtime.str("annotation"), args[1]);
         self.getScope().put(this.runtime.str("value"), args[2]);
         self.getScope().put(this.runtime.str("simple"), args[3]);
+    }
+
+    @Override
+    String[] _fields() {
+        return new String[]{"target", "annotation", "value", "simple"};
     }
 }

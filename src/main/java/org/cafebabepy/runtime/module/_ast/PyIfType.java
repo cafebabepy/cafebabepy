@@ -2,7 +2,6 @@ package org.cafebabepy.runtime.module._ast;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 
@@ -12,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
  * Created by yotchang4s on 2017/05/29.
  */
 @DefinePyType(name = "_ast.If", parent = {"_ast.stmt"})
-public class PyIfType extends AbstractCafeBabePyType {
+public class PyIfType extends AbstractAST {
 
     public PyIfType(Python runtime) {
         super(runtime);
@@ -27,5 +26,10 @@ public class PyIfType extends AbstractCafeBabePyType {
         self.getScope().put(this.runtime.str("test"), args[0]);
         self.getScope().put(this.runtime.str("body"), args[1]);
         self.getScope().put(this.runtime.str("orelse"), args[2]);
+    }
+
+    @Override
+    String[] _fields() {
+        return new String[]{"test", "body", "orelse"};
     }
 }

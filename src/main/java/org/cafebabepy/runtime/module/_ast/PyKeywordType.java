@@ -2,7 +2,6 @@ package org.cafebabepy.runtime.module._ast;
 
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 
@@ -12,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
  * Created by yotchang4s on 2017/05/29.
  */
 @DefinePyType(name = "_ast.keyword", parent = {"_ast.AST"})
-public class PyKeywordType extends AbstractCafeBabePyType {
+public class PyKeywordType extends AbstractAST {
 
     public PyKeywordType(Python runtime) {
         super(runtime);
@@ -26,5 +25,10 @@ public class PyKeywordType extends AbstractCafeBabePyType {
 
         self.getScope().put(this.runtime.str("arg"), args[0]);
         self.getScope().put(this.runtime.str("value"), args[1]);
+    }
+
+    @Override
+    String[] _fields() {
+        return new String[]{"arg", "value"};
     }
 }

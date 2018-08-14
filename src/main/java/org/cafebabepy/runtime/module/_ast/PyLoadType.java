@@ -8,7 +8,7 @@ import org.cafebabepy.runtime.module.DefinePyType;
  * Created by yotchang4s on 2017/05/29.
  */
 @DefinePyType(name = "_ast.Load", parent = "_ast.expr_context")
-public class PyLoadType extends AbstractCafeBabePyType {
+public class PyLoadType extends AbstractAST {
 
     public PyLoadType(Python runtime) {
         super(runtime);
