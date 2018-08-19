@@ -48,7 +48,7 @@ class PyInterpretFunctionObject extends AbstractFunction {
                 return this.runtime.getEvaluator().eval(this.context, this.body);
 
             } catch (InterpretReturn e) {
-                return e.getValue();
+                return e.value;
             }
         }
     }

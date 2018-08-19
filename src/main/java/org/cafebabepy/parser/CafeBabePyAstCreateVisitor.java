@@ -23,9 +23,9 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private final String file;
     private final String input;
 
-    private boolean function;
+    private boolean inFunction;
 
-    private boolean loop;
+    private boolean inLoop;
 
     CafeBabePyAstCreateVisitor(Python runtime, String file, String input) {
         this.runtime = runtime;
@@ -242,10 +242,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitFuncdef(PythonParser.FuncdefContext ctx) {
-        boolean loop = this.loop;
-        boolean function = this.function;
-        this.loop = false;
-        this.function = true;
+        boolean loop = this.inLoop;
+        boolean function = this.inFunction;
+        this.inLoop = false;
+        this.inFunction = true;
 
         PyObject name = this.runtime.str(ctx.NAME().getText());
         PyObject args = this.runtime.None();
@@ -262,8 +262,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             returns = visitTest(testContext);
         }
 
-        this.function = function;
-        this.loop = loop;
+        this.inFunction = function;
+        this.inLoop = loop;
 
         return this.runtime.newPyObject("_ast.FunctionDef", name, args, body, decorator_list, returns);
     }
@@ -594,8 +594,8 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitFor_stmt(PythonParser.For_stmtContext ctx) {
-        boolean loop = this.loop;
-        this.loop = true;
+        boolean loop = this.inLoop;
+        this.inLoop = true;
 
         PyObject target = visitExprlist(ctx.exprlist());
         PyObject iter = visitTestlist(ctx.testlist());
@@ -608,7 +608,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             orelse = visitSuite(suiteContextList.get(1));
         }
 
-        this.loop = loop;
+        this.inLoop = loop;
 
         return this.runtime.newPyObject("_ast.For", target, iter, body, orelse);
     }
@@ -798,7 +798,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitBreak_stmt(PythonParser.Break_stmtContext ctx) {
-        if (!this.loop) {
+        if (!this.inLoop) {
             Token currentToken = ctx.getStop();
             int line = currentToken.getLine();
             int position = currentToken.getCharPositionInLine();
@@ -827,7 +827,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitReturn_stmt(PythonParser.Return_stmtContext ctx) {
-        if (!this.function) {
+        if (!this.inFunction) {
             throw this.runtime.newRaiseException("SyntaxError", "'return' outside function");
         }
         PyObject value = this.runtime.None();
@@ -1474,10 +1474,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitClassdef(PythonParser.ClassdefContext ctx) {
-        boolean loop = this.loop;
-        boolean function = this.function;
-        this.loop = false;
-        this.function = false;
+        boolean loop = this.inLoop;
+        boolean function = this.inFunction;
+        this.inLoop = false;
+        this.inFunction = false;
 
         PyObject name = this.runtime.str(ctx.NAME().getText());
 
@@ -1489,17 +1489,15 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             bases = this.runtime.list();
         }
 
-        // TODO 何これ？
         PyObject keywords = this.runtime.list();
 
         PythonParser.SuiteContext suiteContext = ctx.suite();
         PyObject body = visitSuite(suiteContext);
 
-        // TODO 何これ？
         PyObject decorator_list = this.runtime.list();
 
-        this.function = function;
-        this.loop = loop;
+        this.inFunction = function;
+        this.inLoop = loop;
 
         return this.runtime.newPyObject("_ast.ClassDef",
                 name, bases, keywords, body, decorator_list);

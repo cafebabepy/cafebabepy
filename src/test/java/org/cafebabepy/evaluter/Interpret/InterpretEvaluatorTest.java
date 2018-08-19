@@ -1598,7 +1598,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void functionArgumentForException() throws IOException {
+        void functionArgumentForException() {
             try {
                 Python.eval(""
                         + "def a(b, c):\n"
