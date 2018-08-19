@@ -1616,6 +1616,31 @@ public class InterpretEvaluatorTest {
                         runtime.tuple(new PyObject[]{runtime.str("Generator expression must be parenthesized")}));
             }
         }
+
+        @Test
+        void emptyYield() {
+            PyObject result = Python.eval(""
+                    + "def a(): yield\n"
+                    + "a()");
+
+            Python runtime = result.getRuntime();
+            assertEquals(result.getType(), runtime.typeOrThrow("generator"));
+        }
+
+        @Test
+        void generator() throws IOException {
+            evalStdOutToResult(""
+                    + "  def a(x):\n"
+                    + "    yield 1\n"
+                    + "    yield x\n"
+
+                    + "for x in a(5):\n"
+                    + "  print(x)", result -> {
+                assertEquals(result, ""
+                        + "1" + System.lineSeparator()
+                        + "5" + System.lineSeparator());
+            });
+        }
     }
 
     @Nested

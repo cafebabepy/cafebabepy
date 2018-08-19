@@ -1655,6 +1655,28 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitYield_expr(PythonParser.Yield_exprContext ctx) {
+        if (ctx.yield_arg() != null) {
+            return ctx.yield_arg().accept(this);
+        }
+
+        return this.runtime.newPyObject("_ast.Yield", this.runtime.None());
+    }
+
+    @Override
+    public PyObject visitYield_arg(PythonParser.Yield_argContext ctx) {
+        if (ctx.test() != null) {
+            PyObject value = ctx.test().accept(this);
+
+            return this.runtime.newPyObject("_ast.YieldFrom", value);
+        }
+
+        PyObject value = ctx.testlist().accept(this);
+
+        return this.runtime.newPyObject("_ast.Yield", value);
+    }
+
+    @Override
     public PyObject visitNumber(PythonParser.NumberContext ctx) {
         // TODO over jva int
         String text = ctx.getChild(0).getText();

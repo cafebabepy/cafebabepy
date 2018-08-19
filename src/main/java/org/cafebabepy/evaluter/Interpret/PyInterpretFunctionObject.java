@@ -3,6 +3,7 @@ package org.cafebabepy.evaluter.Interpret;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.internal.AbstractFunction;
+import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 
 /**
  * Created by yotchang4s on 2017/06/30.
@@ -23,11 +24,32 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject callImpl(PyObject context) {
-        try {
-            return this.runtime.getEvaluator().eval(this.context, body);
+        YieldSearcher yieldSearcher = new YieldSearcher(this.runtime);
 
-        } catch (InterpretReturn e) {
-            return e.getValue();
+        if (yieldSearcher.search(this.body)) {
+            return new PyGeneratorObject(this.runtime, s -> {
+                try {
+                    this.runtime.getEvaluator().eval(this.context, this.body);
+                    s.stop(this.runtime);
+                    return this.runtime.None(); // ignore
+
+                } catch (InterpretYield e) {
+                    return e.value;
+
+                } catch (InterpretReturn e) {
+                    s.stop(this.runtime);
+                    return this.runtime.None(); // ignore
+                }
+            });
+
+        } else {
+
+            try {
+                return this.runtime.getEvaluator().eval(this.context, this.body);
+
+            } catch (InterpretReturn e) {
+                return e.getValue();
+            }
         }
     }
 }

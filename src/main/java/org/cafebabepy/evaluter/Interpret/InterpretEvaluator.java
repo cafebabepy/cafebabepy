@@ -130,6 +130,9 @@ public class InterpretEvaluator {
             case "GeneratorExp":
                 return evalGeneratorExp(context, node);
 
+            case "Yield":
+                return evalYield(context, node);
+
             case "BinOp":
                 return evalBinOp(context, node);
 
@@ -534,6 +537,20 @@ public class InterpretEvaluator {
         List<PyObject> result = evalComp(context, node);
 
         return this.runtime.tuple(result);
+    }
+
+    private PyObject evalYield(PyObject context, PyObject node) {
+        PyObject value = this.runtime.getattr(node, "value");
+        Optional<PyObject> consumed = node.getScope().get(this.runtime.str("consumed"), false);
+        if (consumed.isPresent() && consumed.get().isTrue()) {
+            return this.runtime.None();
+        }
+
+        PyObject evalValue = eval(context, value);
+
+        node.getScope().put(this.runtime.str("consumed"), this.runtime.True(), false);
+
+        throw new InterpretYield(evalValue);
     }
 
     @SuppressWarnings("unchecked")
