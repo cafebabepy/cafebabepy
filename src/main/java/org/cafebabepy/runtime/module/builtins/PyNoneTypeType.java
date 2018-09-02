@@ -31,7 +31,7 @@ public class PyNoneTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        if (!this.runtime.isInstance(self, "builtins.NoneType", false)) {
+        if (this.runtime.isInstance(self, "builtins.NoneType", false)) {
             return this.runtime.str("None");
 
         } else {
