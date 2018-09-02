@@ -1628,14 +1628,60 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void generator() throws IOException {
+        void generator1() throws IOException {
             evalStdOutToResult(""
-                    + "  def a(x):\n"
-                    + "    yield 1\n"
-                    + "    yield x\n"
+                    + "def a(x):\n"
+                    + "  yield 1\n"
+                    + "  yield x\n"
+                    + "  return 10\n"
 
                     + "for x in a(5):\n"
+                    + "  print(x)\n"
+
+                    + "for x in a(99):\n"
                     + "  print(x)", result -> {
+                assertEquals(result, ""
+                        + "1" + System.lineSeparator()
+                        + "5" + System.lineSeparator()
+                        + "1" + System.lineSeparator()
+                        + "99" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void generator2() throws IOException {
+            evalStdOutToResult(""
+                    + "def a(x):\n"
+                    + "  yield 1\n"
+                    + "  return 10\n"
+
+                    + "x = a(10)\n"
+                    + "print(x.__next__())\n"
+                    + "try:\n"
+                    + "  x.__next__()\n"
+                    + "except Exception as e:\n"
+                    + "  print(e.value)", result -> {
+                assertEquals(result, ""
+                        + "1" + System.lineSeparator()
+                        + "10" + System.lineSeparator());
+            });
+        }
+
+        @Test
+        void generator3() throws IOException {
+            evalStdOutToResult(""
+                    + "def generate_nums():\n"
+                    + "  num = 0\n"
+                    + "  while True:\n"
+                    + "    yield num\n"
+                    + "    num = num + 1\n"
+
+                    + "nums = generate_nums()\n"
+
+                    + "for x in nums:\n"
+                    + "  print(x)\n"
+                    + "  if x > 9:\n"
+                    + "     break", result -> {
                 assertEquals(result, ""
                         + "1" + System.lineSeparator()
                         + "5" + System.lineSeparator());

@@ -31,6 +31,10 @@ public class PyGeneratorObject extends AbstractPyObjectObject {
     }
 
     public final static class YieldStopper {
+        public void stop(Python runtime, PyObject value) {
+            throw runtime.newRaiseException("builtins.StopIteration", value);
+        }
+
         public void stop(Python runtime) {
             throw runtime.newRaiseException("builtins.StopIteration");
         }

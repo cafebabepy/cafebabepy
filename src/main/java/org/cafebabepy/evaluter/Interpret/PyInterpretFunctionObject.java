@@ -5,6 +5,10 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.internal.AbstractFunction;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Created by yotchang4s on 2017/06/30.
  */
@@ -26,24 +30,51 @@ class PyInterpretFunctionObject extends AbstractFunction {
     protected PyObject callImpl(PyObject context) {
         YieldSearcher yieldSearcher = new YieldSearcher(this.runtime);
 
-        if (yieldSearcher.search(this.body)) {
+        List<PyObject> yields = yieldSearcher.get(this.body);
+        if (!yields.isEmpty()) {
+            Yielder<PyObject> yielder = new Yielder<PyObject>() {
+                @Override
+                public void run() {
+                    runtime.getEvaluator().eval(context, body);
+                }
+            };
+
+            int yieldCount = yields.size();
+            for (int i = 0; i < yieldCount; i++) {
+                this.runtime.getEvaluator().yielderMap.put(yields.get(i), yielder);
+            }
+
+            Yielder.YielderIterable<PyObject> iterable = Yielder.newIterable(yielder);
+            Iterator<PyObject> iter = iterable.iterator();
+
             return new PyGeneratorObject(this.runtime, s -> {
+                if (iter.hasNext()) {
+                    return iter.next();
+                }
+
                 try {
-                    this.runtime.getEvaluator().eval(this.context, this.body);
-                    s.stop(this.runtime);
-                    return this.runtime.None(); // ignore
+                    Optional<RuntimeException> exceptionOpt = iterable.thrownException();
+                    if (exceptionOpt.isPresent()) {
+                        RuntimeException e = exceptionOpt.get();
+                        if (e instanceof InterpretReturn) {
+                            s.stop(runtime, ((InterpretReturn) e).value);
+                            return this.runtime.None();
 
-                } catch (InterpretYield e) {
-                    return e.value;
+                        } else {
+                            throw e;
+                        }
+                    }
+                    s.stop(runtime);
+                    return runtime.None();
 
-                } catch (InterpretReturn e) {
-                    s.stop(this.runtime);
-                    return this.runtime.None(); // ignore
+                } finally {
+                    for (int i = 0; i < yieldCount; i++) {
+                        this.runtime.getEvaluator().yielderMap.remove(yields.get(i));
+                    }
                 }
             });
 
         } else {
-
             try {
                 return this.runtime.getEvaluator().eval(this.context, this.body);
 

@@ -15,15 +15,9 @@ import static org.cafebabepy.util.ProtocolNames.*;
  * Created by yotchang4s on 2017/06/09.
  */
 public class InterpretEvaluator {
-
+    final Map<PyObject, Yielder<PyObject>> yielderMap = Collections.synchronizedMap(new HashMap<>());
     private Python runtime;
-
     private ImportManager importManager;
-
-    public InterpretEvaluator(Python runtime) {
-        this.runtime = runtime;
-        this.importManager = new ImportManager(runtime);
-    }
 
     /*
     public PyObject evalMainModule(PyObject node) {
@@ -40,6 +34,11 @@ public class InterpretEvaluator {
         visit.call(self, node);
     }
     */
+
+    public InterpretEvaluator(Python runtime) {
+        this.runtime = runtime;
+        this.importManager = new ImportManager(runtime);
+    }
 
     public PyObject eval(PyObject context, PyObject node) {
         if (node.isNone()) {
@@ -541,16 +540,15 @@ public class InterpretEvaluator {
 
     private PyObject evalYield(PyObject context, PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
-        Optional<PyObject> consumed = node.getScope().get(this.runtime.str("consumed"), false);
-        if (consumed.isPresent() && consumed.get().isTrue()) {
-            return this.runtime.None();
-        }
-
         PyObject evalValue = eval(context, value);
 
-        node.getScope().put(this.runtime.str("consumed"), this.runtime.True(), false);
+        Yielder<PyObject> yielder = this.yielderMap.get(node);
+        if (yielder == null) {
+            throw new CafeBabePyException("yielder is not found");
+        }
 
-        throw new InterpretYield(evalValue);
+        yielder.yield(evalValue);
+        return this.runtime.None();
     }
 
     @SuppressWarnings("unchecked")
