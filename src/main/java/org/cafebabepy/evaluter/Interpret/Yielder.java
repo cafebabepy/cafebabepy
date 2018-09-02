@@ -37,6 +37,15 @@ public abstract class Yielder<T> {
 
                 this.queue.offer(returnValue);
 
+                synchronized (this.lock) {
+                    try {
+                        this.lock.notifyAll();
+                        this.lock.wait();
+
+                    } catch (InterruptedException ignore) {
+                    }
+                }
+
             } catch (RuntimeException e) {
                 this.thrownException = e;
             }
@@ -100,6 +109,7 @@ public abstract class Yielder<T> {
                         synchronized (context.lock) {
                             if (!context.endReceived) {
                                 try {
+                                    context.lock.notifyAll();
                                     context.lock.wait();
 
                                 } catch (InterruptedException ignore) {
@@ -133,7 +143,7 @@ public abstract class Yielder<T> {
 
         public final Optional<RuntimeException> thrownException() {
             RuntimeException e = this.context.thrownException;
-            if(e == null) {
+            if (e == null) {
                 return Optional.empty();
             }
 
