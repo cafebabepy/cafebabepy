@@ -96,6 +96,9 @@ public class InterpretEvaluator {
             case "With":
                 return evalWith(context, node);
 
+            case "While":
+                return evalWhile(context, node);
+
             case "For":
                 return evalFor(context, node);
 
@@ -212,13 +215,21 @@ public class InterpretEvaluator {
     private PyObject evalSuite(PyObject context, PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
 
-        PyObject[] result = new PyObject[1];
-        result[0] = this.runtime.None();
-        this.runtime.iter(body, b -> {
-            result[0] = eval(context, body);
-        });
+        if (this.runtime.isIterable(body)) {
+            PyObject[] result = new PyObject[1];
+            result[0] = this.runtime.None();
 
-        return result[0];
+            this.runtime.iter(body, b -> {
+                result[0] = eval(context, b);
+            });
+
+            return result[0];
+
+        } else {
+            PyObject result = eval(context, body);
+
+            return result;
+        }
     }
 
     private PyObject evalImport(PyObject context, PyObject node) {
@@ -476,6 +487,32 @@ public class InterpretEvaluator {
 
             throw new CafeBabePyException("Fail evalWith");
         }
+    }
+
+    private PyObject evalWhile(PyObject context, PyObject node) {
+        PyObject test = this.runtime.getattr(node, "test");
+        PyObject body = this.runtime.getattr(node, "body");
+        PyObject orelse = this.runtime.getattr(node, "orelse");
+
+        try {
+            while (true) {
+                PyObject evalTest = eval(context, test);
+                if (evalTest.isFalse()) {
+                    break;
+                }
+                try {
+                    eval(context, body);
+
+                } catch (InterpretContinue ignore) {
+                }
+            }
+
+            eval(context, orelse);
+
+        } catch (InterpretBreak ignore) {
+        }
+
+        return this.runtime.None();
     }
 
     private PyObject evalFor(PyObject context, PyObject node) {

@@ -1061,6 +1061,101 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
+    class While {
+        @Test
+        void whileStmt() throws IOException {
+            evalStdOutToResult(""
+                            + "a = 0\n"
+                            + "while a < 5:\n"
+                            + "  print(a)\n"
+                            + "  a = a + 1"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "0" + System.lineSeparator()
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "3" + System.lineSeparator()
+                                + "4" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void whileStmtBreak() throws IOException {
+            evalStdOutToResult(""
+                            + "while True:\n"
+                            + "  print(1)\n"
+                            + "  break\n"
+                            + "else:\n"
+                            + "  print(99)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void whileStmtContinue() throws IOException {
+            evalStdOutToResult(""
+                            + "a = 0\n"
+                            + "while a < 5:\n"
+                            + "  a = a + 1\n"
+                            + "  if a == 3:\n"
+                            + "    continue\n"
+                            + "  print(a)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "4" + System.lineSeparator()
+                                + "5" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void whileStmtElse1() throws IOException {
+            evalStdOutToResult(""
+                            + "a = 0\n"
+                            + "while a < 5:\n"
+                            + "  print(a)\n"
+                            + "  a = a + 1\n"
+                            + "else:\n"
+                            + "  print(99)\n"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "0" + System.lineSeparator()
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "3" + System.lineSeparator()
+                                + "4" + System.lineSeparator()
+                                + "99" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void whileStmtElse2() throws IOException {
+            evalStdOutToResult(""
+                            + "a = 0\n"
+                            + "try:\n"
+                            + "  while a < 5:\n"
+                            + "    print(a)\n"
+                            + "    if a == 2:\n"
+                            + "      raise Exception()\n"
+                            + "    a = a + 1\n"
+                            + "  else:\n"
+                            + "    print(99)\n"
+                            + "except Exception:\n"
+                            + "  print(9999)"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "0" + System.lineSeparator()
+                                + "1" + System.lineSeparator()
+                                + "2" + System.lineSeparator()
+                                + "9999" + System.lineSeparator());
+                    });
+        }
+    }
+
+    @Nested
     class If {
         @Test
         void ifTrue() throws IOException {
@@ -1683,8 +1778,17 @@ public class InterpretEvaluatorTest {
                     + "  if x > 9:\n"
                     + "     break", result -> {
                 assertEquals(result, ""
+                        + "0" + System.lineSeparator()
                         + "1" + System.lineSeparator()
-                        + "5" + System.lineSeparator());
+                        + "2" + System.lineSeparator()
+                        + "3" + System.lineSeparator()
+                        + "4" + System.lineSeparator()
+                        + "5" + System.lineSeparator()
+                        + "6" + System.lineSeparator()
+                        + "7" + System.lineSeparator()
+                        + "8" + System.lineSeparator()
+                        + "9" + System.lineSeparator()
+                        + "10" + System.lineSeparator());
             });
         }
     }

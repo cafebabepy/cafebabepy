@@ -139,13 +139,21 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitSimple_stmt(PythonParser.Simple_stmtContext ctx) {
-        List<PyObject> small_stmtList = new ArrayList<>();
-        for (PythonParser.Small_stmtContext small_stmtContext : ctx.small_stmt()) {
-            PyObject small_stmt = visitSmall_stmt(small_stmtContext);
-            small_stmtList.add(small_stmt);
-        }
+        List<PythonParser.Small_stmtContext> small_stmts = ctx.small_stmt();
+        if (small_stmts.size() == 1) {
+            return small_stmts.get(0).accept(this);
 
-        return this.runtime.list(small_stmtList);
+        } else {
+            List<PyObject> small_stmtList = new ArrayList<>();
+
+            int small_stmtCount = small_stmts.size();
+            for (int i = 0; i < small_stmtCount; i++) {
+                PyObject small_stmt = small_stmts.get(i).accept(this);
+                small_stmtList.add(small_stmt);
+            }
+
+            return this.runtime.list(small_stmtList);
+        }
     }
 
     @Override
@@ -593,6 +601,26 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitWhile_stmt(PythonParser.While_stmtContext ctx) {
+        boolean loop = this.inLoop;
+        this.inLoop = true;
+
+        PyObject test = ctx.test().accept(this);
+        PyObject body;
+        PyObject orelse = this.runtime.None();
+
+        List<PythonParser.SuiteContext> suiteContextList = ctx.suite();
+        body = visitSuite(suiteContextList.get(0));
+        if (suiteContextList.size() == 2) {
+            orelse = suiteContextList.get(1).accept(this);
+        }
+
+        this.inLoop = loop;
+
+        return this.runtime.newPyObject("_ast.While", test, body, orelse);
+    }
+
+    @Override
     public PyObject visitFor_stmt(PythonParser.For_stmtContext ctx) {
         boolean loop = this.inLoop;
         this.inLoop = true;
@@ -780,6 +808,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             PyObject body = visitSimple_stmt(simple_stmtContext);
 
             return this.runtime.newPyObject("_ast.Suite", body);
+
         } else {
             List<PyObject> stmtList = new ArrayList<>();
             for (PythonParser.StmtContext stmtContext : ctx.stmt()) {
