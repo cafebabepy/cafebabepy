@@ -847,8 +847,19 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitContinue_stmt(PythonParser.Continue_stmtContext ctx) {
-            throw this.runtime.newRaiseException("SyntaxError", "'continue' not properly in loop");
         if (!this.inLoop) {
+            Token currentToken = ctx.getStop();
+            int line = currentToken.getLine();
+            int position = currentToken.getCharPositionInLine();
+
+            String lineInput = this.input.split("(\r\n|\r|\n)")[line - 1];
+
+            throw this.runtime.newRaiseException("builtins.SyntaxError",
+                    this.runtime.str("'continue' not properly in loop"),
+                    this.runtime.str(this.file),
+                    this.runtime.number(line),
+                    this.runtime.number(position),
+                    this.runtime.str(lineInput));
         }
 
         return this.runtime.newPyObject("_ast.Continue");
