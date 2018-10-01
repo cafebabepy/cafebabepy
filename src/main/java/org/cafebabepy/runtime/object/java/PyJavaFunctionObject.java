@@ -57,6 +57,7 @@ public class PyJavaFunctionObject extends AbstractFunction {
             Method defaultValueMethod = defaultArgumentMap.get(parameter.getName());
             if (defaultValueMethod != null) {
                 try {
+                    // FIXME Java method to PyObject
                     defaultValue = (PyObject) defaultValueMethod.invoke(target);
                     defaultArgumentMap.remove(parameter.getName());
 
@@ -129,7 +130,7 @@ public class PyJavaFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject evalDefaultValue(PyObject defaultValue) {
-        return defaultValue.call(new PyObject[]{defaultValue}, new LinkedHashMap<>());
+        return defaultValue;
     }
 
     @Override
