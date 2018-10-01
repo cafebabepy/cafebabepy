@@ -438,10 +438,8 @@ public final class Python {
             }
 
             throw newRaiseException("builtins.AttributeError",
-                    "module '" + module.getName() + "' has no attribute '" + name + "'");
+                    "module '" + module.getName() + "' has no attribute '" + splitLastDot[1] + "'");
         }
-
-
     }
 
     public PyObject type(PyObject object) {
