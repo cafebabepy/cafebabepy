@@ -1741,46 +1741,52 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         return this.runtime.newPyObject("_ast.Num", number);
     }
 
+
     @Override
     public PyObject visitStr(PythonParser.StrContext ctx) {
-        String rawString = ctx.STRING_LITERAL().getText();
-        String str;
+        if (ctx.STRING_LITERAL() != null) {
+            String rawString = ctx.STRING_LITERAL().getText();
+            String str;
 
-        boolean fstring = false;
+            boolean fstring = false;
 
-        int tripleDoubleIndex = rawString.indexOf("\"\"\"");
-        if (tripleDoubleIndex == 1) {
-            fstring = (rawString.charAt(0) == 'f');
-            str = rawString.substring(4, rawString.length() - 3);
-
-        } else if (tripleDoubleIndex == 0) {
-            str = rawString.substring(3, rawString.length() - 3);
-
-        } else {
-            int tripleSingleIndex = rawString.indexOf("'''");
-            if (tripleSingleIndex == 1) {
+            int tripleDoubleIndex = rawString.indexOf("\"\"\"");
+            if (tripleDoubleIndex == 1) {
                 fstring = (rawString.charAt(0) == 'f');
                 str = rawString.substring(4, rawString.length() - 3);
 
-            } else if (tripleSingleIndex == 0) {
+            } else if (tripleDoubleIndex == 0) {
                 str = rawString.substring(3, rawString.length() - 3);
 
             } else {
-                fstring = (rawString.charAt(0) == 'f');
-                if (fstring) {
-                    str = rawString.substring(2, rawString.length() - 1);
+                int tripleSingleIndex = rawString.indexOf("'''");
+                if (tripleSingleIndex == 1) {
+                    fstring = (rawString.charAt(0) == 'f');
+                    str = rawString.substring(4, rawString.length() - 3);
+
+                } else if (tripleSingleIndex == 0) {
+                    str = rawString.substring(3, rawString.length() - 3);
 
                 } else {
-                    str = rawString.substring(1, rawString.length() - 1);
+                    fstring = (rawString.charAt(0) == 'f');
+                    if (fstring) {
+                        str = rawString.substring(2, rawString.length() - 1);
+
+                    } else {
+                        str = rawString.substring(1, rawString.length() - 1);
+                    }
                 }
             }
-        }
 
-        if (fstring) {
-            return fstring(str, 0);
+            if (fstring) {
+                return fstring(str, 0);
+
+            } else {
+                return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
+            }
 
         } else {
-            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
+            return this.runtime.None(); // TODO bytes
         }
     }
 
