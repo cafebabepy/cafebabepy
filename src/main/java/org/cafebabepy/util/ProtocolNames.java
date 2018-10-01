@@ -43,6 +43,7 @@ public final class ProtocolNames {
     public static final String __len__ = "__len__";
     public static final String __get__ = "__get__";
     public static final String __set__ = "__set__";
+    public static final String __delete__ = "__delete__";
     public static final String __getitem__ = "__getitem__";
     public static final String __setitem__ = "__setitem__";
     public static final String __delitem__ = "__delitem__";
@@ -56,6 +57,7 @@ public final class ProtocolNames {
     public static final String __exit__ = "__exit__";
     public static final String __enter__ = "__enter__";
     public static final String __format__ = "__format__";
+    public static final String __doc__ = "__doc__";
 
     private ProtocolNames() {
     }

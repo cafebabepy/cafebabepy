@@ -280,7 +280,7 @@ public class InterpretEvaluator {
             decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
         }
 
-        context.getScope().put(name, decoratorEvalValue);
+        this.runtime.setattr(context, name.toJava(String.class), decoratorEvalValue);
 
         return this.runtime.None();
     }
@@ -302,7 +302,8 @@ public class InterpretEvaluator {
             baseList.add(base);
         });
 
-        String n = name.toJava(String.class);
+        String jname = name.toJava(String.class);
+        String n = jname;
         if (!context.isModule()) {
             n = context.getName() + "." + n;
         }
@@ -310,7 +311,7 @@ public class InterpretEvaluator {
         PyObject clazz = new PyInterpretClassObject(
                 this.runtime, context, n, baseList);
 
-        context.getScope().put(name, clazz);
+        this.runtime.setattr(context, jname, clazz);
 
         eval(clazz, body);
 
@@ -383,7 +384,7 @@ public class InterpretEvaluator {
                     PyObject exceptBody = this.runtime.getattr(handler, "body");
                     try {
                         if (!name.isNone()) {
-                            context.getScope().put(name, exception);
+                            this.runtime.setattr(context, name.toJava(String.class), exception);
                         }
                         return eval(context, exceptBody);
 
@@ -670,7 +671,7 @@ public class InterpretEvaluator {
     void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            context.getScope().put(id, evalValue);
+            this.runtime.setattr(context, id.toJava(String.class), evalValue);
 
         } else {
             unpack(context, target, evalValue);
@@ -685,13 +686,13 @@ public class InterpretEvaluator {
 
         if (targetType instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            context.getScope().put(id, evalValue);
+            this.runtime.setattr(context, id.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
             PyObject attr = this.runtime.getattr(target, "attr");
             PyObject attributeContext = eval(context, target);
-            attributeContext.getScope().put(attr, evalValue);
+            this.runtime.setattr(attributeContext, attr.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
@@ -811,7 +812,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(target, "id");
             PyObject evalValue = eval(context, value);
 
-            context.getScope().put(id, evalValue);
+            this.runtime.setattr(context, id.toJava(String.class), evalValue);
         }
 
         return this.runtime.None();

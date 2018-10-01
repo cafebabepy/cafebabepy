@@ -36,10 +36,10 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
         }
 
         PyObject scope = new PyLexicalScopeProxyObject(self);
-        self.getScope().put(this.runtime.str("f"), f);
+        this.runtime.setattr(self, "f", f);
 
-        scope.getScope().put(this.runtime.str("self"), self);
-        scope.getScope().put(this.runtime.str("klass"), klass);
+        this.runtime.setattr(scope, "self", self);
+        this.runtime.setattr(scope, "klass", klass);
 
         return this.runtime.eval(scope, "<classmethod>", ""
                 + "def newfunc(*args):\n"

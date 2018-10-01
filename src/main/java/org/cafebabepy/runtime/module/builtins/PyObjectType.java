@@ -9,6 +9,7 @@ import org.cafebabepy.runtime.object.java.PyDictObject;
 import org.cafebabepy.runtime.object.java.PyMappingProxyTypeObject;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -56,10 +57,22 @@ public final class PyObjectType extends AbstractCafeBabePyType {
     public void __setattr__(PyObject self, PyObject name, PyObject value) {
         PyObject strType = this.runtime.typeOrThrow("builtins.str");
 
-        if (!this.runtime.isInstance(self, strType)) {
+        if (!this.runtime.isInstance(name, strType)) {
             throw this.runtime.newRaiseTypeError(
                     "attribute name must be string, not '" + name.getFullName() + "'"
             );
+        }
+
+        if (!self.isType()) {
+            Optional<PyObject> existsValueOpt = Python.lookup(self, name);
+            if (existsValueOpt.isPresent()) {
+                PyObject existsValue = existsValueOpt.get();
+                Optional<PyObject> setOpt = this.runtime.getattrOptional(existsValue, __set__);
+                if (setOpt.isPresent()) {
+                    setOpt.get().call(self, value);
+                    return;
+                }
+            }
         }
 
         self.getScope().put(name, value);

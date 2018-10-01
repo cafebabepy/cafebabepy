@@ -51,7 +51,15 @@ configurations {
 
 sourceSets.main.java.srcDirs = [antlr.destinationDir] + sourceSets.main.java.srcDirs
 sourceSets.main.resources.srcDirs = [python.sourceDir] + sourceSets.main.resources.srcDirs
+sourceSets.main.java.outputDir = file("$buildDir/classes")
+sourceSets.main.resources.outputDir = file("$buildDir/classes")
+
+sourceSets.test.java.srcDirs = [python.testSourceDir] + sourceSets.test.java.srcDirs
 sourceSets.test.resources.srcDirs = [python.testSourceDir] + sourceSets.test.resources.srcDirs
+sourceSets.test.java.outputDir = file("$buildDir/classes")
+sourceSets.test.resources.outputDir = file("$buildDir/classes")
+
+test.workingDir = file("$buildDir/classes")
 
 dependencies {
     compile group: 'org.antlr', name: 'antlr4-runtime', version: '4.7'

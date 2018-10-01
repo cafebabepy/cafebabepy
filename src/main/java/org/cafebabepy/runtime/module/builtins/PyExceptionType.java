@@ -26,6 +26,6 @@ public class PyExceptionType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("Exception does not take keyword arguments");
         }
 
-        self.getScope().put(this.runtime.str("args"), this.runtime.tuple(args));
+        this.runtime.setattr(self, "args", this.runtime.tuple(args));
     }
 }

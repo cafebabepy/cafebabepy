@@ -128,7 +128,7 @@ public final class Python {
             PyObject builtinsModule = moduleOrThrow("builtins");
             Map<PyObject, PyObject> objectMap = builtinsModule.getScope().gets();
             for (Map.Entry<PyObject, PyObject> e : objectMap.entrySet()) {
-                mainModule.getScope().put(e.getKey(), e.getValue());
+                setattr(mainModule, e.getKey().toJava(String.class), e.getValue());
             }
 
             return mainModule;
@@ -613,6 +613,16 @@ public final class Python {
         // FIXME module
         throw newRaiseException("builtins.AttributeError",
                 "module '" + object.getName() + "' has no attribute '" + name + "'");
+    }
+
+    public void setattr(PyObject object, String name, PyObject value) {
+        PyObject getattr = getattr(object, __setattr__);
+        if (object.isType()) {
+            getattr.call(object, str(name), value);
+
+        } else {
+            getattr.call(str(name), value);
+        }
     }
 
     public boolean hasattr(PyObject object, String name) {

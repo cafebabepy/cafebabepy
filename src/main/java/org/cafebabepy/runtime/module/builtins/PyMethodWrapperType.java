@@ -25,6 +25,5 @@ public class PyMethodWrapperType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject func, PyObject instance) {
-        self.getScope().put(this.runtime.str("func"), func, false);
     }
 }
