@@ -421,7 +421,7 @@ yield_arg
 
 str
  : STRING_LITERAL
-// | BYTES_LITERAL
+ | BYTES_LITERAL
  ;
 
 number
