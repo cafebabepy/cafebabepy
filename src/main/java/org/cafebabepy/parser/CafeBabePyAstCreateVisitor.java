@@ -9,8 +9,10 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module._ast.*;
+import org.cafebabepy.runtime.object.java.PyBytesObject;
 import org.cafebabepy.util.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 /**
@@ -1744,50 +1746,120 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
     @Override
     public PyObject visitStr(PythonParser.StrContext ctx) {
+        String rawString;
+
         if (ctx.STRING_LITERAL() != null) {
-            String rawString = ctx.STRING_LITERAL().getText();
-            String str;
+            rawString = ctx.STRING_LITERAL().getText();
 
-            boolean fstring = false;
-
-            int tripleDoubleIndex = rawString.indexOf("\"\"\"");
-            if (tripleDoubleIndex == 1) {
-                fstring = (rawString.charAt(0) == 'f');
-                str = rawString.substring(4, rawString.length() - 3);
-
-            } else if (tripleDoubleIndex == 0) {
-                str = rawString.substring(3, rawString.length() - 3);
-
-            } else {
-                int tripleSingleIndex = rawString.indexOf("'''");
-                if (tripleSingleIndex == 1) {
-                    fstring = (rawString.charAt(0) == 'f');
-                    str = rawString.substring(4, rawString.length() - 3);
-
-                } else if (tripleSingleIndex == 0) {
-                    str = rawString.substring(3, rawString.length() - 3);
-
-                } else {
-                    fstring = (rawString.charAt(0) == 'f');
-                    if (fstring) {
-                        str = rawString.substring(2, rawString.length() - 1);
-
-                    } else {
-                        str = rawString.substring(1, rawString.length() - 1);
-                    }
-                }
-            }
-
-            if (fstring) {
-                return fstring(str, 0);
-
-            } else {
-                return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
-            }
+        } else if (ctx.BYTES_LITERAL() != null) {
+            rawString = ctx.BYTES_LITERAL().getText();
 
         } else {
-            return this.runtime.None(); // TODO bytes
+            throw new CafeBabePyException("Invalid string literal");
         }
+
+        String str;
+
+        int tripleSingleIndex = rawString.indexOf("'''");
+        int tripleDoubleIndex = rawString.indexOf("\"\"\"");
+
+        int doubleIndex = rawString.indexOf("\"");
+        int singleIndex = rawString.indexOf("'");
+
+        String prefix;
+        if (tripleSingleIndex >= 0) {
+            str = rawString.substring(tripleSingleIndex + 3, rawString.length() - 3);
+            prefix = rawString.substring(0, tripleSingleIndex);
+
+        } else if (tripleDoubleIndex >= 0) {
+            str = rawString.substring(tripleDoubleIndex + 3, rawString.length() - 3);
+            prefix = rawString.substring(0, tripleDoubleIndex);
+
+        } else if (doubleIndex >= 0) {
+            str = rawString.substring(doubleIndex + 1, rawString.length() - 1);
+            prefix = rawString.substring(0, doubleIndex);
+
+        } else if (singleIndex >= 0) {
+            str = rawString.substring(singleIndex + 1, rawString.length() - 1);
+            prefix = rawString.substring(0, singleIndex);
+
+        } else {
+            throw new CafeBabePyException("Invalid string '" + rawString + "'");
+        }
+
+        if (prefix.isEmpty()) {
+            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
+        }
+        if (prefix.contains("f")) {
+            return fstring(str, 0);
+
+        } else if (prefix.contains("b")) {
+            return bytes(str);
+
+        } else {
+            // FIXME
+            throw new CafeBabePyException("Invalid string '" + rawString + "'");
+        }
+    }
+
+    private PyObject bytes(String bytes) {
+        char[] chars = bytes.toCharArray();
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+        int position = 0;
+
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+
+            if (0xFF < c) {
+                throw this.runtime.newRaiseException("SyntaxError",
+                        "bytes can only contain ASCII literal characters.");
+            }
+
+            if (c == '\\') {
+                if (i + 1 < chars.length) {
+                    char c2 = chars[i + 1];
+                    if (c2 == 'x') {
+                        if (i + 3 >= chars.length) {
+                            throw this.runtime.newRaiseException("SyntaxError",
+                                    "(value error) invalid \\x escape at position " + position);
+                        }
+
+                        char charHex1 = chars[i + 2];
+                        char charHex2 = chars[i + 3];
+
+                        if (charHex1 > 0xFF || charHex2 > 0xFF) {
+                            throw this.runtime.newRaiseException("SyntaxError",
+                                    "(value error) invalid \\x escape at position " + position);
+                        }
+
+                        byte b = (byte) (Character.getNumericValue(charHex1) * 16 + Character.getNumericValue(charHex2));
+                        os.write(b);
+
+                    } else if (c2 <= 0xFF) {
+                        byte b = (byte) Character.getNumericValue(c2);
+                        os.write(b);
+
+                    } else {
+                        os.write('\\');
+                        os.write(c2);
+                    }
+                    position++;
+
+                } else {
+                    throw this.runtime.newRaiseException("SyntaxError",
+                            "EOL while scanning string literal");
+                }
+
+            } else {
+                os.write(c);
+            }
+        }
+
+        PyObject bytesPy = new PyBytesObject(this.runtime, os.toByteArray());
+
+        return this.runtime.newPyObject("_ast.Bytes", bytesPy);
     }
 
     // FIXME move compile

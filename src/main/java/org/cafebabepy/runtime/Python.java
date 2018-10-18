@@ -288,6 +288,10 @@ public final class Python {
         return object;
     }
 
+    public PyObject bytes(byte[] bytes) {
+        return new PyBytesObject(this, bytes);
+    }
+
     public PyObject format(PyObject value, String formatSpecOpt) {
         // FIXME not dict
         PyObject format = getattr(type(value), __format__);

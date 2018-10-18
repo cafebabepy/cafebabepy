@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -396,6 +397,16 @@ public class InterpretEvaluatorTest {
                         runtime.tuple(new PyObject[]{runtime.str(
                                 "f-string: invalid conversion character: expected 's', 'r', or 'a'")}));
             }
+        }
+
+        @Test
+        void bytesASCIIOnly () throws UnsupportedEncodingException {
+            PyObject result = Python.eval(""
+                    + "abcd = b'abcd'\n"
+                    + "abcd\n");
+            byte[] actualJavaBytes = "abcd".getBytes("ASCII");
+
+            assertEquals(result, result.getRuntime().bytes(actualJavaBytes));
         }
 
         @Test

@@ -162,6 +162,9 @@ public class InterpretEvaluator {
             case "Str":
                 return evalStr(context, node);
 
+            case "Bytes":
+                return evalBytes(context, node);
+
             case "FormattedValue":
                 return evalFormattedValue(context, node);
 
@@ -1113,6 +1116,10 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalStr(PyObject context, PyObject node) {
+        return this.runtime.getattr(node, "s");
+    }
+
+    private PyObject evalBytes(PyObject context, PyObject node) {
         return this.runtime.getattr(node, "s");
     }
 
