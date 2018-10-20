@@ -24,11 +24,11 @@ public class PyBytesIteratorObject extends AbstractPyIteratorObject {
 
         private final Python runtime;
 
-        private final byte[] value;
+        private final int[] value;
         private final int count;
         private int index;
 
-        BytesIterator(Python runtime, byte[] value) {
+        BytesIterator(Python runtime, int[] value) {
             this.runtime = runtime;
             this.value = value;
             this.count = 0;

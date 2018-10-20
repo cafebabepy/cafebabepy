@@ -400,13 +400,23 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void bytesASCIIOnly () throws UnsupportedEncodingException {
+        void bytesASCIIOnly() throws UnsupportedEncodingException {
             PyObject result = Python.eval(""
                     + "abcd = b'abcd'\n"
                     + "abcd\n");
-            byte[] actualJavaBytes = "abcd".getBytes("ASCII");
+            byte[] actual = "abcd".getBytes("UTF-8");
 
-            assertEquals(result, result.getRuntime().bytes(actualJavaBytes));
+            assertEquals(result, result.getRuntime().bytes(actual));
+        }
+
+        @Test
+        void bytesHiragana() throws UnsupportedEncodingException {
+            PyObject result = Python.eval(""
+                    + "abcd = b'a\\xE3\\x81\\x82b\\xE3\\x81\\x84c\\xE3\\x81\\x86d\\\\\\g\\h'\n"
+                    + "abcd\n");
+            byte[] actual = "aあbいcうd\\\\g\\h".getBytes("UTF-8");
+
+            assertEquals(result, result.getRuntime().bytes(actual));
         }
 
         @Test

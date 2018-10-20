@@ -18,10 +18,21 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group = 'org.cafebabepy'
-version = '3.6.2.0'
+version = '1-3.6.2'
+
 project.ext {
     artifactId = 'cafebabepy'
     defaultEncoding = 'UTF-8'
+}
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 ext.versions = [

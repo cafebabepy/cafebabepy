@@ -72,8 +72,8 @@ public final class PyBytesType extends AbstractCafeBabePyType {
                 if (!(other instanceof PyBytesObject)) {
                     throw new CafeBabePyException("other is not PyBytesObject " + other);
                 }
-                byte[] jself = ((PyBytesObject) self).getValue();
-                byte[] jother = ((PyBytesObject) other).getValue();
+                int[] jself = ((PyBytesObject) self).getValue();
+                int[] jother = ((PyBytesObject) other).getValue();
 
                 return Arrays.equals(jself, jother) ? this.runtime.True() : this.runtime.False();
 

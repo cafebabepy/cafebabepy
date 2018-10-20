@@ -12,7 +12,6 @@ import org.cafebabepy.runtime.module._ast.*;
 import org.cafebabepy.runtime.object.java.PyBytesObject;
 import org.cafebabepy.util.StringUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.util.*;
 
 /**
@@ -1805,7 +1804,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private PyObject bytes(String bytes) {
         char[] chars = bytes.toCharArray();
 
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        List<Integer> ints = new ArrayList<>();
 
         int position = 0;
 
@@ -1834,17 +1833,18 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                                     "(value error) invalid \\x escape at position " + position);
                         }
 
-                        byte b = (byte) (Character.getNumericValue(charHex1) * 16 + Character.getNumericValue(charHex2));
-                        os.write(b);
+                        int integer1 = Character.getNumericValue(charHex1) * 0x10;
+                        int integer2 = Character.getNumericValue(charHex2);
+                        ints.add(integer1 + integer2);
 
-                    } else if (c2 <= 0xFF) {
-                        byte b = (byte) Character.getNumericValue(c2);
-                        os.write(b);
+                        i += 3;
 
                     } else {
-                        os.write('\\');
-                        os.write(c2);
+                        ints.add((int) '\\');
+                        ints.add((int) c2);
+                        i += 2;
                     }
+
                     position++;
 
                 } else {
@@ -1853,11 +1853,13 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 }
 
             } else {
-                os.write(c);
+                ints.add((int) c);
             }
         }
 
-        PyObject bytesPy = new PyBytesObject(this.runtime, os.toByteArray());
+        int[] intArray = ints.stream().mapToInt(v -> v).toArray();
+
+        PyObject bytesPy = new PyBytesObject(this.runtime, intArray);
 
         return this.runtime.newPyObject("_ast.Bytes", bytesPy);
     }

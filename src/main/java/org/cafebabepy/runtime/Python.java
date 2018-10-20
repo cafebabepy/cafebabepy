@@ -288,8 +288,18 @@ public final class Python {
         return object;
     }
 
-    public PyObject bytes(byte[] bytes) {
+    public PyObject bytes(int[] bytes) {
         return new PyBytesObject(this, bytes);
+    }
+
+    public PyObject bytes(byte[] bytes) {
+        int[] ints = new int[bytes.length];
+
+        for (int i = 0; i < bytes.length; i++) {
+            ints[i] = Byte.toUnsignedInt(bytes[i]);
+        }
+
+        return bytes(ints);
     }
 
     public PyObject format(PyObject value, String formatSpecOpt) {

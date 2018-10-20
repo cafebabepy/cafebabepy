@@ -9,15 +9,15 @@ import org.cafebabepy.runtime.object.AbstractPyObjectObject;
  */
 public class PyBytesObject extends AbstractPyObjectObject {
 
-    private final byte[] value;
+    private final int[] value;
 
-    public PyBytesObject(Python runtime, byte[] value) {
+    public PyBytesObject(Python runtime, int[] value) {
         super(runtime);
 
         this.value = value;
     }
 
-    public byte[] getValue() {
+    public int[] getValue() {
         return this.value;
     }
 
@@ -29,7 +29,7 @@ public class PyBytesObject extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
-        if (byte[].class.isAssignableFrom(clazz)) {
+        if (int[].class.isAssignableFrom(clazz)) {
             return (T)this.value;
 
         }
