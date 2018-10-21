@@ -84,7 +84,11 @@ public class CafeBabePyLexer extends PythonLexer {
             emitNewLine();
 
             while (!this.indents.isEmpty()) {
+                setCharPositionInLine(0);
+
                 CommonToken dedent = new CommonToken(DEDENT, "<DEDENT>");
+                dedent.setLine(getLine());
+                dedent.setCharPositionInLine(getCharPositionInLine());
                 emitOnly(dedent);
                 this.indents.removeFirst();
             }
@@ -132,16 +136,27 @@ public class CafeBabePyLexer extends PythonLexer {
         int previous = this.indents.isEmpty() ? 0 : this.indents.peekFirst();
 
         CommonToken newLine = new CommonToken(NEWLINE, "<NEWLINE>");
+        newLine.setLine(getLine());
+        newLine.setCharPositionInLine(getCharPositionInLine());
         emitOnly(newLine);
 
         if (indent > previous) {
             this.indents.addFirst(indent);
+
+            setCharPositionInLine(spaces.length());
+
             CommonToken indentToken = new CommonToken(INDENT, "<INDENT>");
+            indentToken.setLine(getLine());
+            indentToken.setCharPositionInLine(getCharPositionInLine());
             emitOnly(indentToken);
 
         } else {
             while (!this.indents.isEmpty() && this.indents.peekFirst() > indent) {
+                setCharPositionInLine(0);
+
                 CommonToken dedentToken = new CommonToken(DEDENT, "<DEDENT>");
+                dedentToken.setLine(getLine());
+                dedentToken.setCharPositionInLine(getCharPositionInLine());
                 emitOnly(dedentToken);
                 this.indents.removeFirst();
             }
