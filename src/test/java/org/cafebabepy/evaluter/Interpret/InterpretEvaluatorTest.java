@@ -192,6 +192,31 @@ public class InterpretEvaluatorTest {
 
             assertEquals(result, runtime.number(99));
         }
+
+        @Test
+        void inmportInit() throws IOException {
+            evalStdOutToResult(""
+                            + "import init\n"
+                            + "init.a()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "__init__" + System.lineSeparator()
+                                + "define a" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void inmportModule() throws IOException {
+            evalStdOutToResult(""
+                            + "import a1\n"
+                            + "a1.a()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "define a" + System.lineSeparator()
+                        );
+                    });
+        }
     }
 
     @Nested

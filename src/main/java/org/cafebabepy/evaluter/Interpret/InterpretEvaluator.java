@@ -193,6 +193,10 @@ public class InterpretEvaluator {
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
     }
 
+    public PyObject loadModule(String moduleName) {
+        return this.importManager.loadModule(moduleName);
+    }
+
     public void importSimple(PyObject context, PyObject name) {
         this.importManager.importSimple(context, name);
     }

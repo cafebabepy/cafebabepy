@@ -111,7 +111,7 @@ class ImportManager {
     }
 
     @SuppressWarnings("unchecked")
-    private PyObject loadModule(String moduleName) {
+    PyObject loadModule(String moduleName) {
         try {
             Optional<PyObject> moduleOpt;
 
@@ -197,7 +197,6 @@ class ImportManager {
         File dir = new File(baseFile, path);
         if (dir.isDirectory()) {
             return Optional.of(createModule(moduleName));
-
         }
 
         return Optional.empty();
@@ -210,7 +209,7 @@ class ImportManager {
 
         InputStream in;
 
-        String file = path + "/__init.__.py";
+        String file = path + "/__init__.py";
 
         // __init__.py
         in = classLoader.getResourceAsStream(file);

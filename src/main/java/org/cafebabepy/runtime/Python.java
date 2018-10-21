@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.module.PyMainModule;
 import org.cafebabepy.runtime.module._ast.PyAstModule;
 import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;
 import org.cafebabepy.runtime.module.sys.PySysModule;
+import org.cafebabepy.runtime.object.PyModuleObject;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
@@ -112,6 +113,10 @@ public final class Python {
 
     public InterpretEvaluator getEvaluator() {
         return this.evaluator;
+    }
+
+    public PyObject evalModule(String file) {
+        return getEvaluator().loadModule(file);
     }
 
     public PyObject eval(PyObject context, String file, String input) {
