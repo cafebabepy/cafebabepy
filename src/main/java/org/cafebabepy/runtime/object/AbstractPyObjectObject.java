@@ -42,7 +42,7 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     }
 
     @Override
-    public final boolean isModule() {
+    public boolean isModule() {
         return false;
     }
 

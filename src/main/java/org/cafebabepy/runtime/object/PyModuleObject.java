@@ -17,6 +17,11 @@ public class PyModuleObject extends AbstractPyObjectObject {
     }
 
     @Override
+    public boolean isModule() {
+        return true;
+    }
+
+    @Override
     public PyObject getType() {
         return this.runtime.typeOrThrow("builtins.ModuleType", false);
     }
