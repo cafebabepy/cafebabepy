@@ -340,7 +340,6 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                 } else if (argument) {
                     if (keywordArgument) {
                         kwarg = element;
-                        keywordArgument = false;
 
                     } else if (defineKeywordOnlyArgument) {
                         if (!beforeAsterisk && vararg.isNone()) {
@@ -367,7 +366,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
 
             } else if (",".equals(text)) {
                 if (i < ctx.getChildCount() - 1) { // last comma
-                    if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument) {
+                    if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument && !keywordArgument) {
                         throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
                     }
                     argument = true;
@@ -385,8 +384,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             beforeText = text;
         }
 
-        if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument) {
-            throw this.runtime.newRaiseException("builtins.SyntaxError", "non-default argument follows default argument");
+        if (defineDefaultArgument && !defaultArgument && !defineKeywordOnlyArgument && !keywordArgument) {
+            throw ParserUtils.syntaxError(this.runtime,
+                    "non-default argument follows default argument",
+                    ctx.getStop());
         }
 
         PyObject args = this.runtime.list(argsList);
@@ -1580,8 +1581,15 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                     defineKeyword = true;
                 }
 
+            } else if (this.runtime.isInstance(argument, "_ast.Starred")) {
+                // ignore
+
             } else if (defineKeyword) {
-                throw this.runtime.newRaiseException("builtins.SyntaxError", "positional argument follows keyword argument");
+                throw ParserUtils.syntaxError(
+                        this.runtime,
+                        "positional argument follows keyword argument",
+                        ctx.getStop()
+                );
 
             } else if (unpacking) {
                 throw this.runtime.newRaiseException("builtins.SyntaxError", "positional argument follows keyword argument unpacking");
