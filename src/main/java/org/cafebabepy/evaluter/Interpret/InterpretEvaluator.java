@@ -306,7 +306,8 @@ public class InterpretEvaluator {
             if (exists) {
                 throw this.runtime.newRaiseTypeError("duplicate base class " + base.getName());
             }
-            baseList.add(base);
+            PyObject evalBase = eval(context, base);
+            baseList.add(evalBase);
         });
 
         String jname = name.toJava(String.class);

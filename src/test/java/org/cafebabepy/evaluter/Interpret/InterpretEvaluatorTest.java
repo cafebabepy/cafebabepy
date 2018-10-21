@@ -1261,6 +1261,18 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void defineOverrideClass() throws IOException {
+            evalStdOutToResult(""
+                    + "class T(object):\n"
+                    + "  def a(self):\n"
+                    + "    print('cafebabepy')\n"
+                    + "t = T()\n"
+                    + "t.a()", result -> {
+                assertEquals(result, "cafebabepy" + System.lineSeparator());
+            });
+        }
+
+        @Test
         void defineMethodClass() {
             PyObject result = Python.eval(""
                     + "class T:\n"
