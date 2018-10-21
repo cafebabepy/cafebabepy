@@ -6,9 +6,8 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.iterator.PyStrIteratorObject;
+import org.cafebabepy.runtime.object.iterator.PyBytesIteratorObject;
 import org.cafebabepy.runtime.object.java.PyBytesObject;
-import org.cafebabepy.runtime.object.java.PyStrObject;
 
 import java.util.Arrays;
 
@@ -35,31 +34,16 @@ public final class PyBytesType extends AbstractCafeBabePyType {
         return self;
     }
 
-    @DefinePyFunction(name = __add__)
-    public PyObject __add__(PyObject self, PyObject other) {
-        PyObject strType = this.runtime.typeOrThrow("builtins.str");
-
-        if (!(self instanceof PyStrObject)) {
-            throw this.runtime.newRaiseTypeError(
-                    "descriptor '__add__' requires a 'str' object but received a '" + self.getFullName() + "'");
-
-        } else if (!(other instanceof PyStrObject)) {
-            throw this.runtime.newRaiseTypeError("must be str, not " + other);
-        }
-
-        return ((PyStrObject) self).add((PyStrObject) other);
-    }
-
     @DefinePyFunction(name = __iter__)
     public PyObject __iter__(PyObject self) {
-        if (!(self instanceof PyStrObject)) {
+        if (!(self instanceof PyBytesObject)) {
             throw this.runtime.newRaiseTypeError(
-                    "descriptor '__iter__' requires a 'str' object but received a '"
+                    "descriptor '__iter__' requires a 'bytes' object but received a '"
                             + self.getType().getFullName()
                             + "'");
         }
 
-        return new PyStrIteratorObject(this.runtime, (PyStrObject) self);
+        return new PyBytesIteratorObject(this.runtime, (PyBytesObject) self);
     }
 
     @DefinePyFunction(name = __eq__)
