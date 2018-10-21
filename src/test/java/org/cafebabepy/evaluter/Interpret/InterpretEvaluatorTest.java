@@ -285,6 +285,13 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
+        void rstring() {
+            PyObject result = Python.eval("r'C:\\abc'");
+
+            assertEquals(result.toJava(String.class), "C:\\\\abc");
+        }
+
+        @Test
         void stringDoubleQuote() {
             PyObject result = Python.eval("\"abc\"");
 

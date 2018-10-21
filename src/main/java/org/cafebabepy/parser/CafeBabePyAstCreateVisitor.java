@@ -1786,22 +1786,24 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             throw new CafeBabePyException("Invalid string '" + rawString + "'");
         }
 
-        if (prefix.isEmpty()) {
-            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
-        }
+        prefix = prefix.toLowerCase();
+
         if (prefix.contains("f")) {
             return fstring(str, 0);
 
         } else if (prefix.contains("b")) {
-            return bytes(str);
+            return bytes(str, prefix.contains("r"));
+
+        } else if (prefix.contains("r")) {
+            String escapeStr = str.replaceAll("\\\\", "\\\\\\\\");
+            return this.runtime.newPyObject("_ast.Str", this.runtime.str(escapeStr));
 
         } else {
-            // FIXME
-            throw new CafeBabePyException("Invalid string '" + rawString + "'");
+            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
         }
     }
 
-    private PyObject bytes(String bytes) {
+    private PyObject bytes(String bytes, boolean escape) {
         char[] chars = bytes.toCharArray();
 
         List<Integer> ints = new ArrayList<>();
@@ -1817,6 +1819,19 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             }
 
             if (c == '\\') {
+                if (escape) {
+                    if (i == chars.length - 1) {
+                        // FIXME いる？
+                        throw this.runtime.newRaiseException("SyntaxError",
+                                "EOL while scanning string literal");
+                    }
+
+                    ints.add((int) c);
+                    ints.add((int) c);
+
+                    continue;
+                }
+
                 if (i + 1 < chars.length) {
                     char c2 = chars[i + 1];
                     if (c2 == 'x') {
