@@ -42,6 +42,10 @@ public class PyIntObject extends AbstractPyObjectObject {
         return this.runtime.number(this.value * other.value);
     }
 
+    public PyIntObject floorDiv(PyIntObject other) {
+        return this.runtime.number((int) Math.floor((double) this.value / other.value));
+    }
+
     public PyIntObject mod(PyIntObject other) {
         return this.runtime.number(this.value % other.value);
     }

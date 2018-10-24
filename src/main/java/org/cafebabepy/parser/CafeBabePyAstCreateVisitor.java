@@ -1036,6 +1036,10 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
                     operator = this.runtime.newPyObject("_ast.Mod");
                     break;
 
+                case "//":
+                    operator = this.runtime.newPyObject("_ast.FloorDiv");
+                    break;
+
                 default:
                     throw this.runtime.newRaiseException("builtins.SyntaxError", "op '" + op + "' is not found");
             }

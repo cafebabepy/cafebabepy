@@ -23,6 +23,8 @@ public final class ProtocolNames {
     public static final String __rmod__ = "__rmod__";
     public static final String __mul__ = "__mul__";
     public static final String __rmul__ = "__rmul__";
+    public static final String __floordiv__ = "__floordiv__";
+    public static final String __rfloordiv__ = "__rfloordiv__";
     public static final String __neg__ = "__neg__";
     public static final String __pos__ = "__pos__";
     public static final String __invert__ = "__invert__";

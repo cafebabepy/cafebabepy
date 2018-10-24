@@ -7,7 +7,6 @@ import org.cafebabepy.runtime.module.PyMainModule;
 import org.cafebabepy.runtime.module._ast.PyAstModule;
 import org.cafebabepy.runtime.module.builtins.PyBuiltinsModule;
 import org.cafebabepy.runtime.module.sys.PySysModule;
-import org.cafebabepy.runtime.object.PyModuleObject;
 import org.cafebabepy.runtime.object.iterator.PyGeneratorObject;
 import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
@@ -803,6 +802,11 @@ public final class Python {
     // *
     public PyObject mul(PyObject x, PyObject y) {
         return refOp(x, y, "*", __mul__, __mul__);
+    }
+
+    // //
+    public PyObject floorDiv(PyObject x, PyObject y) {
+        return refOp(x, y, "//", __floordiv__, __rfloordiv__);
     }
 
     private PyObject refOp(PyObject x, PyObject y, String op, String opFunctionName, String ropFunctionName) {

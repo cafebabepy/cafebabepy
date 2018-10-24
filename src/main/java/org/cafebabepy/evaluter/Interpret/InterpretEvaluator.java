@@ -1022,6 +1022,7 @@ public class InterpretEvaluator {
         PyObject subType = this.runtime.typeOrThrow("_ast.Sub");
         PyObject modType = this.runtime.typeOrThrow("_ast.Mod");
         PyObject multType = this.runtime.typeOrThrow("_ast.Mult");
+        PyObject floorDivType = this.runtime.typeOrThrow("_ast.FloorDiv");
 
         PyObject op = this.runtime.getattr(node, "op");
         if (this.runtime.isInstance(op, addType)) {
@@ -1035,6 +1036,9 @@ public class InterpretEvaluator {
 
         } else if (this.runtime.isInstance(op, multType)) {
             return this.runtime.mul(evalLeft, evalRight);
+
+        } else if (this.runtime.isInstance(op, floorDivType)) {
+            return this.runtime.floorDiv(evalLeft, evalRight);
         }
 
         throw new CafeBabePyException("operator '" + op.getName() + "' not found");

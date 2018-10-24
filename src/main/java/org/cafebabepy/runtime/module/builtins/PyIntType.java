@@ -144,6 +144,26 @@ public final class PyIntType extends AbstractCafeBabePyType {
         return ((PyIntObject) other).mul((PyIntObject) self);
     }
 
+    @DefinePyFunction(name = __floordiv__)
+    public PyObject __floordiv__(PyObject self, PyObject other) {
+        PyObject result = check(__floordiv__, self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) self).floorDiv((PyIntObject) other);
+    }
+
+    @DefinePyFunction(name = __rfloordiv__)
+    public PyObject __rfloordiv__(PyObject self, PyObject other) {
+        PyObject result = check(__rfloordiv__, self, other);
+        if (result != null) {
+            return result;
+        }
+
+        return ((PyIntObject) other).floorDiv((PyIntObject) self);
+    }
+
     @DefinePyFunction(name = __lt__)
     public PyObject __lt__(PyObject self, PyObject other) {
         PyObject result = check(__lt__, self, other);

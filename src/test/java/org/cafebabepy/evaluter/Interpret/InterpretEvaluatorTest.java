@@ -815,6 +815,15 @@ public class InterpretEvaluatorTest {
 
             assertEquals(result, runtime.True());
         }
+
+        @Test
+        void floorDiv() {
+            PyObject result = Python.eval("10 // 3");
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.number(3));
+        }
     }
 
     @Nested
