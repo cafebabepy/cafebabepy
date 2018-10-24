@@ -10,6 +10,7 @@ import org.cafebabepy.runtime.object.PyObjectObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
 
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -62,9 +63,21 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject cls, PyObject key) {
-        return this.runtime.builtins_type__getattribute__(cls, key).orElseThrow(() ->
-                this.runtime.newRaiseException("builtins.AttributeError",
-                        "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'")
-        );
+        return this.runtime.builtins_type__getattribute__(cls, key).orElseGet(() -> {
+            Optional<PyObject> specialVar;
+            if (__name__.equals(key.toJava(String.class))) {
+                specialVar = cls.getScope().get(key, false);
+
+            } else {
+                specialVar = Optional.empty();
+            }
+
+            if (specialVar.isPresent()) {
+                return specialVar.get();
+            }
+
+            throw this.runtime.newRaiseException("AttributeError",
+                    "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'");
+        });
     }
 }

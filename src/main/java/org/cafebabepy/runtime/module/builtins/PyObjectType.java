@@ -39,6 +39,8 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
             getScope().put(this.runtime.str(__dict__), dict);
         }
+
+        getScope().put(this.runtime.str(__name__), this.runtime.str(getName()));
     }
 
     @DefinePyFunction(name = __init__)
@@ -47,10 +49,22 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject key) {
-        return this.runtime.builtins_object__getattribute__(self, key).orElseThrow(() ->
-                this.runtime.newRaiseException("builtins.AttributeError",
-                        "'" + self.getName() + "' object has no attribute " + key)
-        );
+        return this.runtime.builtins_object__getattribute__(self, key).orElseGet(() -> {
+            Optional<PyObject> specialVar;
+            if (__name__.equals(key.toJava(String.class))) {
+                specialVar = self.getScope().get(key, false);
+
+            } else {
+                specialVar = Optional.empty();
+            }
+
+            if (specialVar.isPresent()) {
+                return specialVar.get();
+            }
+
+            throw this.runtime.newRaiseException("AttributeError",
+                    "'" + self.getName() + "' object has no attribute " + key);
+        });
     }
 
     @DefinePyFunction(name = __setattr__)
