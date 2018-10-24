@@ -25,13 +25,17 @@ public final class PyBytesType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __str__)
     public PyObject __str__(PyObject self) {
-        PyObject strType = this.runtime.typeOrThrow("builtins.str");
-
-        if (!this.runtime.isInstance(self, strType)) {
-            throw this.runtime.newRaiseTypeError("descriptor '__str__' requires a 'str' object but received a '" + self.getFullName() + "'");
+        if (!(self instanceof PyBytesObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__str__' requires a 'bytes' object but received a '"
+                            + self.getFullName()
+                            + "'");
         }
 
-        return self;
+        PyBytesObject bytes = (PyBytesObject) self;
+
+        // FIXME to bytes literal
+        return this.runtime.str("b'" + bytes.getValue() + "'");
     }
 
     @DefinePyFunction(name = __iter__)
