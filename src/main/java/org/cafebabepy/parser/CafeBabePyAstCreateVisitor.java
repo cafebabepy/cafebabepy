@@ -258,7 +258,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     }
 
     @Override
+    public PyObject visitAsync_funcdef(PythonParser.Async_funcdefContext ctx) {
+        return visitFuncdefImpl(ctx.funcdef(), "_ast.AsyncFunctionDef");
+    }
+
+    @Override
     public PyObject visitFuncdef(PythonParser.FuncdefContext ctx) {
+        return visitFuncdefImpl(ctx, "_ast.FunctionDef");
+    }
+
+    private PyObject visitFuncdefImpl(PythonParser.FuncdefContext ctx, String className) {
         boolean loop = this.inLoop;
         boolean function = this.inFunction;
         this.inLoop = false;
@@ -282,7 +291,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         this.inFunction = function;
         this.inLoop = loop;
 
-        return this.runtime.newPyObject("_ast.FunctionDef", name, args, body, decorator_list, returns);
+        return this.runtime.newPyObject(className, name, args, body, decorator_list, returns);
     }
 
     @Override
@@ -566,6 +575,16 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         return this.runtime.str(nameBuilder.toString());
+    }
+
+    @Override
+    public PyObject visitAsync_stmt(PythonParser.Async_stmtContext ctx) {
+        if (ctx.funcdef() != null) {
+            return visitFuncdefImpl(ctx.funcdef(), "_ast.AsyncFunctionDef");
+
+        } else {
+            throw new CafeBabePyException("Not implement");
+        }
     }
 
     @Override

@@ -78,6 +78,9 @@ public class InterpretEvaluator {
             case "ImportFrom":
                 return evalImportFrom(context, node);
 
+            case "AsyncFunctionDef":
+                return evalAsyncFunctionDef(context, node);
+
             case "FunctionDef":
                 return evalFunctionDef(context, node);
 
@@ -262,7 +265,15 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
+    private PyObject evalAsyncFunctionDef(PyObject context, PyObject node) {
+        return evalFunctionDefImpl(context, node, true);
+    }
+
     private PyObject evalFunctionDef(PyObject context, PyObject node) {
+        return evalFunctionDefImpl(context, node, false);
+    }
+
+    private PyObject evalFunctionDefImpl(PyObject context, PyObject node, boolean async) {
         PyObject name = this.runtime.getattr(node, "name");
         PyObject args = this.runtime.getattr(node, "args");
         PyObject body = this.runtime.getattr(node, "body");
@@ -272,6 +283,7 @@ public class InterpretEvaluator {
         PyObject function = new PyInterpretFunctionObject(
                 this.runtime, name.toJava(String.class), context, args, body);
         function.initialize();
+        function.getScope().put(this.runtime.str("_async"), this.runtime.bool(async));
 
         List<PyObject> decorators = new ArrayList<>();
         this.runtime.iter(decorator_list, decorators::add);
@@ -1088,6 +1100,7 @@ public class InterpretEvaluator {
 
         PyObject function = new PyInterpretFunctionObject(this.runtime, "<lambda>", context, args, body);
         function.initialize();
+        function.getScope().put(this.runtime.str("_async"), this.runtime.False());
 
         return function;
     }

@@ -1,5 +1,6 @@
 package org.cafebabepy.evaluter.Interpret;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.internal.AbstractFunction;
@@ -28,6 +29,14 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject callImpl(PyObject context) {
+        boolean async = getScope().get(this.runtime.str("_async"), false)
+                .orElseThrow(() -> new CafeBabePyException("_async is not found")).isTrue();
+
+        if (async) {
+            // FIXME stub
+            return this.runtime.newPyObject("coroutine", false);
+        }
+
         YieldSearcher yieldSearcher = new YieldSearcher(this.runtime);
 
         List<PyObject> yields = yieldSearcher.get(this.body);
@@ -73,14 +82,13 @@ class PyInterpretFunctionObject extends AbstractFunction {
                     }
                 }
             });
+        }
 
-        } else {
-            try {
-                return this.runtime.getEvaluator().eval(this.context, this.body);
+        try {
+            return this.runtime.getEvaluator().eval(this.context, this.body);
 
-            } catch (InterpretReturn e) {
-                return e.value;
-            }
+        } catch (InterpretReturn e) {
+            return e.value;
         }
     }
 }
