@@ -35,7 +35,14 @@ public class PyListObject extends AbstractPyObjectObject {
     }
 
     public PyObject get(PyIntObject i) {
-        return this.values.get(i.getIntValue());
+        int value = i.getIntValue();
+
+        if (value < 0 || this.values.size() <= value) {
+            throw this.runtime.newRaiseException("IndexError",
+                    "list index out of range");
+        }
+
+        return this.values.get(value);
     }
 
     public PyObject getLen() {
