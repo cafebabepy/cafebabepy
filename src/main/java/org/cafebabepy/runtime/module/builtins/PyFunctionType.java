@@ -7,8 +7,7 @@ import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
-import static org.cafebabepy.util.ProtocolNames.__code__;
-import static org.cafebabepy.util.ProtocolNames.__get__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -25,6 +24,9 @@ public class PyFunctionType extends AbstractCafeBabePyType {
         super.initialize();
 
         getScope().put(this.runtime.str(__code__), this.runtime.typeOrThrow("builtins.code", false));
+
+        // FIXME stub
+        getScope().put(this.runtime.str(__globals__), this.runtime.dict());
     }
 
     @DefinePyFunction(name = __get__)

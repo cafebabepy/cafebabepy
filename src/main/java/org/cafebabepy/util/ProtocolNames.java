@@ -60,6 +60,7 @@ public final class ProtocolNames {
     public static final String __enter__ = "__enter__";
     public static final String __format__ = "__format__";
     public static final String __doc__ = "__doc__";
+    public static final String __globals__ = "__globals__";
     public static final String __reversed__ = "__reversed__";
 
     private ProtocolNames() {

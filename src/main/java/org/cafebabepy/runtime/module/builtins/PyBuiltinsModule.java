@@ -115,4 +115,10 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
                 new CafeBabePyException("zip is not found")
         );
     }
+
+    @DefinePyFunction(name = "globals")
+    public PyObject globals() {
+        // FIXME stub
+        return this.runtime.list();
+    }
 }

@@ -3,6 +3,7 @@ package org.cafebabepy.runtime.module.sys;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
+import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.object.java.PyDictObject;
 
@@ -69,5 +70,15 @@ public class PySysModule extends AbstractCafeBabePyModule {
         );
 
         getScope().put(this.runtime.str("implementation"), implementation);
+    }
+
+    @DefinePyFunction(name = "exc_info")
+    public PyObject exc_info() {
+        // FIXME types stub
+        PyObject traceback1 = this.runtime.newPyObject("traceback", false);
+        PyObject traceback2 = this.runtime.newPyObject("traceback", false);
+        PyObject traceback3 = this.runtime.newPyObject("traceback", false);
+
+        return this.runtime.list(traceback1, traceback2, traceback3);
     }
 }
