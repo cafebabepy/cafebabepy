@@ -152,7 +152,7 @@ public final class Python {
     }
 
     @SuppressWarnings("unchecked")
-    private void initializeModuleAndTypes(Class<? extends PyObject>... moduleClasses) {
+    public void initializeModuleAndTypes(Class<? extends PyObject>... moduleClasses) {
         Map<Class<? extends PyObject>, PyObject> moduleMap = new LinkedHashMap<>();
         for (Class<? extends PyObject> moduleClass : moduleClasses) {
             PyObject module = createJavaPyObject(moduleClass);
@@ -372,6 +372,20 @@ public final class Python {
         return object;
     }
 
+    public PyObject set(Collection<PyObject> value) {
+        PyObject[] array = new PyObject[value.size()];
+        value.toArray(array);
+
+        return set(array);
+    }
+
+    public PyObject set(PyObject... value) {
+        PySetObject object = new PySetObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
     public PyObject dict() {
         return dict(new LinkedHashMap<>());
     }
@@ -563,12 +577,11 @@ public final class Python {
         }
     }
 
-    public void iter(PyObject object, Consumer<PyObject> action) {
-        if (object instanceof PyListObject) {
-            iter((PyListObject) object, action);
-            return;
-        }
+    public PyObject iter(PyObject object) {
+        return getIterType(object);
+    }
 
+    public void iter(PyObject object, Consumer<PyObject> action) {
         PyObject next;
 
         Optional<PyObject> nextOpt = getNext(object);
@@ -600,11 +613,9 @@ public final class Python {
         } while (true);
     }
 
-    private void iter(PyListObject listObject, Consumer<PyObject> action) {
-        List<PyObject> list = listObject.getRawValues();
-        for (int i = 0; i < list.size(); i++) {
-            action.accept(list.get(i));
-        }
+    public PyObject reversed(PyObject seq) {
+        return getattrOptional(seq, __reversed__).map(PyObject::call).orElseThrow(() ->
+                newRaiseTypeError("argument to reversed() must be a sequence"));
     }
 
     public Optional<PyObject> getattrOptional(PyObject object, String name) {
