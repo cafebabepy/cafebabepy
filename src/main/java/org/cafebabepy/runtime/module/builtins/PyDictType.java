@@ -6,7 +6,10 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.java.PyDictItemsObject;
+import org.cafebabepy.runtime.object.java.PyDictKeysObject;
 import org.cafebabepy.runtime.object.java.PyDictObject;
+import org.cafebabepy.runtime.object.java.PyDictValuesObject;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -152,5 +155,38 @@ public class PyDictType extends AbstractCafeBabePyType {
         PyDictObject list = (PyDictObject) self;
 
         return this.runtime.number(list.getRawMap().hashCode());
+    }
+
+    @DefinePyFunction(name = "keys")
+    public PyObject keys(PyObject self) {
+        if (!(self instanceof PyDictObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor 'keys' requires a 'dict' object but received a '" + self.getType() + "'");
+        }
+
+        PyDictObject dict = (PyDictObject) self;
+
+        return new PyDictKeysObject(this.runtime, dict.getRawMap().keySet());
+    }
+
+    @DefinePyFunction(name = "values")
+    public PyObject values(PyObject self) {
+        if (!(self instanceof PyDictObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor 'values' requires a 'dict' object but received a '" + self.getType() + "'");
+        }
+
+        PyDictObject dict = (PyDictObject) self;
+
+        return new PyDictValuesObject(this.runtime, dict.getRawMap().keySet());
+    }
+
+    @DefinePyFunction(name = "items")
+    public PyObject items(PyObject self) {
+        if (!(self instanceof PyDictObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor 'values' requires a 'dict' object but received a '" + self.getType() + "'");
+        }
+
+        PyDictObject dict = (PyDictObject) self;
+
+        return new PyDictItemsObject(this.runtime, dict.getRawMap());
     }
 }
