@@ -1,13 +1,12 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyModule;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyModule;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.cafebabepy.runtime.object.PyObjectObject;
 
 import static org.cafebabepy.util.ProtocolNames.__len__;
 
@@ -79,5 +78,41 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         );
 
         return len.call();
+    }
+
+    @DefinePyFunction(name = "iter")
+    public PyObject iter(PyObject object) {
+        // FIXME sentinel
+        return this.runtime.iter(object);
+    }
+
+    @DefinePyFunction(name = "reversed")
+    public PyObject reversed(PyObject seq) {
+        return this.runtime.reversed(seq);
+    }
+
+    @DefinePyFunction(name = "zip")
+    public PyObject zip(PyObject[] iterables) {
+        PyObject object = new PyObjectObject(this.runtime);
+        object.initialize();
+
+        this.runtime.eval(object, "<FIXME>",
+                "def zip(*iterables):\n" +
+                        "  # zip('ABCD', 'xy') --> Ax By\n" +
+                        "  sentinel = object()\n" +
+                        "  iterators = [iter(it) for it in iterables]\n" +
+                        "  while iterators:\n" +
+                        "    result = []\n" +
+                        "    for it in iterators:\n" +
+                        "      elem = next(it, sentinel)\n" +
+                        "      if elem is sentinel:\n" +
+                        "        return\n" +
+                        "      result.append(elem)\n" +
+                        "      yield tuple(result)"
+        );
+
+        return object.getScope().get(this.runtime.str("zip")).map(zip -> zip.call(iterables)).orElseThrow(() ->
+                new CafeBabePyException("zip is not found")
+        );
     }
 }
