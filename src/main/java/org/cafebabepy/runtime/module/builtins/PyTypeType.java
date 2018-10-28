@@ -7,6 +7,8 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.PyObjectObject;
+import org.cafebabepy.runtime.object.java.PyListObject;
+import org.cafebabepy.runtime.object.java.PySetObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
 
 import java.util.LinkedHashMap;
@@ -54,11 +56,22 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                             + ")");
         }
 
+        PyObject instance;
+
         if (cls.getClass() == PyTupleType.class) {
-            return new PyTupleObject(this.runtime);
+            instance = new PyTupleObject(this.runtime);
+
+        } else if (cls.getClass() == PyListType.class) {
+            instance = new PyListObject(this.runtime);
+
+        } else if (cls.getClass() == PySetType.class) {
+            instance = new PySetObject(this.runtime);
+
+        } else {
+            instance = new PyObjectObject(this.runtime, cls);
         }
 
-        return new PyObjectObject(this.runtime, cls);
+        return instance;
     }
 
     @DefinePyFunction(name = __getattribute__)
