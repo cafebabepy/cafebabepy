@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
 import org.cafebabepy.runtime.object.java.PyIntObject;
@@ -23,6 +24,30 @@ public class PyListType extends AbstractCafeBabePyType {
 
     public PyListType(Python runtime) {
         super(runtime);
+    }
+
+    @DefinePyFunction(name = "__init__")
+    public void __init__(PyObject self, PyObject iterable) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError("descriptor '__init__' requires a 'set' object but received a '" + self.getType().getFullName() + "'");
+        }
+
+        getScope().get(this.runtime.str("___init__itarable_default_value"), false).ifPresent(v -> {
+            if (v != iterable) {
+                PyListObject object = (PyListObject) self;
+                this.runtime.iter(iterable, item -> object.getRawValues().add(item));
+            }
+        });
+    }
+
+    @DefinePyFunctionDefaultValue(methodName = "__init__", parameterName = "iterable")
+    private PyObject __init___iterable() {
+        return getScope().get(this.runtime.str("___init__itarable_default_value"), false).orElseGet(() -> {
+            PyObject object = new PyObjectObject(this.runtime);
+            getScope().put(this.runtime.str("___init__itarable_default_value"), object, false);
+
+            return object;
+        });
     }
 
     @DefinePyFunction(name = __getitem__)
