@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
+import org.cafebabepy.runtime.module.DefinePyModule;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.PyModuleObject;
 import org.cafebabepy.util.ReflectionUtils;
@@ -73,13 +74,9 @@ class ImportManager {
                     context.getScope().put(loadModule.getScope());
 
                 } else {
-                    PyObject target = this.runtime.getattrOptional(loadModule, nameJava).orElseGet(() -> {
-                        PyObject sysModules = this.runtime.getattr(this.runtime.moduleOrThrow("sys"), "modules");
-
-                        return this.runtime.getitemOptional(sysModules, name).orElseThrow(() ->
-                                this.runtime.newRaiseException("builtins.ImportError", "cannot import name '" + nameJava + "'")
-                        );
-                    });
+                    PyObject target = this.runtime.getattrOptional(loadModule, nameJava).orElseThrow(() ->
+                            this.runtime.newRaiseException("builtins.ImportError", "cannot import name '" + nameJava + "'")
+                    );
 
                     context.getScope().put(importName, target);
                 }
@@ -203,6 +200,30 @@ class ImportManager {
     }
 
     private Optional<PyObject> loadModuleFromClassPath(String moduleName) throws IOException {
+        Class<PyObject> moduleClass = null;
+
+        Set<Class<?>> classes = ReflectionUtils.getClasses("org.cafebabepy.runtime.module." + moduleName);
+        for (Class<?> clazz : classes) {
+            DefinePyModule ma = clazz.getAnnotation(DefinePyModule.class);
+            if (ma != null) {
+                if (!PyObject.class.isAssignableFrom(clazz)) {
+                    throw new CafeBabePyException("not module" + moduleName);
+                }
+
+                if (moduleClass != null) {
+                    throw new CafeBabePyException("module duplicate" + ma.name());
+                }
+
+                moduleClass = (Class<PyObject>) clazz;
+            }
+        }
+
+        if (moduleClass != null) {
+            this.runtime.initializeModuleAndTypes((Class<PyObject>) moduleClass);
+
+            return this.runtime.module(moduleName);
+        }
+
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
         String path = moduleName.replace('.', '/');
