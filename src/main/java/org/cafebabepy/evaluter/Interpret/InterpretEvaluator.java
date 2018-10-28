@@ -1119,10 +1119,16 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(node, "id");
             String name = id.toJava(String.class);
 
-            return Python.lookup(context, id).orElseThrow(() ->
-                    this.runtime.newRaiseException("builtins.NameError",
-                            "name '" + name + "' is not defined")
-            );
+            Optional<PyObject> resultOpt = Python.lookup(context, id);
+            if (resultOpt.isPresent()) {
+                return resultOpt.get();
+            }
+
+            if ("NotImplemented".equals(name)) {
+                return this.runtime.NotImplemented();
+            }
+
+            throw this.runtime.newRaiseException("NameError", "name '" + name + "' is not defined");
 
             /*
             return this.runtime.getattrOptional(context, name).orElseThrow(() ->
