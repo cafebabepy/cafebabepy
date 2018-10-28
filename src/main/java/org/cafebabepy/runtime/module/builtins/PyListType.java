@@ -6,7 +6,9 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.PyObjectObject;
 import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
+import org.cafebabepy.runtime.object.iterator.PyListReverseIteratorObject;
 import org.cafebabepy.runtime.object.java.PyIntObject;
 import org.cafebabepy.runtime.object.java.PyListObject;
 
@@ -240,6 +242,18 @@ public class PyListType extends AbstractCafeBabePyType {
         }
 
         return new PyListIteratorObject(this.runtime, (PyListObject) self);
+    }
+
+    @DefinePyFunction(name = __reversed__)
+    public PyObject __reversed__(PyObject self) {
+        if (!(self instanceof PyListObject)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__reversed__' requires a 'list' object but received a '"
+                            + self.getType().getFullName()
+                            + "'");
+        }
+
+        return new PyListReverseIteratorObject(this.runtime, (PyListObject) self);
     }
 
     @DefinePyFunction(name = __contains__)
