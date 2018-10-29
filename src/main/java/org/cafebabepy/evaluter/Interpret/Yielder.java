@@ -67,7 +67,8 @@ public abstract class Yielder<T> {
         private final Context<T> context;
         private final Thread thread;
 
-        private boolean iteratorCalled;
+        private volatile boolean iteratorCalled;
+        private volatile boolean threadStarted;
 
         private YielderIterable(Yielder<T> yielder) {
             this.context = new Context<>();
@@ -89,16 +90,17 @@ public abstract class Yielder<T> {
                 }
             });
 
-            this.thread.start();
+            this.iteratorCalled = false;
+            this.threadStarted = false;
         }
 
         @Override
         public synchronized Iterator<T> iterator() {
-            if (iteratorCalled) {
+            if (this.iteratorCalled) {
                 throw new IllegalStateException("iterator() has been called");
             }
 
-            iteratorCalled = true;
+            this.iteratorCalled = true;
 
             return new Iterator<T>() {
                 T nextItem;
@@ -109,10 +111,15 @@ public abstract class Yielder<T> {
                         synchronized (context.lock) {
                             if (!context.endReceived) {
                                 try {
+                                    if (!threadStarted) {
+                                        thread.start();
+                                        threadStarted = true;
+                                    }
                                     context.lock.notifyAll();
                                     context.lock.wait();
 
                                 } catch (InterruptedException ignore) {
+                                    return false;
                                 }
                             }
                         }
@@ -139,6 +146,13 @@ public abstract class Yielder<T> {
                     return result;
                 }
             };
+        }
+
+        @Override
+        protected void finalize() {
+            if (threadStarted) {
+                this.thread.interrupt();
+            }
         }
 
         public final Optional<RuntimeException> thrownException() {
