@@ -1555,14 +1555,28 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject name = this.runtime.str(ctx.NAME().getText());
 
         PyObject bases;
+        PyObject keywords;
         if (ctx.arglist() != null) {
-            bases = ctx.arglist().accept(this);
+            PyObject arglist = ctx.arglist().accept(this);
+
+            List<PyObject> baseList = new ArrayList<>();
+            List<PyObject> keywordList = new ArrayList<>();
+            this.runtime.iter(arglist, arg -> {
+                if (this.runtime.isInstance(arg, "_ast.keyword")) {
+                    keywordList.add(arg);
+
+                } else {
+                    baseList.add(arg);
+                }
+            });
+
+            bases = this.runtime.list(baseList);
+            keywords = this.runtime.list(keywordList);
 
         } else {
             bases = this.runtime.list();
+            keywords = this.runtime.list();
         }
-
-        PyObject keywords = this.runtime.list();
 
         PythonParser.SuiteContext suiteContext = ctx.suite();
         PyObject body = visitSuite(suiteContext);

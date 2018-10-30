@@ -319,13 +319,8 @@ public class InterpretEvaluator {
                 throw this.runtime.newRaiseTypeError("duplicate base class " + base.getName());
             }
 
-            if (this.runtime.isInstance(base, "_ast.keyword")) {
-                // FIXME not impl
-
-            } else {
-                PyObject evalBase = eval(context, base);
-                baseList.add(evalBase);
-            }
+            PyObject evalBase = eval(context, base);
+            baseList.add(evalBase);
         });
 
         String jname = name.toJava(String.class);
