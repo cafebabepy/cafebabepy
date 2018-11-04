@@ -12,6 +12,7 @@ import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
 import org.cafebabepy.runtime.object.literal.PyNoneObject;
 import org.cafebabepy.runtime.object.literal.PyNotImplementedObject;
+import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
@@ -46,6 +47,8 @@ public final class Python {
 
     private LinkedHashMap<PyObject, PyObject> sysModules;
 
+    private ThreadLocal<Deque<PyObject>> context = ThreadLocal.withInitial(ArrayDeque::new);
+
     private PyNoneObject noneObject;
 
     private PyBoolObject trueObject;
@@ -64,7 +67,13 @@ public final class Python {
 
         PyObject ast = runtime.parser.parse("<string>", input);
 
-        return runtime.evaluator.eval(runtime.getMainModule(), ast);
+        runtime.pushContext(runtime.getMainModule());
+        try {
+            return runtime.evaluator.eval(ast);
+
+        } finally {
+            runtime.popContext();
+        }
     }
 
     public static Python createRuntime() {
@@ -118,10 +127,10 @@ public final class Python {
         return getEvaluator().loadModule(file);
     }
 
-    public PyObject eval(PyObject context, String file, String input) {
+    public PyObject eval(String file, String input) {
         PyObject ast = this.parser.parse(file, input);
 
-        return this.evaluator.eval(context, ast);
+        return this.evaluator.eval(ast);
     }
 
     public PyObject getMainModule() {
@@ -137,6 +146,33 @@ public final class Python {
 
             return mainModule;
         });
+    }
+
+    public synchronized PyObject getCurrentContext() {
+        return this.context.get().peekFirst();
+    }
+
+    public synchronized void pushContext() {
+        Deque<PyObject> stack = this.context.get();
+        PyObject first = stack.peekFirst();
+        if (first == null) {
+            throw new CafeBabePyException("parent context is not found");
+        }
+
+        stack.push(new PyLexicalScopeProxyObject(first));
+    }
+
+    public synchronized void pushContext(PyObject context) {
+        this.context.get().push(context);
+    }
+
+    public synchronized PyObject popContext() {
+        PyObject context = this.context.get().pollFirst();
+        if (context == null) {
+            throw new CafeBabePyException("context is not found");
+        }
+
+        return context;
     }
 
     private void initialize() {

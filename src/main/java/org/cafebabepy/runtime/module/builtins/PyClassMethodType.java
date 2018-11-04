@@ -5,7 +5,6 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import static org.cafebabepy.util.ProtocolNames.__get__;
 import static org.cafebabepy.util.ProtocolNames.__init__;
@@ -35,15 +34,19 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
             klass = obj.getType();
         }
 
-        PyObject scope = new PyLexicalScopeProxyObject(self);
-        this.runtime.setattr(self, "f", f);
+        this.runtime.pushContext();
+        try {
+            this.runtime.setattr(this.runtime.getCurrentContext(), "f", f);
+            this.runtime.setattr(this.runtime.getCurrentContext(), "klass", klass);
 
-        this.runtime.setattr(scope, "self", self);
-        this.runtime.setattr(scope, "klass", klass);
 
-        return this.runtime.eval(scope, "<classmethod>", ""
-                + "def newfunc(*args):\n"
-                + "  return self.f(klass, *args)\n"
-                + "newfunc");
+            return this.runtime.eval("<classmethod>", ""
+                    + "def newfunc(*args):\n"
+                    + "  return f(klass, *args)\n"
+                    + "newfunc");
+
+        } finally {
+            this.runtime.popContext();
+        }
     }
 }

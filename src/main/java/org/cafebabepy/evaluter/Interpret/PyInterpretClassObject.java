@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
-class PyInterpretClassObject extends AbstractPyObject {
+public class PyInterpretClassObject extends AbstractPyObject {
 
     private final PyObject context;
 
@@ -21,12 +21,14 @@ class PyInterpretClassObject extends AbstractPyObject {
 
     private final List<PyObject> bases;
 
+    private final PyObject body;
+
     private volatile PyObjectScope scope;
 
-    PyInterpretClassObject(Python runtime, PyObject context, String name, List<PyObject> bases) {
+    PyInterpretClassObject(Python runtime, String name, List<PyObject> bases, PyObject body) {
         super(runtime);
 
-        this.context = new PyLexicalScopeProxyObject(context);
+        this.context = new PyLexicalScopeProxyObject(this.runtime.getCurrentContext());
         this.name = name;
 
         List<PyObject> mutableBases = new ArrayList<>(bases);
@@ -34,6 +36,21 @@ class PyInterpretClassObject extends AbstractPyObject {
             mutableBases.add(runtime.typeOrThrow("builtins.object"));
         }
         this.bases = Collections.unmodifiableList(mutableBases);
+
+        this.body = body;
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+
+        this.runtime.pushContext(this);
+        try {
+            this.runtime.getEvaluator().eval(this.body);
+
+        } finally {
+            this.runtime.popContext();
+        }
     }
 
     @Override

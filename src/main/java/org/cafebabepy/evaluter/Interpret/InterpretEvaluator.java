@@ -5,7 +5,6 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.RaiseException;
 import org.cafebabepy.runtime.module._ast.*;
-import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.*;
 
@@ -40,7 +39,7 @@ public class InterpretEvaluator {
         this.importManager = new ImportManager(runtime);
     }
 
-    public PyObject eval(PyObject context, PyObject node) {
+    public PyObject eval(PyObject node) {
         if (node.isNone()) {
             return node;
 
@@ -53,7 +52,7 @@ public class InterpretEvaluator {
 
         if (this.runtime.isInstance(node, "builtins.list")) {
             PyObject[] end = new PyObject[1];
-            this.runtime.iter(node, n -> end[0] = eval(context, n));
+            this.runtime.iter(node, n -> end[0] = eval(n));
             if (end[0] == null) {
                 return this.runtime.None();
 
@@ -64,133 +63,133 @@ public class InterpretEvaluator {
 
         switch (node.getName()) {
             case "Module":
-                return evalModule(context, node);
+                return evalModule(node);
 
             case "Interactive":
-                return evalInteractive(context, node);
+                return evalInteractive(node);
 
             case "Suite":
-                return evalSuite(context, node);
+                return evalSuite(node);
 
             case "Import":
-                return evalImport(context, node);
+                return evalImport(node);
 
             case "ImportFrom":
-                return evalImportFrom(context, node);
+                return evalImportFrom(node);
 
             case "AsyncFunctionDef":
-                return evalAsyncFunctionDef(context, node);
+                return evalAsyncFunctionDef(node);
 
             case "FunctionDef":
-                return evalFunctionDef(context, node);
+                return evalFunctionDef(node);
 
             case "ClassDef":
-                return evalClassDef(context, node);
+                return evalClassDef(node);
 
             case "If":
-                return evalIfAndIfExp(context, node);
+                return evalIfAndIfExp(node);
 
             case "Raise":
-                return evalRaise(context, node);
+                return evalRaise(node);
 
             case "Try":
-                return evalTry(context, node);
+                return evalTry(node);
 
             case "With":
-                return evalWith(context, node);
+                return evalWith(node);
 
             case "While":
-                return evalWhile(context, node);
+                return evalWhile(node);
 
             case "For":
-                return evalFor(context, node);
+                return evalFor(node);
 
             case "Expr":
-                return evalExpr(context, node);
+                return evalExpr(node);
 
             case "Pass":
-                return evalPass(context, node);
+                return evalPass(node);
 
             case "Break":
-                return evalBreak(context, node);
+                return evalBreak(node);
 
             case "Continue":
-                return evalContinue(context, node);
+                return evalContinue(node);
 
             case "Assign":
-                return evalAssign(context, node);
+                return evalAssign(node);
 
             case "Annassign":
-                return evalAnnassign(context, node);
+                return evalAnnassign(node);
 
             case "IfExp":
-                return evalIfAndIfExp(context, node);
+                return evalIfAndIfExp(node);
 
             case "List":
-                return evalList(context, node);
+                return evalList(node);
 
             case "ListComp":
-                return evalListComp(context, node);
+                return evalListComp(node);
 
             case "GeneratorExp":
-                return evalGeneratorExp(context, node);
+                return evalGeneratorExp(node);
 
             case "Yield":
-                return evalYield(context, node);
+                return evalYield(node);
 
             case "BinOp":
-                return evalBinOp(context, node);
+                return evalBinOp(node);
 
             case "UnaryOp":
-                return evalUnaryOp(context, node);
+                return evalUnaryOp(node);
 
             case "Lambda":
-                return evalLambda(context, node);
+                return evalLambda(node);
 
             case "Call":
-                return evalCall(context, node);
+                return evalCall(node);
 
             case "Return":
-                return evalReturn(context, node);
+                return evalReturn(node);
 
             case "Compare":
-                return evalCompare(context, node);
+                return evalCompare(node);
 
             case "Name":
-                return evalName(context, node);
+                return evalName(node);
 
             case "Num":
-                return evalNum(context, node);
+                return evalNum(node);
 
             case "Str":
-                return evalStr(context, node);
+                return evalStr(node);
 
             case "Bytes":
-                return evalBytes(context, node);
+                return evalBytes(node);
 
             case "FormattedValue":
-                return evalFormattedValue(context, node);
+                return evalFormattedValue(node);
 
             case "JoinedStr":
-                return evalJoinedStr(context, node);
+                return evalJoinedStr(node);
 
             case "Attribute":
-                return evalAttribute(context, node);
+                return evalAttribute(node);
 
             case "Dict":
-                return evalDict(context, node);
+                return evalDict(node);
 
             case "Tuple":
-                return evalTuple(context, node);
+                return evalTuple(node);
 
             case "Subscript":
-                return evalSubscript(context, node);
+                return evalSubscript(node);
 
             case "Index":
-                return evalIndex(context, node);
+                return evalIndex(node);
 
             case "Slice":
-                return evalSlice(context, node);
+                return evalSlice(node);
         }
 
         throw new CafeBabePyException("Unknown AST '" + node.getName() + "'");
@@ -200,29 +199,17 @@ public class InterpretEvaluator {
         return this.importManager.loadModule(moduleName);
     }
 
-    public void importSimple(PyObject context, PyObject name) {
-        this.importManager.importSimple(context, name);
-    }
-
-    public void importAsName(PyObject context, PyObject name, PyObject asName) {
-        this.importManager.importAsName(context, name, asName);
-    }
-
-    public void importFrom(PyObject context, PyObject moduleName, PyObject names, PyObject level) {
-        this.importManager.importFrom(context, moduleName, names, level);
-    }
-
-    private PyObject evalModule(PyObject context, PyObject node) {
+    private PyObject evalModule(PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
-        return eval(context, body);
+        return eval(body);
     }
 
-    private PyObject evalInteractive(PyObject context, PyObject node) {
+    private PyObject evalInteractive(PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
-        return eval(context, body);
+        return eval(body);
     }
 
-    private PyObject evalSuite(PyObject context, PyObject node) {
+    private PyObject evalSuite(PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
 
         if (this.runtime.isIterable(body)) {
@@ -230,58 +217,57 @@ public class InterpretEvaluator {
             result[0] = this.runtime.None();
 
             this.runtime.iter(body, b -> {
-                result[0] = eval(context, b);
+                result[0] = eval(b);
             });
 
             return result[0];
 
         } else {
-            PyObject result = eval(context, body);
+            PyObject result = eval(body);
 
             return result;
         }
     }
 
-    private PyObject evalImport(PyObject context, PyObject node) {
+    private PyObject evalImport(PyObject node) {
         PyObject names = this.runtime.getattr(node, "names");
 
         this.runtime.iter(names, n -> {
             PyObject name = this.runtime.getattr(n, "name");
             PyObject asname = this.runtime.getattr(n, "asname");
 
-            importAsName(context, name, asname);
+            this.importManager.importAsName(name, asname);
         });
 
         return this.runtime.None();
     }
 
-    private PyObject evalImportFrom(PyObject context, PyObject node) {
+    private PyObject evalImportFrom(PyObject node) {
         PyObject module = this.runtime.getattr(node, "module");
         PyObject names = this.runtime.getattr(node, "names");
         PyObject level = this.runtime.getattr(node, "level");
 
-        importFrom(context, module, names, level);
+        this.importManager.importFrom(module, names, level);
 
         return this.runtime.None();
     }
 
-    private PyObject evalAsyncFunctionDef(PyObject context, PyObject node) {
-        return evalFunctionDefImpl(context, node, true);
+    private PyObject evalAsyncFunctionDef(PyObject node) {
+        return evalFunctionDefImpl(node, true);
     }
 
-    private PyObject evalFunctionDef(PyObject context, PyObject node) {
-        return evalFunctionDefImpl(context, node, false);
+    private PyObject evalFunctionDef(PyObject node) {
+        return evalFunctionDefImpl(node, false);
     }
 
-    private PyObject evalFunctionDefImpl(PyObject context, PyObject node, boolean async) {
+    private PyObject evalFunctionDefImpl(PyObject node, boolean async) {
         PyObject name = this.runtime.getattr(node, "name");
         PyObject args = this.runtime.getattr(node, "args");
         PyObject body = this.runtime.getattr(node, "body");
         PyObject decorator_list = this.runtime.getattr(node, "decorator_list");
         PyObject returns = this.runtime.getattr(node, "returns"); // FIXME ???
 
-        PyObject function = new PyInterpretFunctionObject(
-                this.runtime, name.toJava(String.class), context, args, body);
+        PyObject function = new PyInterpretFunctionObject(this.runtime, name.toJava(String.class), args, body);
         function.initialize();
         function.getScope().put(this.runtime.str("_async"), this.runtime.bool(async));
 
@@ -295,16 +281,16 @@ public class InterpretEvaluator {
         for (int i = 0; i < decoratorCount; i++) {
             PyObject decorator = decorators.get(i);
 
-            PyObject decoratorEvalFunction = eval(context, decorator);
+            PyObject decoratorEvalFunction = eval(decorator);
             decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
         }
 
-        this.runtime.setattr(context, name.toJava(String.class), decoratorEvalValue);
+        this.runtime.setattr(this.runtime.getCurrentContext(), name.toJava(String.class), decoratorEvalValue);
 
         return this.runtime.None();
     }
 
-    private PyObject evalClassDef(PyObject context, PyObject node) {
+    private PyObject evalClassDef(PyObject node) {
         PyObject name = this.runtime.getattr(node, "name");
         PyObject bases = this.runtime.getattr(node, "bases");
         PyObject keywords = this.runtime.getattr(node, "keywords");
@@ -319,47 +305,47 @@ public class InterpretEvaluator {
                 throw this.runtime.newRaiseTypeError("duplicate base class " + base.getName());
             }
 
-            PyObject evalBase = eval(context, base);
+            PyObject evalBase = eval(base);
             baseList.add(evalBase);
         });
 
         String jname = name.toJava(String.class);
         String n = jname;
-        if (!context.isModule()) {
-            n = context.getName() + "." + n;
+
+        PyObject c = this.runtime.getCurrentContext();
+        if (!c.isModule()) {
+            n = c.getName() + "." + n;
         }
 
-        PyObject clazz = new PyInterpretClassObject(
-                this.runtime, context, n, baseList);
+        PyObject clazz = new PyInterpretClassObject(this.runtime, n, baseList, body);
+        clazz.initialize();
 
-        this.runtime.setattr(context, jname, clazz);
-
-        eval(clazz, body);
+        this.runtime.setattr(c, jname, clazz);
 
         return this.runtime.None();
     }
 
-    private PyObject evalIfAndIfExp(PyObject context, PyObject node) {
+    private PyObject evalIfAndIfExp(PyObject node) {
         PyObject test = this.runtime.getattr(node, "test");
         PyObject body = this.runtime.getattr(node, "body");
         PyObject orElse = this.runtime.getattr(node, "orelse");
 
-        PyObject evalTest = eval(context, test);
+        PyObject evalTest = eval(test);
         if (evalTest.isTrue()) {
-            return eval(context, body);
+            return eval(body);
 
         } else {
-            return eval(context, orElse);
+            return eval(orElse);
         }
     }
 
-    private PyObject evalRaise(PyObject context, PyObject node) {
+    private PyObject evalRaise(PyObject node) {
         PyObject exc = this.runtime.getattr(node, "exc");
 
         // FIXME raise Exception from xxx
         PyObject cause = this.runtime.getattr(node, "cause");
 
-        PyObject evalExc = eval(context, exc);
+        PyObject evalExc = eval(exc);
         if (!this.runtime.isInstance(evalExc, "BaseException")) {
             throw this.runtime.newRaiseTypeError("exceptions must derive from BaseException");
         }
@@ -367,7 +353,7 @@ public class InterpretEvaluator {
         throw this.runtime.newRaiseException(evalExc);
     }
 
-    private PyObject evalTry(PyObject context, PyObject node) {
+    private PyObject evalTry(PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
         PyObject handlers = this.runtime.getattr(node, "handlers");
         PyObject orelse = this.runtime.getattr(node, "orelse");
@@ -377,10 +363,10 @@ public class InterpretEvaluator {
         RaiseException elseException = null;
 
         try {
-            result = eval(context, body);
+            result = eval(body);
             if (!orelse.isNone()) {
                 try {
-                    result = eval(context, orelse);
+                    result = eval(orelse);
 
                 } catch (RaiseException e) {
                     elseException = e;
@@ -397,7 +383,7 @@ public class InterpretEvaluator {
                 PyObject handler = handlerList.get(i);
 
                 PyObject type = this.runtime.getattr(handler, "type");
-                PyObject evalType = eval(context, type);
+                PyObject evalType = eval(type);
 
                 if (this.runtime.isInstance(exception, evalType)) {
                     PyObject name = this.runtime.getattr(handler, "name");
@@ -405,13 +391,13 @@ public class InterpretEvaluator {
                     PyObject exceptBody = this.runtime.getattr(handler, "body");
                     try {
                         if (!name.isNone()) {
-                            this.runtime.setattr(context, name.toJava(String.class), exception);
+                            this.runtime.setattr(this.runtime.getCurrentContext(), name.toJava(String.class), exception);
                         }
-                        return eval(context, exceptBody);
+                        return eval(exceptBody);
 
                     } finally {
                         if (!name.isNone()) {
-                            context.getScope().remove(name);
+                            this.runtime.getCurrentContext().getScope().remove(name);
                         }
                     }
                 }
@@ -421,7 +407,7 @@ public class InterpretEvaluator {
 
         } finally {
             if (!finalbody.isNone()) {
-                return eval(context, finalbody);
+                return eval(finalbody);
             }
         }
 
@@ -433,103 +419,108 @@ public class InterpretEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    private PyObject evalWith(PyObject context, PyObject node) {
+    private PyObject evalWith(PyObject node) {
         PyObject items = this.runtime.getattr(node, "items");
         PyObject body = this.runtime.getattr(node, "body");
 
         List<PyObject> itemList = new ArrayList<>();
         this.runtime.iter(items, itemList::add);
 
-        PyObject lexicalContext = new PyLexicalScopeProxyObject(context);
-
-        List<PyObject> evalContextExprList = new ArrayList<>(itemList.size());
-
-        for (int i = 0; i < itemList.size(); i++) {
-            PyObject item = itemList.get(i);
-            PyObject contextExpr = this.runtime.getattr(item, "context_expr");
-            PyObject optionalVars = this.runtime.getattr(item, "optional_vars");
-
-            PyObject evalContextExpr = eval(context, contextExpr);
-
-            if (!this.runtime.hasattr(evalContextExpr, __exit__)) {
-                throw this.runtime.newRaiseException("AttributeError", __exit__);
-            }
-
-            if (!this.runtime.hasattr(evalContextExpr, __enter__)) {
-                throw this.runtime.newRaiseException("AttributeError", __enter__);
-            }
-
-            if (!optionalVars.isNone()) {
-                assign(lexicalContext, optionalVars, evalContextExpr);
-            }
-
-            evalContextExprList.add(evalContextExpr);
-        }
-
-        for (int i = 0; i < evalContextExprList.size(); i++) {
-            PyObject evalContextExpr = evalContextExprList.get(i);
-            PyObject enter = this.runtime.getattr(evalContextExpr, __enter__);
-
-            enter.call();
-        }
-
-        PyObject result = null;
-        RaiseException raiseException = null;
+        this.runtime.pushContext();
         try {
-            result = eval(lexicalContext, body);
+            List<PyObject> evalContextExprList = new ArrayList<>(itemList.size());
 
-        } catch (RaiseException e) {
-            raiseException = e;
+            for (int i = 0; i < itemList.size(); i++) {
+                PyObject item = itemList.get(i);
+                PyObject contextExpr = this.runtime.getattr(item, "context_expr");
+                PyObject optionalVars = this.runtime.getattr(item, "optional_vars");
 
-        } finally {
-            PyObject exception = raiseException != null ? raiseException.getException() : this.runtime.None();
+                PyObject evalContextExpr = eval(contextExpr);
 
-            for (int i = evalContextExprList.size() - 1; i >= 0; i--) {
-                PyObject evalContextExpr = evalContextExprList.get(i);
-                PyObject enter = this.runtime.getattr(evalContextExpr, __exit__);
-
-                PyObject exceptionValue = this.runtime.None();
-                if (!exception.isNone()) {
-                    exceptionValue = this.runtime.getattr(exception, "args");
-                    List<PyObject> argList = exceptionValue.toJava(List.class);
-                    if (argList.size() == 1) {
-                        exceptionValue = argList.get(0);
-                    }
+                if (!this.runtime.hasattr(evalContextExpr, __exit__)) {
+                    throw this.runtime.newRaiseException("AttributeError", __exit__);
                 }
 
-                enter.call(exception.getType(), exceptionValue, this.runtime.None()); // FIXME None
+                if (!this.runtime.hasattr(evalContextExpr, __enter__)) {
+                    throw this.runtime.newRaiseException("AttributeError", __enter__);
+                }
+
+                if (!optionalVars.isNone()) {
+                    assign(optionalVars, evalContextExpr);
+                }
+
+                evalContextExprList.add(evalContextExpr);
             }
 
-            if (result != null) {
-                return result;
-            }
-            if (raiseException != null) {
-                throw raiseException;
+            for (int i = 0; i < evalContextExprList.size(); i++) {
+                PyObject evalContextExpr = evalContextExprList.get(i);
+                PyObject enter = this.runtime.getattr(evalContextExpr, __enter__);
+
+                enter.call();
             }
 
-            throw new CafeBabePyException("Fail evalWith");
+            PyObject result = null;
+            RaiseException raiseException = null;
+            try {
+                result = eval(body);
+
+            } catch (RaiseException e) {
+                raiseException = e;
+
+            } finally {
+                PyObject exception = raiseException != null ? raiseException.getException() : this.runtime.None();
+
+                for (int i = evalContextExprList.size() - 1; i >= 0; i--) {
+                    PyObject evalContextExpr = evalContextExprList.get(i);
+                    PyObject enter = this.runtime.getattr(evalContextExpr, __exit__);
+
+                    PyObject exceptionValue = this.runtime.None();
+                    if (!exception.isNone()) {
+                        exceptionValue = this.runtime.getattr(exception, "args");
+                        List<PyObject> argList = exceptionValue.toJava(List.class);
+                        if (argList.size() == 1) {
+                            exceptionValue = argList.get(0);
+                        }
+                    }
+
+                    enter.call(exception.getType(), exceptionValue, this.runtime.None()); // FIXME None
+                }
+
+                if (result != null) {
+                    return result;
+                }
+                if (raiseException != null) {
+                    throw raiseException;
+                }
+
+                throw new CafeBabePyException("Fail evalWith");
+
+            }
+
+        } finally {
+            this.runtime.popContext();
         }
     }
 
-    private PyObject evalWhile(PyObject context, PyObject node) {
+    private PyObject evalWhile(PyObject node) {
         PyObject test = this.runtime.getattr(node, "test");
         PyObject body = this.runtime.getattr(node, "body");
         PyObject orelse = this.runtime.getattr(node, "orelse");
 
         try {
             while (true) {
-                PyObject evalTest = eval(context, test);
+                PyObject evalTest = eval(test);
                 if (evalTest.isFalse()) {
                     break;
                 }
                 try {
-                    eval(context, body);
+                    eval(body);
 
                 } catch (InterpretContinue ignore) {
                 }
             }
 
-            eval(context, orelse);
+            eval(orelse);
 
         } catch (InterpretBreak ignore) {
         }
@@ -537,25 +528,25 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
-    private PyObject evalFor(PyObject context, PyObject node) {
+    private PyObject evalFor(PyObject node) {
         PyObject target = this.runtime.getattr(node, "target");
         PyObject iter = this.runtime.getattr(node, "iter");
         PyObject body = this.runtime.getattr(node, "body");
         PyObject orelse = this.runtime.getattr(node, "orelse");
 
-        PyObject evalIter = eval(context, iter);
+        PyObject evalIter = eval(iter);
 
         try {
             this.runtime.iter(evalIter, next -> {
-                assign(context, target, next);
+                assign(target, next);
                 try {
-                    eval(context, body);
+                    eval(body);
 
                 } catch (InterpretContinue ignore) {
                 }
             });
 
-            eval(context, orelse);
+            eval(orelse);
 
         } catch (InterpretBreak ignore) {
         }
@@ -563,7 +554,7 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
-    private PyObject evalList(PyObject context, PyObject node) {
+    private PyObject evalList(PyObject node) {
         PyObject elts = this.runtime.getattr(node, "elts");
 
         List<PyObject> elements = new ArrayList<>();
@@ -571,12 +562,12 @@ public class InterpretEvaluator {
             PyObject type = elt.getType();
             if (type instanceof PyStarredType) {
                 PyObject value = this.runtime.getattr(elt, "value");
-                PyObject evalValue = eval(context, value);
+                PyObject evalValue = eval(value);
 
                 this.runtime.iter(evalValue, elements::add);
 
             } else {
-                PyObject evalValue = eval(context, elt);
+                PyObject evalValue = eval(elt);
 
                 elements.add(evalValue);
             }
@@ -585,21 +576,21 @@ public class InterpretEvaluator {
         return this.runtime.list(elements);
     }
 
-    private PyObject evalListComp(PyObject context, PyObject node) {
-        List<PyObject> result = evalComp(context, node);
+    private PyObject evalListComp(PyObject node) {
+        List<PyObject> result = evalComp(node);
 
         return this.runtime.list(result);
     }
 
-    private PyObject evalGeneratorExp(PyObject context, PyObject node) {
-        List<PyObject> result = evalComp(context, node);
+    private PyObject evalGeneratorExp(PyObject node) {
+        List<PyObject> result = evalComp(node);
 
         return this.runtime.tuple(result);
     }
 
-    private PyObject evalYield(PyObject context, PyObject node) {
+    private PyObject evalYield(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
-        PyObject evalValue = eval(context, value);
+        PyObject evalValue = eval(value);
 
         Yielder<PyObject> yielder = this.yielderMap.get(node);
         if (yielder == null) {
@@ -611,28 +602,33 @@ public class InterpretEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    private List<PyObject> evalComp(PyObject context, PyObject node) {
+    private List<PyObject> evalComp(PyObject node) {
         PyObject elt = this.runtime.getattr(node, "elt");
         PyObject generators = this.runtime.getattr(node, "generators");
 
         List<PyObject> generatorList = (List<PyObject>) generators.toJava(List.class);
         List<PyObject> resultList = new ArrayList<>();
 
-        PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
-        evalGenerators(lexicalContext, elt, generatorList, resultList);
+        this.runtime.pushContext();
+        try {
+            evalGenerators(elt, generatorList, resultList);
+
+        } finally {
+            this.runtime.popContext();
+        }
 
         return resultList;
     }
 
     @SuppressWarnings("unchecked")
-    private void evalGenerators(PyObject context, PyObject elt, List<PyObject> generators, List<PyObject> resultList) {
+    private void evalGenerators(PyObject elt, List<PyObject> generators, List<PyObject> resultList) {
         PyObject generator = generators.get(0);
         PyObject target = this.runtime.getattr(generator, "target");
         PyObject iter = this.runtime.getattr(generator, "iter");
         PyObject ifs = this.runtime.getattr(generator, "ifs");
         PyObject is_async = this.runtime.getattr(generator, "is_async");
 
-        PyObject evalIter = eval(context, iter);
+        PyObject evalIter = eval(iter);
 
         List<PyObject> ifList;
         if (ifs.isNone()) {
@@ -642,83 +638,83 @@ public class InterpretEvaluator {
             ifList = (List<PyObject>) ifs.toJava(List.class);
         }
         this.runtime.iter(evalIter, next -> {
-            assign(context, target, next);
+            assign(target, next);
             for (int i = 0; i < ifList.size(); i++) {
-                PyObject result = eval(context, ifList.get(i));
+                PyObject result = eval(ifList.get(i));
                 if (result.isFalse()) {
                     return;
                 }
             }
 
             if (generators.size() == 1) {
-                resultList.add(eval(context, elt));
+                resultList.add(eval(elt));
 
             } else {
                 List<PyObject> gs = generators.subList(1, generators.size());
 
-                evalGenerators(context, elt, gs, resultList);
+                evalGenerators(elt, gs, resultList);
             }
         });
     }
 
-    private PyObject evalExpr(PyObject context, PyObject node) {
+    private PyObject evalExpr(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
 
-        return eval(context, value);
+        return eval(value);
     }
 
-    private PyObject evalPass(PyObject context, PyObject node) {
+    private PyObject evalPass(PyObject node) {
         return this.runtime.None();
     }
 
-    private PyObject evalBreak(PyObject context, PyObject node) {
+    private PyObject evalBreak(PyObject node) {
         throw new InterpretBreak();
     }
 
-    private PyObject evalContinue(PyObject context, PyObject node) {
+    private PyObject evalContinue(PyObject node) {
         throw new InterpretContinue();
     }
 
-    private PyObject evalAssign(PyObject context, PyObject node) {
+    private PyObject evalAssign(PyObject node) {
         PyObject targets = this.runtime.getattr(node, "targets");
         PyObject value = this.runtime.getattr(node, "value");
-        PyObject evalValue = eval(context, value);
+        PyObject evalValue = eval(value);
 
-        this.runtime.iter(targets, target -> assign(context, target, evalValue));
+        this.runtime.iter(targets, target -> assign(target, evalValue));
 
         return this.runtime.None();
     }
 
-    void assign(PyObject context, PyObject target, PyObject evalValue) {
+    void assign(PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            this.runtime.setattr(this.runtime.getCurrentContext(), id.toJava(String.class), evalValue);
 
         } else {
-            unpack(context, target, evalValue);
+            unpack(target, evalValue);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void unpack(PyObject context, PyObject target, PyObject evalValue) {
+    private void unpack(PyObject target, PyObject evalValue) {
         PyObject targetType = target.getType();
 
         PyObject targets;
 
         if (targetType instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            this.runtime.setattr(this.runtime.getCurrentContext(), id.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
             PyObject attr = this.runtime.getattr(target, "attr");
-            PyObject attributeContext = eval(context, target);
+            PyObject attributeContext = eval(target);
             this.runtime.setattr(attributeContext, attr.toJava(String.class), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
             PyObject value = this.runtime.getattr(target, "value");
-            unpack(context, value, evalValue);
+            unpack(value, evalValue);
             return;
 
         } else if (targetType instanceof PyListType) {
@@ -731,14 +727,14 @@ public class InterpretEvaluator {
             PyObject value = this.runtime.getattr(target, "value");
             PyObject slice = this.runtime.getattr(target, "slice");
 
-            PyObject evalTarget = eval(context, value);
+            PyObject evalTarget = eval(value);
 
             Optional<PyObject> setattrOpt = this.runtime.getattrOptional(evalTarget, __setitem__);
             if (!setattrOpt.isPresent()) {
                 throw this.runtime.newRaiseTypeError("'" + evalTarget.getFullName() + "' object does not support item assignment");
             }
 
-            PyObject evalKey = eval(context, slice);
+            PyObject evalKey = eval(slice);
 
             setattrOpt.get().call(evalKey, evalValue);
             return;
@@ -805,19 +801,19 @@ public class InterpretEvaluator {
             } else {
                 if (starredTarget != null) {
                     PyObject value = this.runtime.list(starredValueList);
-                    unpack(context, starredTarget, value);
+                    unpack(starredTarget, value);
 
                     starredTarget = null;
                     starredValueList = null;
                 }
-                unpack(context, t, evalValuePyList.get(valueIndex));
+                unpack(t, evalValuePyList.get(valueIndex));
                 valueIndex++;
             }
         }
 
         if (starredTarget != null) {
             PyObject value = this.runtime.list(starredValueList);
-            unpack(context, starredTarget, value);
+            unpack(starredTarget, value);
         }
 
         if (valueIndex < evalValuePyList.size()) {
@@ -826,23 +822,23 @@ public class InterpretEvaluator {
         }
     }
 
-    private PyObject evalAnnassign(PyObject context, PyObject node) {
+    private PyObject evalAnnassign(PyObject node) {
         PyObject target = this.runtime.getattr(node, "target");
         PyObject value = this.runtime.getattr(node, "value");
         if (!value.isNone()) {
             PyObject id = this.runtime.getattr(target, "id");
-            PyObject evalValue = eval(context, value);
+            PyObject evalValue = eval(value);
 
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            this.runtime.setattr(this.runtime.getCurrentContext(), id.toJava(String.class), evalValue);
         }
 
         return this.runtime.None();
     }
 
     @SuppressWarnings("unchecked")
-    private PyObject evalCall(PyObject context, PyObject node) {
+    private PyObject evalCall(PyObject node) {
         PyObject func = this.runtime.getattr(node, "func");
-        PyObject funcEval = eval(context, func);
+        PyObject funcEval = eval(func);
 
         PyObject args = this.runtime.getattr(node, "args");
         PyObject keywords = this.runtime.getattr(node, "keywords");
@@ -854,7 +850,7 @@ public class InterpretEvaluator {
         this.runtime.iter(args, arg -> {
             if (this.runtime.isInstance(arg, "_ast.Starred")) {
                 PyObject value = this.runtime.getattr(arg, "value");
-                PyObject evalValue = eval(context, value);
+                PyObject evalValue = eval(value);
 
                 if (!this.runtime.isIterable(evalValue)) {
                     String name = this.runtime.getattr(func, "id").toJava(String.class);
@@ -865,7 +861,7 @@ public class InterpretEvaluator {
                 this.runtime.iter(evalValue, argList::add);
 
             } else {
-                PyObject evalArg = eval(context, arg);
+                PyObject evalArg = eval(arg);
 
                 argList.add(evalArg);
             }
@@ -875,7 +871,7 @@ public class InterpretEvaluator {
         this.runtime.iter(keywords, keyword -> {
             PyObject arg = this.runtime.getattr(keyword, "arg");
             PyObject value = this.runtime.getattr(keyword, "value");
-            PyObject evalValue = eval(context, value);
+            PyObject evalValue = eval(value);
 
             if (arg.isNone()) {
                 LinkedHashMap<PyObject, PyObject> dictMap = evalValue.toJava(LinkedHashMap.class);
@@ -896,20 +892,20 @@ public class InterpretEvaluator {
         return funcEval.call(argsArray, keywordsMap);
     }
 
-    private PyObject evalSubscript(PyObject context, PyObject node) {
+    private PyObject evalSubscript(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
         PyObject slice = this.runtime.getattr(node, "slice");
         PyObject ctx = this.runtime.getattr(node, "ctx");
 
         if (this.runtime.isInstance(slice, "_ast.Index")) {
-            PyObject evalValue = eval(context, value);
+            PyObject evalValue = eval(value);
 
             Optional<PyObject> getattrOpt = this.runtime.getattrOptional(evalValue, __getitem__);
             if (!getattrOpt.isPresent()) {
                 throw this.runtime.newRaiseTypeError("'" + evalValue.getFullName() + "' object is not subscriptable");
             }
 
-            PyObject evalKey = eval(context, slice);
+            PyObject evalKey = eval(slice);
             return getattrOpt.get().call(evalKey);
         }
 
@@ -917,32 +913,32 @@ public class InterpretEvaluator {
         return this.runtime.NotImplemented();
     }
 
-    private PyObject evalIndex(PyObject context, PyObject node) {
+    private PyObject evalIndex(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
 
-        return eval(context, value);
+        return eval(value);
     }
 
-    private PyObject evalSlice(PyObject context, PyObject node) {
+    private PyObject evalSlice(PyObject node) {
         PyObject lower = this.runtime.getattr(node, "lower");
         PyObject upper = this.runtime.getattr(node, "upper");
         PyObject step = this.runtime.getattr(node, "step");
 
-        PyObject evalLower = eval(context, lower);
-        PyObject evalUpper = eval(context, upper);
-        PyObject evalStep = eval(context, step);
+        PyObject evalLower = eval(lower);
+        PyObject evalUpper = eval(upper);
+        PyObject evalStep = eval(step);
 
         return this.runtime.newPyObject("builtins.slice", evalLower, evalUpper, evalStep);
     }
 
-    private PyObject evalReturn(PyObject context, PyObject node) {
+    private PyObject evalReturn(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
-        PyObject evalValue = eval(context, value);
+        PyObject evalValue = eval(value);
 
         throw new InterpretReturn(evalValue);
     }
 
-    private PyObject evalCompare(PyObject context, PyObject node) {
+    private PyObject evalCompare(PyObject node) {
 
         // 1 < 2 < 3 < 4 => 1 < 2 && 2 < 3 && 3 < 4
         // 1 < 2 < 3 => 1 < 2 && 2 < 3
@@ -969,8 +965,8 @@ public class InterpretEvaluator {
 
         boolean evalResult = true;
         for (int i = 0; i < comparatorList.size() - 1; i++) {
-            PyObject evalLeft = eval(context, comparatorList.get(i));
-            PyObject evalRight = eval(context, comparatorList.get(i + 1));
+            PyObject evalLeft = eval(comparatorList.get(i));
+            PyObject evalRight = eval(comparatorList.get(i + 1));
             PyObject op = opList.get(i);
 
             if (this.runtime.isInstance(op, ltType)) {
@@ -1024,12 +1020,12 @@ public class InterpretEvaluator {
         return list;
     }
 
-    private PyObject evalBinOp(PyObject context, PyObject node) {
+    private PyObject evalBinOp(PyObject node) {
         PyObject left = this.runtime.getattr(node, "left");
-        PyObject evalLeft = eval(context, left);
+        PyObject evalLeft = eval(left);
 
         PyObject right = this.runtime.getattr(node, "right");
-        PyObject evalRight = eval(context, right);
+        PyObject evalRight = eval(right);
 
         PyObject addType = this.runtime.typeOrThrow("_ast.Add");
         PyObject subType = this.runtime.typeOrThrow("_ast.Sub");
@@ -1057,11 +1053,11 @@ public class InterpretEvaluator {
         throw new CafeBabePyException("operator '" + op.getName() + "' not found");
     }
 
-    private PyObject evalUnaryOp(PyObject context, PyObject node) {
+    private PyObject evalUnaryOp(PyObject node) {
         PyObject op = this.runtime.getattr(node, "op");
         PyObject operand = this.runtime.getattr(node, "operand");
 
-        PyObject evalOperand = eval(context, operand);
+        PyObject evalOperand = eval(operand);
 
         PyObject uAddType = this.runtime.typeOrThrow("_ast.UAdd");
         PyObject uSubType = this.runtime.typeOrThrow("_ast.USub");
@@ -1095,18 +1091,18 @@ public class InterpretEvaluator {
         }
     }
 
-    private PyObject evalLambda(PyObject context, PyObject node) {
+    private PyObject evalLambda(PyObject node) {
         PyObject args = this.runtime.getattr(node, "args");
         PyObject body = this.runtime.getattr(node, "body");
 
-        PyObject function = new PyInterpretFunctionObject(this.runtime, "<lambda>", context, args, body);
+        PyObject function = new PyInterpretFunctionObject(this.runtime, "<lambda>", args, body);
         function.initialize();
         function.getScope().put(this.runtime.str("_async"), this.runtime.False());
 
         return function;
     }
 
-    private PyObject evalName(PyObject context, PyObject node) {
+    private PyObject evalName(PyObject node) {
         PyObject ctx = this.runtime.getattr(node, "ctx");
 
         PyObject ctxType = ctx.getType();
@@ -1114,7 +1110,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(node, "id");
             String name = id.toJava(String.class);
 
-            Optional<PyObject> resultOpt = Python.lookup(context, id);
+            Optional<PyObject> resultOpt = Python.lookup(this.runtime.getCurrentContext(), id);
             if (resultOpt.isPresent()) {
                 return resultOpt.get();
             }
@@ -1133,51 +1129,51 @@ public class InterpretEvaluator {
             */
 
         } else if (ctxType instanceof PyStoreType) {
-            return context;
+            return this.runtime.getCurrentContext();
         }
 
         // TODO どうする？
         return node;
     }
 
-    private PyObject evalNum(PyObject context, PyObject node) {
+    private PyObject evalNum(PyObject node) {
         return this.runtime.getattr(node, "n");
     }
 
-    private PyObject evalStr(PyObject context, PyObject node) {
+    private PyObject evalStr(PyObject node) {
         return this.runtime.getattr(node, "s");
     }
 
-    private PyObject evalBytes(PyObject context, PyObject node) {
+    private PyObject evalBytes(PyObject node) {
         return this.runtime.getattr(node, "s");
     }
 
-    private PyObject evalFormattedValue(PyObject context, PyObject node) {
+    private PyObject evalFormattedValue(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
         PyObject conversion = this.runtime.getattr(node, "conversion");
         PyObject format_spec = this.runtime.getattr(node, "format_spec");
 
-        PyObject evalValue = eval(context, value);
+        PyObject evalValue = eval(value);
         // FIXME conversion
 
         return this.runtime.getattr(evalValue, __format__).call(format_spec);
     }
 
-    private PyObject evalJoinedStr(PyObject context, PyObject node) {
+    private PyObject evalJoinedStr(PyObject node) {
         PyObject values = this.runtime.getattr(node, "values");
 
         StringBuilder builder = new StringBuilder();
-        this.runtime.iter(values, value -> builder.append(eval(context, value).toJava(String.class)));
+        this.runtime.iter(values, value -> builder.append(eval(value).toJava(String.class)));
 
         return this.runtime.str(builder.toString());
     }
 
-    private PyObject evalAttribute(PyObject context, PyObject node) {
+    private PyObject evalAttribute(PyObject node) {
         PyObject value = this.runtime.getattr(node, "value");
         PyObject attr = this.runtime.getattr(node, "attr");
         PyObject ctx = this.runtime.getattr(node, "ctx");
 
-        PyObject evalValue = eval(context, value);
+        PyObject evalValue = eval(value);
 
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
@@ -1192,7 +1188,7 @@ public class InterpretEvaluator {
     }
 
     @SuppressWarnings("unchecked")
-    private PyObject evalDict(PyObject context, PyObject node) {
+    private PyObject evalDict(PyObject node) {
         PyObject keys = this.runtime.getattr(node, "keys");
         PyObject values = this.runtime.getattr(node, "values");
 
@@ -1205,8 +1201,8 @@ public class InterpretEvaluator {
         LinkedHashMap<PyObject, PyObject> map = new LinkedHashMap<>();
 
         for (int i = 0; i < keyList.size(); i++) {
-            PyObject key = eval(context, keyList.get(i));
-            PyObject value = eval(context, valueList.get(i));
+            PyObject key = eval(keyList.get(i));
+            PyObject value = eval(valueList.get(i));
 
             if (key.isNone()) {
                 Map<PyObject, PyObject> vs = value.toJava(Map.class);
@@ -1221,7 +1217,7 @@ public class InterpretEvaluator {
         return this.runtime.dict(map);
     }
 
-    private PyObject evalTuple(PyObject context, PyObject node) {
+    private PyObject evalTuple(PyObject node) {
         PyObject elts = this.runtime.getattr(node, "elts");
 
         List<PyObject> elements = new ArrayList<>();
@@ -1229,12 +1225,12 @@ public class InterpretEvaluator {
             PyObject type = elt.getType();
             if (type instanceof PyStarredType) {
                 PyObject value = this.runtime.getattr(elt, "value");
-                PyObject evalValue = eval(context, value);
+                PyObject evalValue = eval(value);
 
                 this.runtime.iter(evalValue, elements::add);
 
             } else {
-                PyObject evalValue = eval(context, elt);
+                PyObject evalValue = eval(elt);
 
                 elements.add(evalValue);
             }

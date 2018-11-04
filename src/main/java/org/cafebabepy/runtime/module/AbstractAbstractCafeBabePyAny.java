@@ -67,25 +67,31 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
             }
         }
 
-        for (Map.Entry<String, Method> entry : functionMap.entrySet()) {
-            String functionName = entry.getKey();
-            Method functionMethod = entry.getValue();
+        this.runtime.pushContext(this);
+        try {
+            for (Map.Entry<String, Method> entry : functionMap.entrySet()) {
+                String functionName = entry.getKey();
+                Method functionMethod = entry.getValue();
 
-            Map<String, Method> defaultValueMethodMap = defaultArgumentMap.get(functionName);
-            if (defaultValueMethodMap == null) {
-                defaultValueMethodMap = new HashMap<>();
+                Map<String, Method> defaultValueMethodMap = defaultArgumentMap.get(functionName);
+                if (defaultValueMethodMap == null) {
+                    defaultValueMethodMap = new HashMap<>();
+                }
+
+                PyJavaFunctionObject f = new PyJavaFunctionObject(
+                        getRuntime(),
+                        functionName,
+                        this,
+                        functionMethod,
+                        defaultValueMethodMap);
+
+                f.initialize();
+
+                getScope().put(this.runtime.str(f.getName()), f);
             }
 
-            PyJavaFunctionObject f = new PyJavaFunctionObject(
-                    getRuntime(),
-                    functionName,
-                    this,
-                    functionMethod,
-                    defaultValueMethodMap);
-
-            f.initialize();
-
-            getScope().put(this.runtime.str(f.getName()), f);
+        } finally {
+            this.runtime.popContext();
         }
     }
 

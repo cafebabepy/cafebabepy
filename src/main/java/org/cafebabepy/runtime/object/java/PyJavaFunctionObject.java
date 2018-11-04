@@ -23,7 +23,7 @@ public class PyJavaFunctionObject extends AbstractFunction {
     private final Method method;
 
     public PyJavaFunctionObject(Python runtime, String name, PyObject target, Method method, Map<String, Method> defaultArgumentMap) {
-        super(runtime, new PyObjectObject(runtime), name, createArguments(runtime, target, method, new HashMap<>(defaultArgumentMap)));
+        super(runtime, name, createArguments(runtime, target, method, new HashMap<>(defaultArgumentMap)));
 
         this.target = target;
         this.method = method;
@@ -141,8 +141,8 @@ public class PyJavaFunctionObject extends AbstractFunction {
     }
 
     @Override
-    protected PyObject callImpl(PyObject context) {
-        Map<PyObject, PyObject> pyArgumentMap = context.getScope().gets();
+    protected PyObject callImpl() {
+        Map<PyObject, PyObject> pyArgumentMap = this.context.getScope().gets();
         Map<String, PyObject> argumentMap = new LinkedHashMap<>(pyArgumentMap.size());
 
         for (Map.Entry<PyObject, PyObject> entry : pyArgumentMap.entrySet()) {

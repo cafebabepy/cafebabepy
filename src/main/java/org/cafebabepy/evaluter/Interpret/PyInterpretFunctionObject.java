@@ -16,19 +16,19 @@ import java.util.Optional;
 class PyInterpretFunctionObject extends AbstractFunction {
     private PyObject body;
 
-    PyInterpretFunctionObject(Python runtime, String name, PyObject context, PyObject arguments, PyObject body) {
-        super(runtime, context, name, arguments);
+    PyInterpretFunctionObject(Python runtime, String name, PyObject arguments, PyObject body) {
+        super(runtime, name, arguments);
 
         this.body = body;
     }
 
     @Override
     protected PyObject evalDefaultValue(PyObject defaultValue) {
-        return this.runtime.getEvaluator().eval(this.context, defaultValue);
+        return this.runtime.getEvaluator().eval(defaultValue);
     }
 
     @Override
-    protected PyObject callImpl(PyObject context) {
+    protected PyObject callImpl() {
         boolean async = getScope().get(this.runtime.str("_async"), false)
                 .orElseThrow(() -> new CafeBabePyException("_async is not found")).isTrue();
 
@@ -44,7 +44,13 @@ class PyInterpretFunctionObject extends AbstractFunction {
             Yielder<PyObject> yielder = new Yielder<PyObject>() {
                 @Override
                 public void run() {
-                    runtime.getEvaluator().eval(context, body);
+                    runtime.pushContext(context);
+                    try {
+                        runtime.getEvaluator().eval(body);
+
+                    } finally {
+                        runtime.popContext();
+                    }
                 }
             };
 
@@ -85,7 +91,7 @@ class PyInterpretFunctionObject extends AbstractFunction {
         }
 
         try {
-            return this.runtime.getEvaluator().eval(this.context, this.body);
+            return this.runtime.getEvaluator().eval(this.body);
 
         } catch (InterpretReturn e) {
             return e.value;

@@ -24,10 +24,10 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     private List<PyObject> kw_defaults;
     private List<PyObject> defaultArgs;
 
-    protected AbstractFunction(Python runtime, PyObject context, String name, PyObject arguments) {
+    protected AbstractFunction(Python runtime, String name, PyObject arguments) {
         super(runtime);
 
-        this.context = new PyLexicalScopeProxyObject(context); // arguments scope
+        this.context = new PyLexicalScopeProxyObject(this.runtime.getCurrentContext()); // arguments scope
         this.name = name;
         this.arguments = arguments;
     }
@@ -38,10 +38,16 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
         super.initialize();
 
         List<PyObject> defaultsList = getattr(this.arguments, "defaults").toJava(List.class);
-        this.defaultArgs = evalDefaults(defaultsList);
-
         List<PyObject> kw_defaultsList = getattr(this.arguments, "kw_defaults").toJava(List.class);
-        this.kw_defaults = evalDefaults(kw_defaultsList);
+
+        this.runtime.pushContext(this.context);
+        try {
+            this.defaultArgs = evalDefaults(defaultsList);
+            this.kw_defaults = evalDefaults(kw_defaultsList);
+
+        } finally {
+            this.runtime.popContext();
+        }
 
         getScope().put(this.runtime.str(__call__), this);
     }
@@ -70,139 +76,147 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        PyObjectScope scope = this.context.getScope();
+        PyObject context = this.context;
+        this.runtime.pushContext(context);
 
-        PyObject vararg = getattr(this.arguments, "vararg");
-        PyObject kwarg = getattr(this.arguments, "kwarg");
+        try {
+            PyObjectScope scope = context.getScope();
 
-        List<PyObject> defineArgsList = getattr(this.arguments, "args").toJava(List.class);
-        for (int i = 0; i < defineArgsList.size(); i++) {
-            PyObject defineArg = getattr(defineArgsList.get(i), "arg");
-            defineArgsList.set(i, defineArg);
-        }
+            PyObject vararg = getattr(this.arguments, "vararg");
+            PyObject kwarg = getattr(this.arguments, "kwarg");
 
-        List<PyObject> defineKwOnlyArgList = getattr(this.arguments, "kwonlyargs").toJava(List.class);
-        for (int i = 0; i < defineKwOnlyArgList.size(); i++) {
-            PyObject defineArg = getattr(defineKwOnlyArgList.get(i), "arg");
-            defineKwOnlyArgList.set(i, defineArg);
-        }
-
-        if (args.length + this.defaultArgs.size() + keywords.size() + (vararg.isNone() ? 0 : 1) < defineArgsList.size()) {
-            List<PyObject> notEnoughArguments = defineArgsList.subList(args.length, defineArgsList.size());
-
-            StringBuilder error = new StringBuilder(this.name + "() missing " + notEnoughArguments.size() + " required positional argument: ");
-
-            if (notEnoughArguments.size() == 1) {
-                error.append(notEnoughArguments.get(0));
-
-            } else {
-                for (int i = 0; i < notEnoughArguments.size() - 2; i++) {
-                    if (i != 0) {
-                        error.append(", ");
-                    }
-                    error.append(notEnoughArguments.get(i));
-                }
-                if (notEnoughArguments.size() > 2) {
-                    error.append(", ");
-                }
-
-                error.append(notEnoughArguments.get(notEnoughArguments.size() - 2))
-                        .append(" and ").append(notEnoughArguments.get(notEnoughArguments.size() - 1));
+            List<PyObject> defineArgsList = getattr(this.arguments, "args").toJava(List.class);
+            for (int i = 0; i < defineArgsList.size(); i++) {
+                PyObject defineArg = getattr(defineArgsList.get(i), "arg");
+                defineArgsList.set(i, defineArg);
             }
 
-            throw this.runtime.newRaiseTypeError(error.toString());
-
-        } else if (vararg.isNone() && args.length > defineArgsList.size()) {
-            throw this.runtime.newRaiseTypeError(
-                    this.name + "() takes " + defineArgsList.size() + " positional arguments but " + args.length + " were given"
-            );
-        }
-
-        int defaultArgumentIndex = args.length + this.defaultArgs.size() - defineArgsList.size() - defineKwOnlyArgList.size();
-        int assignIndex = 0;
-
-        // args
-        for (int i = 0; i < defineArgsList.size(); i++) {
-            PyObject arg = defineArgsList.get(i);
-
-            if (i < args.length) {
-                scope.put(arg, args[i]);
-                assignIndex++;
-
-            } else if (i < defineArgsList.size() - keywords.size()) {
-                scope.put(arg, this.defaultArgs.get(defaultArgumentIndex++));
-                assignIndex++;
-            }
-        }
-
-        // variable argument
-        if (!vararg.isNone()) {
-            PyObject arg = getattr(vararg, "arg");
-
-            PyObject[] varargs = new PyObject[args.length - assignIndex];
-            int count = args.length - assignIndex;
-            for (int i = 0; i < count; i++) {
-                varargs[i] = args[assignIndex++];
+            List<PyObject> defineKwOnlyArgList = getattr(this.arguments, "kwonlyargs").toJava(List.class);
+            for (int i = 0; i < defineKwOnlyArgList.size(); i++) {
+                PyObject defineArg = getattr(defineKwOnlyArgList.get(i), "arg");
+                defineKwOnlyArgList.set(i, defineArg);
             }
 
-            scope.put(arg, this.runtime.tuple(varargs));
-        }
+            if (args.length + this.defaultArgs.size() + keywords.size() + (vararg.isNone() ? 0 : 1) < defineArgsList.size()) {
+                List<PyObject> notEnoughArguments = defineArgsList.subList(args.length, defineArgsList.size());
 
-        // keyword arguments
-        for (String keywordString : keywords.keySet()) {
-            PyObject keyword = this.runtime.str(keywordString);
+                StringBuilder error = new StringBuilder(this.name + "() missing " + notEnoughArguments.size() + " required positional argument: ");
 
-            if (!defineArgsList.contains(keyword) && !defineKwOnlyArgList.contains(keyword) && kwarg.isNone()) {
-                throw this.runtime.newRaiseTypeError(this.name + "() got an unexpected keyword argument " + keyword);
-            }
-
-            if (scope.containsKey(keyword)) {
-                throw this.runtime.newRaiseTypeError(this.name + "() got multiple values for argument " + keyword);
-
-            } else {
-                if (defineArgsList.contains(keyword) && !defineKwOnlyArgList.contains(keyword)) {
-                    scope.put(keyword, keywords.get(keywordString));
-                }
-            }
-        }
-
-        int kw_defaultIndex = 0;
-        int kwonlyargsCount = defineKwOnlyArgList.size();
-        for (PyObject kwonlyarg : defineKwOnlyArgList) {
-            PyObject kwonlyargValue = keywords.get(kwonlyarg.toJava(String.class));
-            if (kwonlyargValue == null) {
-                if (kw_defaultIndex < this.kw_defaults.size()) {
-                    scope.put(kwonlyarg, this.kw_defaults.get(kw_defaultIndex++));
-                    kwonlyargsCount--;
+                if (notEnoughArguments.size() == 1) {
+                    error.append(notEnoughArguments.get(0));
 
                 } else {
-                    throw this.runtime.newRaiseTypeError(this.name + "() missing " + kwonlyargsCount + " required keyword-only argument: " + kwonlyarg);
+                    for (int i = 0; i < notEnoughArguments.size() - 2; i++) {
+                        if (i != 0) {
+                            error.append(", ");
+                        }
+                        error.append(notEnoughArguments.get(i));
+                    }
+                    if (notEnoughArguments.size() > 2) {
+                        error.append(", ");
+                    }
+
+                    error.append(notEnoughArguments.get(notEnoughArguments.size() - 2))
+                            .append(" and ").append(notEnoughArguments.get(notEnoughArguments.size() - 1));
                 }
 
-            } else {
-                scope.put(kwonlyarg, kwonlyargValue);
+                throw this.runtime.newRaiseTypeError(error.toString());
+
+            } else if (vararg.isNone() && args.length > defineArgsList.size()) {
+                throw this.runtime.newRaiseTypeError(
+                        this.name + "() takes " + defineArgsList.size() + " positional arguments but " + args.length + " were given"
+                );
             }
-        }
 
-        // variable keyword
-        if (!kwarg.isNone()) {
-            LinkedHashMap<PyObject, PyObject> kwargsMap = new LinkedHashMap<>();
+            int defaultArgumentIndex = args.length + this.defaultArgs.size() - defineArgsList.size() - defineKwOnlyArgList.size();
+            int assignIndex = 0;
 
+            // args
+            for (int i = 0; i < defineArgsList.size(); i++) {
+                PyObject arg = defineArgsList.get(i);
+
+                if (i < args.length) {
+                    scope.put(arg, args[i]);
+                    assignIndex++;
+
+                } else if (i < defineArgsList.size() - keywords.size()) {
+                    scope.put(arg, this.defaultArgs.get(defaultArgumentIndex++));
+                    assignIndex++;
+                }
+            }
+
+            // variable argument
+            if (!vararg.isNone()) {
+                PyObject arg = getattr(vararg, "arg");
+
+                PyObject[] varargs = new PyObject[args.length - assignIndex];
+                int count = args.length - assignIndex;
+                for (int i = 0; i < count; i++) {
+                    varargs[i] = args[assignIndex++];
+                }
+
+                scope.put(arg, this.runtime.tuple(varargs));
+            }
+
+            // keyword arguments
             for (String keywordString : keywords.keySet()) {
                 PyObject keyword = this.runtime.str(keywordString);
-                if (!scope.containsKey(keyword)) {
-                    kwargsMap.put(keyword, keywords.get(keywordString));
+
+                if (!defineArgsList.contains(keyword) && !defineKwOnlyArgList.contains(keyword) && kwarg.isNone()) {
+                    throw this.runtime.newRaiseTypeError(this.name + "() got an unexpected keyword argument " + keyword);
+                }
+
+                if (scope.containsKey(keyword)) {
+                    throw this.runtime.newRaiseTypeError(this.name + "() got multiple values for argument " + keyword);
+
+                } else {
+                    if (defineArgsList.contains(keyword) && !defineKwOnlyArgList.contains(keyword)) {
+                        scope.put(keyword, keywords.get(keywordString));
+                    }
                 }
             }
 
-            PyObject arg = getattr(kwarg, "arg");
-            scope.put(arg, this.runtime.dict(kwargsMap));
-        }
+            int kw_defaultIndex = 0;
+            int kwonlyargsCount = defineKwOnlyArgList.size();
+            for (PyObject kwonlyarg : defineKwOnlyArgList) {
+                PyObject kwonlyargValue = keywords.get(kwonlyarg.toJava(String.class));
+                if (kwonlyargValue == null) {
+                    if (kw_defaultIndex < this.kw_defaults.size()) {
+                        scope.put(kwonlyarg, this.kw_defaults.get(kw_defaultIndex++));
+                        kwonlyargsCount--;
 
-        return callImpl(this.context);
+                    } else {
+                        throw this.runtime.newRaiseTypeError(this.name + "() missing " + kwonlyargsCount + " required keyword-only argument: " + kwonlyarg);
+                    }
+
+                } else {
+                    scope.put(kwonlyarg, kwonlyargValue);
+                }
+            }
+
+            // variable keyword
+            if (!kwarg.isNone()) {
+                LinkedHashMap<PyObject, PyObject> kwargsMap = new LinkedHashMap<>();
+
+                for (String keywordString : keywords.keySet()) {
+                    PyObject keyword = this.runtime.str(keywordString);
+                    if (!scope.containsKey(keyword)) {
+                        kwargsMap.put(keyword, keywords.get(keywordString));
+                    }
+                }
+
+                PyObject arg = getattr(kwarg, "arg");
+                scope.put(arg, this.runtime.dict(kwargsMap));
+            }
+
+            return callImpl();
+
+        } finally {
+            this.runtime.popContext();
+        }
     }
 
-    protected abstract PyObject callImpl(PyObject context);
+    protected abstract PyObject callImpl();
 
     @Override
     public String getName() {
