@@ -9,6 +9,8 @@ import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.iterator.PyStrIteratorObject;
 import org.cafebabepy.runtime.object.java.PyStrObject;
 
+import java.io.UnsupportedEncodingException;
+
 import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
@@ -134,5 +136,27 @@ public final class PyStrType extends AbstractCafeBabePyType {
         });
 
         return this.runtime.str(builder.toString());
+    }
+
+    @DefinePyFunction(name = "encode")
+    public PyObject encode(PyObject self, PyObject encoding) {
+        if (!this.runtime.isInstance(self, "str")) {
+            throw this.runtime.newRaiseTypeError(" descriptor 'encode' requires a 'str' object but received a '" + self.getFullName() + "'");
+        }
+        if (!this.runtime.isInstance(encoding, "str")) {
+            throw this.runtime.newRaiseTypeError("encode() argument 1 must be str, not " + getFullName());
+        }
+
+        String value = self.toJava(String.class);
+        String charsetName = encoding.toJava(String.class);
+
+        try {
+            byte[] byteBytes = value.getBytes(charsetName);
+
+            return this.runtime.bytes(byteBytes);
+
+        } catch (UnsupportedEncodingException e) {
+            throw this.runtime.newRaiseException("builtins.LookupError", "unknown encoding: " + charsetName);
+        }
     }
 }
