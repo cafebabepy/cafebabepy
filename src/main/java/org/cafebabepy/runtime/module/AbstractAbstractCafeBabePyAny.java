@@ -67,7 +67,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
             }
         }
 
-        this.runtime.pushContext(this);
+        this.runtime.pushNewContext(this);
         try {
             for (Map.Entry<String, Method> entry : functionMap.entrySet()) {
                 String functionName = entry.getKey();

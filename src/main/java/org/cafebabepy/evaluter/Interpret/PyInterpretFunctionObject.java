@@ -41,6 +41,7 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
         List<PyObject> yields = yieldSearcher.get(this.body);
         if (!yields.isEmpty()) {
+            PyObject context = this.runtime.getCurrentContext();
             Yielder<PyObject> yielder = new Yielder<PyObject>() {
                 @Override
                 public void run() {

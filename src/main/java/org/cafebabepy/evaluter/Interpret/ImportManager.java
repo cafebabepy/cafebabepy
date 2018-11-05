@@ -285,6 +285,7 @@ class ImportManager {
         } catch (RaiseException e) {
             this.runtime.del(modules, this.runtime.str(moduleName));
             throw e;
+
         } finally {
             this.runtime.popContext();
         }

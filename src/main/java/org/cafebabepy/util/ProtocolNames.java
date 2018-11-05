@@ -62,6 +62,7 @@ public final class ProtocolNames {
     public static final String __doc__ = "__doc__";
     public static final String __globals__ = "__globals__";
     public static final String __reversed__ = "__reversed__";
+    public static final String __prepare__ = "__prepare__";
 
     private ProtocolNames() {
     }

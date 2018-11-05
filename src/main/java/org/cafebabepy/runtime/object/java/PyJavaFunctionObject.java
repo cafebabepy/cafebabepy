@@ -142,7 +142,7 @@ public class PyJavaFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject callImpl() {
-        Map<PyObject, PyObject> pyArgumentMap = this.context.getScope().gets();
+        Map<PyObject, PyObject> pyArgumentMap = this.runtime.getCurrentContext().getScope().gets();
         Map<String, PyObject> argumentMap = new LinkedHashMap<>(pyArgumentMap.size());
 
         for (Map.Entry<PyObject, PyObject> entry : pyArgumentMap.entrySet()) {
@@ -150,8 +150,8 @@ public class PyJavaFunctionObject extends AbstractFunction {
         }
 
         Object[] arguments = new Object[argumentMap.size()];
-
         Parameter[] parameters = this.method.getParameters();
+
         for (int i = 0; i < parameters.length; i++) {
             PyObject argument = argumentMap.get(parameters[i].getName());
             Parameter parameter = parameters[i];

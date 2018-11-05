@@ -317,12 +317,111 @@ public class InterpretEvaluator {
             n = c.getName() + "." + n;
         }
 
-        PyObject clazz = new PyInterpretClassObject(this.runtime, n, baseList, body);
-        clazz.initialize();
+        LinkedHashMap<String, PyObject> keywordsMap = new LinkedHashMap<>();
+        this.runtime.iter(keywords, keyword -> {
+            PyObject arg = this.runtime.getattr(keyword, "arg");
+            PyObject value = this.runtime.getattr(keyword, "value");
+            PyObject evalValue = eval(value);
+
+            keywordsMap.put(arg.toJava(String.class), evalValue);
+        });
+
+        PyObject clazz = newClass(jname, baseList, keywordsMap);
+        this.runtime.pushContext(clazz);
+        try {
+            eval(body);
+
+        } finally {
+            this.runtime.popContext();
+        }
 
         this.runtime.setattr(c, jname, clazz);
 
         return this.runtime.None();
+    }
+
+    private PyObject newClass(String name, List<PyObject> bases, LinkedHashMap<String, PyObject> kwds) {
+        this.runtime.pushNewContext();
+        try {
+            PrepareClassReturn result = prepareClass(name, bases, kwds);
+
+            PyObject[] args = new PyObject[3];
+            args[0] = this.runtime.str(name);
+            args[1] = this.runtime.tuple(bases);
+            args[2] = result.ns;
+
+            PyObject newClass = result.meta.call(args, result.kwds);
+            if (newClass instanceof PyInterpretClassObject) {
+                ((PyInterpretClassObject) newClass).setContext(this.runtime.getCurrentContext());
+            }
+
+            return newClass;
+
+        } finally {
+            this.runtime.popContext();
+        }
+    }
+
+    private PrepareClassReturn prepareClass(String name, List<PyObject> bases, LinkedHashMap<String, PyObject> kwds) {
+        PyObject type = this.runtime.typeOrThrow("type");
+
+        PyObject meta = kwds.get("metaclass");
+        if (meta != null) {
+            kwds.remove("metaclass");
+
+        } else {
+            if (!bases.isEmpty()) {
+                meta = bases.get(0).getType();
+
+            } else {
+                meta = type;
+            }
+        }
+
+        if (this.runtime.isInstance(meta, type)) {
+            meta = calculateMeta(meta, bases);
+        }
+
+        LinkedHashMap<String, PyObject> finalKwds = kwds;
+
+        PyObject ns = this.runtime.getattrOptional(meta, __prepare__)
+                .map(prepare -> {
+                    PyObject[] args = new PyObject[2];
+                    args[0] = this.runtime.str(name);
+                    args[1] = this.runtime.tuple(bases);
+
+                    return prepare.call(args, finalKwds);
+                })
+                .orElseGet(() -> this.runtime.dict());
+
+        PrepareClassReturn result = new PrepareClassReturn();
+        result.meta = meta;
+        result.ns = ns;
+        result.kwds = kwds;
+
+        return result;
+    }
+
+    private PyObject calculateMeta(PyObject meta, List<PyObject> bases) {
+        PyObject winner = meta;
+
+        for (int i = 0; i < bases.size(); i++) {
+            PyObject base = bases.get(i);
+
+            PyObject baseMeta = base.getType();
+            if (this.runtime.isSubClass(winner, baseMeta)) {
+                continue;
+            }
+            if (this.runtime.isSubClass(baseMeta, winner)) {
+                winner = baseMeta;
+                continue;
+            }
+
+            throw this.runtime.newRaiseTypeError(
+                    "metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases");
+        }
+
+        return winner;
     }
 
     private PyObject evalIfAndIfExp(PyObject node) {
@@ -426,7 +525,7 @@ public class InterpretEvaluator {
         List<PyObject> itemList = new ArrayList<>();
         this.runtime.iter(items, itemList::add);
 
-        this.runtime.pushContext();
+        this.runtime.pushNewContext();
         try {
             List<PyObject> evalContextExprList = new ArrayList<>(itemList.size());
 
@@ -609,7 +708,7 @@ public class InterpretEvaluator {
         List<PyObject> generatorList = (List<PyObject>) generators.toJava(List.class);
         List<PyObject> resultList = new ArrayList<>();
 
-        this.runtime.pushContext();
+        this.runtime.pushNewContext();
         try {
             evalGenerators(elt, generatorList, resultList);
 
@@ -1110,7 +1209,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(node, "id");
             String name = id.toJava(String.class);
 
-            Optional<PyObject> resultOpt = Python.lookup(this.runtime.getCurrentContext(), id);
+            Optional<PyObject> resultOpt = this.runtime.lookup(this.runtime.getCurrentContext(), id);
             if (resultOpt.isPresent()) {
                 return resultOpt.get();
             }
@@ -1237,5 +1336,11 @@ public class InterpretEvaluator {
         });
 
         return this.runtime.tuple(elements);
+    }
+
+    class PrepareClassReturn {
+        PyObject meta;
+        PyObject ns;
+        LinkedHashMap<String, PyObject> kwds;
     }
 }

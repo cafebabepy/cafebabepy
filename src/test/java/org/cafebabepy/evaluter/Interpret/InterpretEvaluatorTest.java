@@ -194,7 +194,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void inmportInit() throws IOException {
+        void importInit() throws IOException {
             evalStdOutToResult(""
                             + "import init\n"
                             + "init.a()"

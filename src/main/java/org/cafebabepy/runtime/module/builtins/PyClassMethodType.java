@@ -34,7 +34,7 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
             klass = obj.getType();
         }
 
-        this.runtime.pushContext();
+        this.runtime.pushNewContext();
         try {
             this.runtime.setattr(this.runtime.getCurrentContext(), "f", f);
             this.runtime.setattr(this.runtime.getCurrentContext(), "klass", klass);

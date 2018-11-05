@@ -17,7 +17,7 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
  */
 public abstract class AbstractFunction extends AbstractPyObjectObject {
 
-    protected final PyObject context;
+    protected final PyObject argumentsContext;
     protected final String name;
     protected final PyObject arguments;
 
@@ -27,7 +27,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     protected AbstractFunction(Python runtime, String name, PyObject arguments) {
         super(runtime);
 
-        this.context = new PyLexicalScopeProxyObject(this.runtime.getCurrentContext()); // arguments scope
+        this.argumentsContext = new PyLexicalScopeProxyObject(this.runtime.getCurrentContext()); // arguments scope
         this.name = name;
         this.arguments = arguments;
     }
@@ -40,7 +40,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
         List<PyObject> defaultsList = getattr(this.arguments, "defaults").toJava(List.class);
         List<PyObject> kw_defaultsList = getattr(this.arguments, "kw_defaults").toJava(List.class);
 
-        this.runtime.pushContext(this.context);
+        this.runtime.pushContext(this.argumentsContext);
         try {
             this.defaultArgs = evalDefaults(defaultsList);
             this.kw_defaults = evalDefaults(kw_defaultsList);
@@ -76,9 +76,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        PyObject context = this.context;
-        this.runtime.pushContext(context);
-
+        PyObject context = this.runtime.pushNewContext(this.argumentsContext);
         try {
             PyObjectScope scope = context.getScope();
 
@@ -97,7 +95,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
                 defineKwOnlyArgList.set(i, defineArg);
             }
 
-            if (args.length + this.defaultArgs.size() + keywords.size() + (vararg.isNone() ? 0 : 1) < defineArgsList.size()) {
+            if (args.length + this.defaultArgs.size() + keywords.size() < defineArgsList.size()) {
                 List<PyObject> notEnoughArguments = defineArgsList.subList(args.length, defineArgsList.size());
 
                 StringBuilder error = new StringBuilder(this.name + "() missing " + notEnoughArguments.size() + " required positional argument: ");

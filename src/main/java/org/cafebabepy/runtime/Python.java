@@ -41,6 +41,8 @@ public final class Python {
 
     public static final String VERSION = MAJOR + "." + MINOR + "." + MICRO;
 
+    private volatile boolean initialize = false;
+
     private NormalParser parser;
 
     private InterpretEvaluator evaluator;
@@ -64,6 +66,7 @@ public final class Python {
 
     public static PyObject eval(String input) {
         Python runtime = Python.createRuntime();
+        runtime.initialize();
 
         PyObject ast = runtime.parser.parse("<string>", input);
 
@@ -77,35 +80,7 @@ public final class Python {
     }
 
     public static Python createRuntime() {
-        Python runtime = new Python();
-        runtime.initialize();
-
-        return runtime;
-    }
-
-    public static Optional<PyObject> lookup(PyObject object, PyObject name) {
-        Optional<PyObject> attrOpt = lookupScope(object, name);
-        if (attrOpt.isPresent()) {
-            return attrOpt;
-        }
-
-        return lookupType(object, name);
-    }
-
-    private static Optional<PyObject> lookupScope(PyObject object, PyObject name) {
-        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
-        while (parentOpt.isPresent()) {
-            PyObjectScope parent = parentOpt.get();
-            Optional<PyObject> result = parent.get(name);
-
-            if (result.isPresent()) {
-                return result;
-            }
-
-            parentOpt = parent.getParent();
-        }
-
-        return Optional.empty();
+        return new Python();
     }
 
     private static Optional<PyObject> lookupType(PyObject object, PyObject name) {
@@ -119,17 +94,45 @@ public final class Python {
         return Optional.empty();
     }
 
+    public Optional<PyObject> lookup(PyObject object, PyObject name) {
+        Optional<PyObject> attrOpt = lookupScope(object, name);
+        if (attrOpt.isPresent()) {
+            return attrOpt;
+        }
+
+        return lookupType(object, name);
+    }
+
+    private Optional<PyObject> lookupScope(PyObject object, PyObject name) {
+        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
+        while (parentOpt.isPresent()) {
+            PyObjectScope parent = parentOpt.get();
+            Optional<PyObject> result = parent.get(name);
+
+            if (result.isPresent()) {
+                return result;
+            }
+
+            parentOpt = parent.getParent();
+        }
+
+        return Optional.empty();
+
+    }
+
     public InterpretEvaluator getEvaluator() {
         return this.evaluator;
     }
 
     public PyObject evalModule(String file) {
+        initialize();
         return getEvaluator().loadModule(file);
     }
 
     public PyObject eval(String file, String input) {
-        PyObject ast = this.parser.parse(file, input);
+        initialize();
 
+        PyObject ast = this.parser.parse(file, input);
         return this.evaluator.eval(ast);
     }
 
@@ -152,7 +155,7 @@ public final class Python {
         return this.context.get().peekFirst();
     }
 
-    public synchronized void pushContext() {
+    public synchronized void pushNewContext() {
         Deque<PyObject> stack = this.context.get();
         PyObject first = stack.peekFirst();
         if (first == null) {
@@ -166,6 +169,13 @@ public final class Python {
         this.context.get().push(context);
     }
 
+    public synchronized PyObject pushNewContext(PyObject context) {
+        PyObject newContext = new PyLexicalScopeProxyObject(context);
+        this.context.get().push(newContext);
+
+        return newContext;
+    }
+
     public synchronized PyObject popContext() {
         PyObject context = this.context.get().pollFirst();
         if (context == null) {
@@ -176,6 +186,9 @@ public final class Python {
     }
 
     private void initialize() {
+        if (this.initialize) {
+            return;
+        }
         this.parser = new NormalParser(this);
         this.evaluator = new InterpretEvaluator(this);
         this.sysModules = new LinkedHashMap<>();
@@ -185,6 +198,8 @@ public final class Python {
         initializeModuleAndTypes(PyBuiltinsModule.class);
         initializeModuleAndTypes(PySysModule.class);
         initializeModuleAndTypes(PyAstModule.class);
+
+        this.initialize = true;
     }
 
     @SuppressWarnings("unchecked")

@@ -24,7 +24,7 @@ public final class PySimpleNamespaceType extends AbstractCafeBabePyType {
 
     @Override
     public PyObject getModule() {
-        return this.runtime.moduleOrThrow("types");
+        return this.runtime.moduleOrThrow("builtins"); // FIXME types
     }
 
     @DefinePyFunction(name = __init__)

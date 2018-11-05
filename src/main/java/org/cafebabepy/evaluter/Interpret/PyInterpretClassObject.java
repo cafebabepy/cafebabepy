@@ -4,7 +4,6 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
-import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,20 +14,15 @@ import static org.cafebabepy.util.ProtocolNames.__call__;
 
 public class PyInterpretClassObject extends AbstractPyObject {
 
-    private final PyObject context;
-
     private final String name;
-
     private final List<PyObject> bases;
-
-    private final PyObject body;
-
+    private PyObject context;
     private volatile PyObjectScope scope;
 
-    PyInterpretClassObject(Python runtime, String name, List<PyObject> bases, PyObject body) {
+    public PyInterpretClassObject(Python runtime, String name, List<PyObject> bases) {
         super(runtime);
 
-        this.context = new PyLexicalScopeProxyObject(this.runtime.getCurrentContext());
+        this.context = this.runtime.None();
         this.name = name;
 
         List<PyObject> mutableBases = new ArrayList<>(bases);
@@ -36,21 +30,15 @@ public class PyInterpretClassObject extends AbstractPyObject {
             mutableBases.add(runtime.typeOrThrow("builtins.object"));
         }
         this.bases = Collections.unmodifiableList(mutableBases);
-
-        this.body = body;
     }
 
-    @Override
-    public void initialize() {
-        super.initialize();
+    public PyObject getContext() {
+        return this.context;
+    }
 
-        this.runtime.pushContext(this);
-        try {
-            this.runtime.getEvaluator().eval(this.body);
-
-        } finally {
-            this.runtime.popContext();
-        }
+    public void setContext(PyObject context) {
+        this.scope = null;
+        this.context = context;
     }
 
     @Override
@@ -62,6 +50,7 @@ public class PyInterpretClassObject extends AbstractPyObject {
                 }
             }
         }
+
         return this.scope;
     }
 
@@ -112,12 +101,20 @@ public class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public PyObject call(PyObject... args) {
-        return this.runtime.getattr(this, __call__).call(args);
+        return call(args, new LinkedHashMap<>());
     }
 
     @Override
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        // FIXME keywords
-        return call(args);
+        if (this.runtime.isSubClass(this, "builtins.type")) {
+            PyObject[] newArgs = new PyObject[args.length + 1];
+            newArgs[0] = this;
+            System.arraycopy(args, 0, newArgs, 1, args.length);
+
+            return this.runtime.getattr(this, __call__).call(newArgs, keywords);
+
+        } else {
+            return this.runtime.getattr(this, __call__).call(args, keywords);
+        }
     }
 }

@@ -33,7 +33,7 @@ public class InteractiveConsole {
 
         printBanner();
 
-        this.runtime.pushContext();
+        this.runtime.pushNewContext();
         try {
             // not close
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

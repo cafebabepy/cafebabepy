@@ -78,7 +78,7 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         }
 
         if (!self.isType()) {
-            Optional<PyObject> existsValueOpt = Python.lookup(self, name);
+            Optional<PyObject> existsValueOpt = this.runtime.lookup(self, name);
             if (existsValueOpt.isPresent()) {
                 PyObject existsValue = existsValueOpt.get();
                 Optional<PyObject> setOpt = this.runtime.getattrOptional(existsValue, __set__);
