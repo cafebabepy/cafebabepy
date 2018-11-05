@@ -1832,11 +1832,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         prefix = prefix.toLowerCase();
-
-        if (prefix.contains("f")) {
-            return fstring(str, 0);
-
-        } else if (prefix.contains("b")) {
+        if (prefix.contains("b")) {
             return bytes(str, prefix.contains("r"));
 
         } else if (prefix.contains("r")) {
@@ -1844,7 +1840,45 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             return this.runtime.newPyObject("_ast.Str", this.runtime.str(escapeStr));
 
         } else {
-            return this.runtime.newPyObject("_ast.Str", this.runtime.str(str));
+            StringBuilder builder = new StringBuilder();
+
+            char[] chars = str.toCharArray();
+            for (int i = 0; i < chars.length; i++) {
+                if (chars[i] == '\\') {
+                    if (i == chars.length - 1) {
+                        throw this.runtime.newRaiseException(
+                                "builtins.SyntaxError",
+                                "EOL while scanning string literal");
+                    }
+                    if (chars[i + 1] == '\\') {
+                        builder.append('\\');
+                        i++;
+
+                    } else if (chars[i + 1] == 'r') {
+                        builder.append('\r');
+                        i++;
+
+                    } else if (chars[i + 1] == 'n') {
+                        builder.append('\r');
+                        i++;
+
+                    } else {
+                        builder.append('\\');
+                    }
+
+                } else {
+                    builder.append(chars[i]);
+                }
+            }
+
+            String value = builder.toString();
+
+            if (prefix.contains("f")) {
+                return fstring(value, 0);
+
+            } else {
+                return this.runtime.newPyObject("_ast.Str", this.runtime.str(value));
+            }
         }
     }
 
