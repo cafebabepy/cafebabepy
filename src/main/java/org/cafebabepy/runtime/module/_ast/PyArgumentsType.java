@@ -23,12 +23,12 @@ public class PyArgumentsType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("args", args[0]);
-        self.getFrame().putToLocals("vararg", args[1]);
-        self.getFrame().putToLocals("kwonlyargs", args[2]);
-        self.getFrame().putToLocals("kw_defaults", args[3]);
-        self.getFrame().putToLocals("kwarg", args[4]);
-        self.getFrame().putToLocals("defaults", args[5]);
+        self.getFrame().getLocals().put("args", args[0]);
+        self.getFrame().getLocals().put("vararg", args[1]);
+        self.getFrame().getLocals().put("kwonlyargs", args[2]);
+        self.getFrame().getLocals().put("kw_defaults", args[3]);
+        self.getFrame().getLocals().put("kwarg", args[4]);
+        self.getFrame().getLocals().put("defaults", args[5]);
     }
 
     @Override

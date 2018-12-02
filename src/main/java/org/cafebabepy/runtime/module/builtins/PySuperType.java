@@ -35,7 +35,7 @@ public class PySuperType extends AbstractCafeBabePyType {
         */
 
         if (args.length == 1) {
-            self.getFrame().putToNotAppearLocals("_proxy_object", args[0]);
+            self.getFrame().getNotAppearLocals().put("_proxy_object", args[0]);
         }
     }
 
@@ -49,9 +49,11 @@ public class PySuperType extends AbstractCafeBabePyType {
             );
         }
 
-        PyObject object = self.getFrame().getFromNotAppearLocals("_proxy_object").orElseThrow(() ->
-                getRuntime().newRaiseException("builtins.AttributeError",
-                        "'" + self.getFullName() + "' object has no attribute '_proxy_object'"));
+        PyObject object = self.getFrame().getNotAppearLocals().get("_proxy_object");
+        if (object == null) {
+            throw this.runtime.newRaiseException("builtins.AttributeError",
+                    "'" + self.getFullName() + "' object has no attribute '_proxy_object'");
+        }
 
         PyObject selfProxy;
         List<PyObject> types = object.getType().getTypes();

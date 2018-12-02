@@ -23,9 +23,9 @@ public class PyAttributeType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("value", args[0]);
-        self.getFrame().putToLocals("attr", args[1]);
-        self.getFrame().putToLocals("ctx", args[2]);
+        self.getFrame().getLocals().put("value", args[0]);
+        self.getFrame().getLocals().put("attr", args[1]);
+        self.getFrame().getLocals().put("ctx", args[2]);
     }
 
     @Override

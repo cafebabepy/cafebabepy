@@ -28,7 +28,7 @@ public class PyWrapperDescriptorType extends AbstractCafeBabePyType {
                     "descriptor '__get__' requires a 'wrapper_descriptor' object but received a '" + self.getFullName() + "'");
         }
 
-        if(args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
+        if (args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
             return self;
         }
 

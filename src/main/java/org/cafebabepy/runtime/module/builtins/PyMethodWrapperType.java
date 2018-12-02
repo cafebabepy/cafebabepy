@@ -11,7 +11,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 /**
  * Created by yotchang4s on 2018/06/24.
  */
-@DefinePyType(name = "builtins.method-wrapper")
+@DefinePyType(name = "builtins.method-wrapper", appear = false)
 public class PyMethodWrapperType extends AbstractCafeBabePyType {
 
     public PyMethodWrapperType(Python runtime) {

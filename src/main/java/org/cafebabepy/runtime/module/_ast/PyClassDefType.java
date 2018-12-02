@@ -23,11 +23,11 @@ public class PyClassDefType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("name", args[0]);
-        self.getFrame().putToLocals("bases", args[1]);
-        self.getFrame().putToLocals("keywords", args[2]);
-        self.getFrame().putToLocals("body", args[3]);
-        self.getFrame().putToLocals("decorator_list", args[4]);
+        self.getFrame().getLocals().put("name", args[0]);
+        self.getFrame().getLocals().put("bases", args[1]);
+        self.getFrame().getLocals().put("keywords", args[2]);
+        self.getFrame().getLocals().put("body", args[3]);
+        self.getFrame().getLocals().put("decorator_list", args[4]);
     }
 
     @Override

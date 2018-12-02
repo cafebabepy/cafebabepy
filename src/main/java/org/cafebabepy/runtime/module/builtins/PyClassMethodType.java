@@ -5,6 +5,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import static org.cafebabepy.util.ProtocolNames.__get__;
 import static org.cafebabepy.util.ProtocolNames.__init__;
@@ -21,32 +22,28 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject f) {
-        self.getFrame().putToNotAppearLocals("f", f);
+        self.getFrame().getNotAppearLocals().put("f", f);
     }
 
     @DefinePyFunction(name = __get__)
     public PyObject __get__(PyObject self, PyObject obj, PyObject klass) {
-        PyObject f = self.getFrame().getFromNotAppearLocals("f").orElseThrow(() ->
-                this.runtime.newRaiseException("builtins.RuntimeError", "uninitialized staticmethod object")
-        );
+        PyObject f = self.getFrame().getNotAppearLocals().get("f");
+        if (f == null) {
+            throw this.runtime.newRaiseException("builtins.RuntimeError", "uninitialized staticmethod object");
+        }
 
         if (klass.isNone()) {
             klass = obj.getType();
         }
 
-        this.runtime.pushNewContext();
-        try {
-            this.runtime.setattr(this.runtime.getCurrentContext(), "f", f);
-            this.runtime.setattr(this.runtime.getCurrentContext(), "klass", klass);
+        PyObject scope = new PyLexicalScopeProxyObject(self);
 
+        this.runtime.setattr(scope, "f", f);
+        this.runtime.setattr(scope, "klass", klass);
 
-            return this.runtime.eval("<classmethod>", ""
-                    + "def newfunc(*args):\n"
-                    + "  return f(klass, *args)\n"
-                    + "newfunc");
-
-        } finally {
-            this.runtime.popContext();
-        }
+        return this.runtime.eval(scope, "<classmethod>", ""
+                + "def newfunc(*args):\n"
+                + "  return f(klass, *args)\n"
+                + "newfunc");
     }
 }

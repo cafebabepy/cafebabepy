@@ -96,35 +96,31 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
         PyObject object = new PyObjectObject(this.runtime);
         object.initialize();
 
-        this.runtime.pushContext(object);
-        try {
-            this.runtime.eval("<FIXME>",
-                    "def zip(*iterables):\n" +
-                            "  # zip('ABCD', 'xy') --> Ax By\n" +
-                            "  sentinel = object()\n" +
-                            "  iterators = [iter(it) for it in iterables]\n" +
-                            "  while iterators:\n" +
-                            "    result = []\n" +
-                            "    for it in iterators:\n" +
-                            "      elem = next(it, sentinel)\n" +
-                            "      if elem is sentinel:\n" +
-                            "        return\n" +
-                            "      result.append(elem)\n" +
-                            "      yield tuple(result)"
-            );
+        this.runtime.eval(object, "<FIXME>",
+                "def zip(*iterables):\n" +
+                        "  # zip('ABCD', 'xy') --> Ax By\n" +
+                        "  sentinel = object()\n" +
+                        "  iterators = [iter(it) for it in iterables]\n" +
+                        "  while iterators:\n" +
+                        "    result = []\n" +
+                        "    for it in iterators:\n" +
+                        "      elem = next(it, sentinel)\n" +
+                        "      if elem is sentinel:\n" +
+                        "        return\n" +
+                        "      result.append(elem)\n" +
+                        "      yield tuple(result)"
+        );
 
-            return object.getFrame().getFromGlobals("zip").map(zip -> zip.call(iterables)).orElseThrow(() ->
-                    new CafeBabePyException("zip is not found")
-            );
-
-        } finally {
-            this.runtime.popContext();
+        PyObject zip = object.getFrame().lookup("zip");
+        if (zip == null) {
+            throw new CafeBabePyException("zip is not found");
         }
+
+        return zip.call(iterables);
     }
 
     @DefinePyFunction(name = "globals")
     public PyObject globals() {
-        // FIXME stub
-        return this.runtime.list();
+        return this.runtime.dict(this.runtime.getEvaluator().getFrame().getGlobalsPyObjectMap());
     }
 }

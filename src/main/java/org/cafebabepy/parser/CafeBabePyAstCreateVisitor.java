@@ -12,7 +12,10 @@ import org.cafebabepy.runtime.module._ast.*;
 import org.cafebabepy.runtime.object.java.PyBytesObject;
 import org.cafebabepy.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by yotchang4s on 2017/05/29.
@@ -1287,14 +1290,14 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private PyObject addASTStr(PyObject str1, PyObject str2) {
         String javaStr = "";
 
-        Optional<PyObject> str1Opt = str1.getFrame().getFromGlobals("s");
-        if (str1Opt.isPresent()) {
-            javaStr += str1Opt.get().toJava(String.class);
+        PyObject s1 = str1.getFrame().lookup("s");
+        if (s1 != null) {
+            javaStr += s1.toJava(String.class);
         }
 
-        Optional<PyObject> str2Opt = str2.getFrame().getFromGlobals("s");
-        if (str2Opt.isPresent()) {
-            javaStr += str2Opt.get().toJava(String.class);
+        PyObject s2 = str2.getFrame().lookup("s");
+        if (s2 != null) {
+            javaStr += s2.toJava(String.class);
         }
 
         return this.runtime.newPyObject("_ast.Str", this.runtime.str(javaStr));

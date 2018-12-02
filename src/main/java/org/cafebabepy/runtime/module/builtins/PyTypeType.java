@@ -11,7 +11,10 @@ import org.cafebabepy.runtime.object.java.PyListObject;
 import org.cafebabepy.runtime.object.java.PySetObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -134,7 +137,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                 PyObject clazz = new PyInterpretClassObject(this.runtime, name, bases);
                 for (Map.Entry<PyObject, PyObject> e : dict.entrySet()) {
                     // valid {1: 2}
-                    clazz.getFrame().putToLocals(e.getKey().toJava(String.class), e.getValue());
+                    clazz.getFrame().getLocals().put(e.getKey().toJava(String.class), e.getValue());
                 }
 
                 return clazz;
@@ -150,20 +153,43 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         String javaKey = key.toJava(String.class);
 
         return this.runtime.builtins_type__getattribute__(cls, javaKey).orElseGet(() -> {
-            Optional<PyObject> specialVar;
+            PyObject specialVar = null;
             if (__name__.equals(javaKey)) {
-                specialVar = cls.getFrame().getFromNotAppearLocals(javaKey);
-
-            } else {
-                specialVar = Optional.empty();
+                specialVar = cls.getFrame().getNotAppearLocals().get(javaKey);
             }
 
-            if (specialVar.isPresent()) {
-                return specialVar.get();
+            if (specialVar != null) {
+                return specialVar;
             }
 
             throw this.runtime.newRaiseException("AttributeError",
                     "type object '" + cls.getName() + "' object has no attribute '" + javaKey + "'");
         });
+    }
+
+    @DefinePyFunction(name = __setattr__)
+    public void __setattr__(PyObject self, PyObject name, PyObject value) {
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
+
+        if (!this.runtime.isInstance(name, strType)) {
+            throw this.runtime.newRaiseTypeError(
+                    "attribute name must be string, not '" + name.getFullName() + "'"
+            );
+        }
+
+        self.getFrame().getLocals().put(name.toJava(String.class), value);
+    }
+
+    @DefinePyFunction(name = __delattr__)
+    public void __delattr__(PyObject self, PyObject name) {
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
+
+        if (!this.runtime.isInstance(name, strType)) {
+            throw this.runtime.newRaiseTypeError(
+                    "attribute name must be string, not '" + name.getFullName() + "'"
+            );
+        }
+
+        self.getFrame().getLocals().remove(name.toJava(String.class));
     }
 }

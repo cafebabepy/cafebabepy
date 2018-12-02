@@ -23,10 +23,10 @@ public class PyComprehensionType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("target", args[0]);
-        self.getFrame().putToLocals("iter", args[1]);
-        self.getFrame().putToLocals("ifs", args[2]);
-        self.getFrame().putToLocals("is_async", args[3]);
+        self.getFrame().getLocals().put("target", args[0]);
+        self.getFrame().getLocals().put("iter", args[1]);
+        self.getFrame().getLocals().put("ifs", args[2]);
+        self.getFrame().getLocals().put("is_async", args[3]);
     }
 
     @Override

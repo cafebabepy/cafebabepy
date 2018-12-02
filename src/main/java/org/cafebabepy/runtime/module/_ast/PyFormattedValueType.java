@@ -23,9 +23,9 @@ public class PyFormattedValueType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("value", args[0]);
-        self.getFrame().putToLocals("conversion", args[1]);
-        self.getFrame().putToLocals("format_spec", args[2]);
+        self.getFrame().getLocals().put("value", args[0]);
+        self.getFrame().getLocals().put("conversion", args[1]);
+        self.getFrame().getLocals().put("format_spec", args[2]);
     }
 
     @Override

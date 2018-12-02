@@ -23,9 +23,9 @@ public class PyBinOpType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("left", args[0]);
-        self.getFrame().putToLocals("op", args[1]);
-        self.getFrame().putToLocals("right", args[2]);
+        self.getFrame().getLocals().put("left", args[0]);
+        self.getFrame().getLocals().put("op", args[1]);
+        self.getFrame().getLocals().put("right", args[2]);
     }
 
     @Override

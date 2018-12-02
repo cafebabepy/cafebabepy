@@ -5,7 +5,6 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.iterator.PyListIteratorObject;
 import org.cafebabepy.runtime.object.iterator.PyListReverseIteratorObject;
 
 import static org.cafebabepy.util.ProtocolNames.__iter__;

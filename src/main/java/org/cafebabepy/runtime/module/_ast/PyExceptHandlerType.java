@@ -23,9 +23,9 @@ public class PyExceptHandlerType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("type", args[0]);
-        self.getFrame().putToLocals("name", args[1]);
-        self.getFrame().putToLocals("body", args[2]);
+        self.getFrame().getLocals().put("type", args[0]);
+        self.getFrame().getLocals().put("name", args[1]);
+        self.getFrame().getLocals().put("body", args[2]);
     }
 
     @Override

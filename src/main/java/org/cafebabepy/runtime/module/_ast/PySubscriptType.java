@@ -23,9 +23,9 @@ public class PySubscriptType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("value", args[0]);
-        self.getFrame().putToLocals("slice", args[1]);
-        self.getFrame().putToLocals("ctx", args[2]);
+        self.getFrame().getLocals().put("value", args[0]);
+        self.getFrame().getLocals().put("slice", args[1]);
+        self.getFrame().getLocals().put("ctx", args[2]);
     }
 
     @Override

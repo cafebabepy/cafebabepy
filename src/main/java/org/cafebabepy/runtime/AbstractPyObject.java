@@ -147,7 +147,12 @@ public abstract class AbstractPyObject implements PyObject {
         if (this.frame == null) {
             synchronized (this) {
                 if (this.frame == null) {
-                    this.frame = new Frame();
+                    if (isModule()) {
+                        this.frame = new Frame();
+
+                    } else {
+                        this.frame = new Frame(getModule().getFrame());
+                    }
                 }
             }
         }
@@ -171,7 +176,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final boolean isCallable() {
-        return getFrame().containsKeyFromLocals(__call__);
+        return getFrame().getLocals().containsKey(__call__);
     }
 
     @Override

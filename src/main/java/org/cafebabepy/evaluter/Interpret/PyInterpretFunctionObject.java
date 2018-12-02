@@ -16,22 +16,25 @@ import java.util.Optional;
 class PyInterpretFunctionObject extends AbstractFunction {
     private PyObject body;
 
-    PyInterpretFunctionObject(Python runtime, String name, PyObject arguments, PyObject body) {
-        super(runtime, name, arguments);
+    PyInterpretFunctionObject(Python runtime, PyObject context, String name, PyObject arguments, PyObject body) {
+        super(runtime, context, name, arguments);
 
         this.body = body;
     }
 
     @Override
-    protected PyObject evalDefaultValue(PyObject defaultValue) {
-        return this.runtime.getEvaluator().eval(defaultValue);
+    protected PyObject evalDefaultValue(PyObject context, PyObject defaultValue) {
+        return this.runtime.getEvaluator().eval(context, defaultValue);
     }
 
     @Override
-    protected PyObject callImpl() {
-        boolean async = getFrame().getFromNotAppearLocals("_async")
-                .orElseThrow(() -> new CafeBabePyException("_async is not found")).isTrue();
+    protected PyObject callImpl(PyObject context) {
+        PyObject asyncBool = getFrame().getNotAppearLocals().get("_async");
+        if (asyncBool == null) {
+            throw new CafeBabePyException("_async is not found");
+        }
 
+        boolean async = asyncBool.isTrue();
         if (async) {
             // FIXME stub
             return this.runtime.newPyObject("coroutine", false);
@@ -41,17 +44,10 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
         List<PyObject> yields = yieldSearcher.get(this.body);
         if (!yields.isEmpty()) {
-            PyObject context = this.runtime.getCurrentContext();
             Yielder<PyObject> yielder = new Yielder<PyObject>() {
                 @Override
                 public void run() {
-                    runtime.pushContext(context);
-                    try {
-                        runtime.getEvaluator().eval(body);
-
-                    } finally {
-                        runtime.popContext();
-                    }
+                    runtime.getEvaluator().eval(context, body);
                 }
             };
 
@@ -92,7 +88,7 @@ class PyInterpretFunctionObject extends AbstractFunction {
         }
 
         try {
-            return this.runtime.getEvaluator().eval(this.body);
+            return this.runtime.getEvaluator().eval(context, this.body);
 
         } catch (InterpretReturn e) {
             return e.value;

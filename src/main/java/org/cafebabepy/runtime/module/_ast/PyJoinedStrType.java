@@ -23,7 +23,7 @@ public class PyJoinedStrType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("values", args[0]);
+        self.getFrame().getLocals().put("values", args[0]);
     }
 
     @Override

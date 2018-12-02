@@ -31,16 +31,16 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             PyObject dict;
 
             if (isType()) {
-                dict = new PyMappingProxyTypeObject(this.runtime, getFrame().toPyObjectMap());
+                dict = new PyMappingProxyTypeObject(this.runtime, getFrame().getLocalsPyObjectMap());
 
             } else {
-                dict = new PyDictObject(this.runtime, getFrame().toPyObjectMap());
+                dict = new PyDictObject(this.runtime, getFrame().getLocalsPyObjectMap());
             }
 
-            getFrame().putToLocals(__dict__, dict);
+            getFrame().getLocals().put(__dict__, dict);
         }
 
-        getFrame().putToLocals(__name__, this.runtime.str(getName()));
+        getFrame().getLocals().put(__name__, this.runtime.str(getName()));
     }
 
     @DefinePyFunction(name = __init__)
@@ -52,16 +52,13 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         String javaKey = key.toJava(String.class);
 
         return this.runtime.builtins_object__getattribute__(self, javaKey).orElseGet(() -> {
-            Optional<PyObject> specialVar;
+            PyObject specialVar = null;
             if (__name__.equals(key.toJava(String.class))) {
-                specialVar = self.getFrame().getFromNotAppearLocals(javaKey);
-
-            } else {
-                specialVar = Optional.empty();
+                specialVar = self.getFrame().getNotAppearLocals().get(javaKey);
             }
 
-            if (specialVar.isPresent()) {
-                return specialVar.get();
+            if (specialVar != null) {
+                return specialVar;
             }
 
             throw this.runtime.newRaiseException("AttributeError",
@@ -81,39 +78,60 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
         String javaName = name.toJava(String.class);
 
-        if (!self.isType()) {
-            Optional<PyObject> existsValueOpt = lookup(self, javaName);
-            if (existsValueOpt.isPresent()) {
-                PyObject existsValue = existsValueOpt.get();
-                Optional<PyObject> setOpt = this.runtime.getattrOptional(existsValue, __set__);
-                if (setOpt.isPresent()) {
-                    setOpt.get().call(self, value);
-                    return;
-                }
+        PyObject existsValue = lookup(self, javaName);
+        if (existsValue != null) {
+            Optional<PyObject> setOpt = this.runtime.getattrOptional(existsValue, __set__);
+            if (setOpt.isPresent()) {
+                setOpt.get().call(self, value);
+                return;
             }
         }
 
-        self.getFrame().putToLocals(javaName, value);
+        self.getFrame().getLocals().put(javaName, value);
     }
 
-    private static Optional<PyObject> lookupType(PyObject object, String name) {
+    @DefinePyFunction(name = __delattr__)
+    public void __delattr__(PyObject self, PyObject name) {
+        PyObject strType = this.runtime.typeOrThrow("builtins.str");
+
+        if (!this.runtime.isInstance(name, strType)) {
+            throw this.runtime.newRaiseTypeError(
+                    "attribute name must be string, not '" + name.getFullName() + "'"
+            );
+        }
+
+        String javaName = name.toJava(String.class);
+
+        PyObject existsValue = lookup(self, javaName);
+        if (existsValue != null) {
+            Optional<PyObject> deleteOpt = this.runtime.getattrOptional(existsValue, __delete__);
+            if (deleteOpt.isPresent()) {
+                deleteOpt.get().call(self);
+                return;
+            }
+        }
+
+        self.getFrame().getLocals().remove(javaName);
+    }
+
+    private PyObject lookup(PyObject object, String name) {
+        PyObject attr = object.getFrame().lookup(name);
+        if (attr != null) {
+            return attr;
+        }
+
+        return lookupType(object, name);
+    }
+
+    private PyObject lookupType(PyObject object, String name) {
         for (PyObject type : object.getTypes()) {
-            Optional<PyObject> typeObject = type.getFrame().getFromGlobals(name);
-            if (typeObject.isPresent()) {
+            PyObject typeObject = type.getFrame().lookup(name);
+            if (typeObject != null) {
                 return typeObject;
             }
         }
 
-        return Optional.empty();
-    }
-
-    private Optional<PyObject> lookup(PyObject object, String name) {
-        Optional<PyObject> attrOpt = object.getFrame().getFromGlobals(name);
-        if (attrOpt.isPresent()) {
-            return attrOpt;
-        }
-
-        return lookupType(object, name);
+        return null;
     }
 
     @DefinePyFunction(name = __str__)

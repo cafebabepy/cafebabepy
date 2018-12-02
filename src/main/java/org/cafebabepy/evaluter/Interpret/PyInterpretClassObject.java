@@ -46,7 +46,7 @@ public class PyInterpretClassObject extends AbstractPyObject {
         if (this.frame == null) {
             synchronized (this) {
                 if (this.frame == null) {
-                    this.frame = new Frame(this.context.getFrame());
+                    this.frame = new Frame(getModule().getFrame(), this.context.getFrame());
                 }
             }
         }

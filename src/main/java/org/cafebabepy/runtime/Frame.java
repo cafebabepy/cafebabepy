@@ -10,16 +10,22 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by yotchang4s on 2018/11/26.
  */
 public class Frame {
+    private final Frame module;
     private final Frame back;
 
     private Map<String, PyObject> locals;
     private Map<String, PyObject> notAppearLocals;
 
     public Frame() {
-        this(null);
+        this(null, null);
     }
 
-    public Frame(Frame back) {
+    public Frame(Frame module) {
+        this(module, null);
+    }
+
+    public Frame(Frame module, Frame back) {
+        this.module = module;
         this.back = back;
     }
 
@@ -48,105 +54,67 @@ public class Frame {
         return this.locals;
     }
 
-    public Optional<PyObject> getFromNotAppearLocals(String key) {
-        if (this.notAppearLocals != null) {
-            return Optional.ofNullable(this.notAppearLocals.get(key));
+    public Map<String, PyObject> getGlobals() {
+        if (this.module == null) {
+            return getLocals();
         }
 
-        return Optional.empty();
+        return this.module.getLocals();
     }
 
-    public Optional<PyObject> put(String key, PyObject value, boolean appear) {
-        if (appear) {
-            return putToLocals(key, value);
-
-        } else {
-            return putToNotAppearLocals(key, value);
-        }
-    }
-
-    public Optional<PyObject> putToLocals(String key, PyObject value) {
-        initializeLocals();
-        return Optional.ofNullable(this.locals.put(key, value));
-    }
-
-    public Optional<PyObject> putToNotAppearLocals(String key, PyObject value) {
+    public Map<String, PyObject> getNotAppearLocals() {
         initializeNotAppearLocals();
-        return Optional.ofNullable(this.notAppearLocals.put(key, value));
+        return this.notAppearLocals;
     }
 
-    public Optional<PyObject> removeToLocals(String key) {
-        return Optional.ofNullable(this.locals.remove(key));
-    }
-
-    public boolean containsKeyFromLocals(String key) {
-        if (this.locals == null) {
-            return false;
-        }
-
-        return this.locals.containsKey(key);
-    }
-
-    public boolean containsKeyFromAppearLocals(String key) {
-        if (this.notAppearLocals == null) {
-            return false;
-        }
-
-        return this.notAppearLocals.containsKey(key);
-    }
-
-    public Optional<PyObject> getFromGlobals(String key) {
-        return getFromGlobals(key, true);
-    }
-
-    public Optional<PyObject> getFromGlobals(String key, boolean appear) {
+    public PyObject lookup(String key) {
         if (this.locals != null) {
             PyObject value = this.locals.get(key);
             if (value != null) {
-                return Optional.of(value);
-            }
-        }
-
-        if (!appear) {
-            if (this.notAppearLocals != null) {
-                PyObject value = this.notAppearLocals.get(key);
-                if (value != null) {
-                    return Optional.of(value);
-                }
+                return value;
             }
         }
 
         if (this.back != null) {
-            return this.back.getFromGlobals(key, appear);
+            return this.back.lookup(key);
         }
 
-        return Optional.empty();
+        return null;
     }
 
     public Optional<Frame> getBack() {
         return Optional.ofNullable(this.back);
     }
 
-    public Map<PyObject, PyObject> toPyObjectMap() {
-        return new PyObjectMap();
+    public Map<PyObject, PyObject> getLocalsPyObjectMap() {
+        return new PyObjectMap(getLocals());
     }
 
-    class PyObjectMap implements Map<PyObject, PyObject> {
+    public Map<PyObject, PyObject> getGlobalsPyObjectMap() {
+        return new PyObjectMap(getGlobals());
+    }
+
+    static class PyObjectMap implements Map<PyObject, PyObject> {
+        private Map<String, PyObject> map;
+
+        PyObjectMap(Map<String, PyObject> map) {
+            this.map = map;
+        }
 
         @Override
         public int size() {
-            return getLocals().size();
+            return this.map.size();
         }
 
         @Override
         public boolean isEmpty() {
-            return getLocals().isEmpty();
+            return this.map.isEmpty();
         }
 
         @Override
         public boolean containsKey(Object key) {
             if (key instanceof PyObject) {
-                return getLocals().containsKey(((PyObject) key).toJava(String.class));
+                return this.map.containsKey(((PyObject) key).toJava(String.class));
             }
 
             return false;
@@ -155,7 +123,7 @@ public class Frame {
         @Override
         public boolean containsValue(Object value) {
             if (value instanceof PyObject) {
-                return getLocals().containsValue(((PyObject) value).toJava(String.class));
+                return this.map.containsValue(((PyObject) value).toJava(String.class));
             }
 
             return false;
@@ -164,7 +132,7 @@ public class Frame {
         @Override
         public PyObject get(Object key) {
             if (key instanceof PyObject) {
-                return getLocals().get(((PyObject) key).toJava(String.class));
+                return this.map.get(((PyObject) key).toJava(String.class));
             }
 
             return null;
@@ -172,13 +140,13 @@ public class Frame {
 
         @Override
         public PyObject put(PyObject key, PyObject value) {
-            return putToLocals(key.toJava(String.class), value).orElse(null);
+            return this.map.put(key.toJava(String.class), value);
         }
 
         @Override
         public PyObject remove(Object key) {
             if (key instanceof PyObject) {
-                return getLocals().remove(((PyObject) key).toJava(String.class));
+                return this.map.remove(((PyObject) key).toJava(String.class));
             }
 
             return null;
@@ -187,13 +155,13 @@ public class Frame {
         @Override
         public void putAll(Map<? extends PyObject, ? extends PyObject> m) {
             for (Entry<? extends PyObject, ? extends PyObject> e : m.entrySet()) {
-                getLocals().put(e.getKey().toJava(String.class), e.getValue());
+                this.map.put(e.getKey().toJava(String.class), e.getValue());
             }
         }
 
         @Override
         public void clear() {
-            getLocals().clear();
+            this.map.clear();
         }
 
         @Override
@@ -203,7 +171,7 @@ public class Frame {
 
         @Override
         public Collection<PyObject> values() {
-            return getLocals().values();
+            return this.map.values();
         }
 
         @Override

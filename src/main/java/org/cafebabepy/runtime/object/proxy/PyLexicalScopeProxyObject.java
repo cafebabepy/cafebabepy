@@ -10,7 +10,7 @@ public class PyLexicalScopeProxyObject extends PyProxyObject {
     public PyLexicalScopeProxyObject(PyObject source) {
         super(source);
 
-        this.frame = new Frame(source.getFrame());
+        this.frame = new Frame(source.getModule().getFrame(), source.getFrame());
     }
 
     @Override

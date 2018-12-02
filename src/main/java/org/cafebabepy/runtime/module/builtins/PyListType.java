@@ -34,22 +34,24 @@ public class PyListType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("descriptor '__init__' requires a 'set' object but received a '" + self.getType().getFullName() + "'");
         }
 
-        getFrame().getFromNotAppearLocals("___init__itarable_default_value").ifPresent(v -> {
+        PyObject v = getFrame().getNotAppearLocals().get("___init__itarable_default_value");
+        if (v != null) {
             if (v != iterable) {
                 PyListObject object = (PyListObject) self;
                 this.runtime.iter(iterable, item -> object.getRawValues().add(item));
             }
-        });
+        }
     }
 
     @DefinePyFunctionDefaultValue(methodName = "__init__", parameterName = "iterable")
     private PyObject __init___iterable() {
-        return getFrame().getFromNotAppearLocals("___init__itarable_default_value").orElseGet(() -> {
-            PyObject object = new PyObjectObject(this.runtime);
-            getFrame().putToNotAppearLocals("___init__itarable_default_value", object);
+        PyObject object = getFrame().getNotAppearLocals().get("___init__itarable_default_value");
+        if (object == null) {
+            object = new PyObjectObject(this.runtime);
+            getFrame().getNotAppearLocals().put("___init__itarable_default_value", object);
+        }
 
-            return object;
-        });
+        return object;
     }
 
     @DefinePyFunction(name = __getitem__)

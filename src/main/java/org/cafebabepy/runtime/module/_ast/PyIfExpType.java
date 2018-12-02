@@ -23,9 +23,9 @@ public class PyIfExpType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("test", args[0]);
-        self.getFrame().putToLocals("body", args[1]);
-        self.getFrame().putToLocals("orelse", args[2]);
+        self.getFrame().getLocals().put("test", args[0]);
+        self.getFrame().getLocals().put("body", args[1]);
+        self.getFrame().getLocals().put("orelse", args[2]);
     }
 
     @Override

@@ -23,8 +23,8 @@ public class PyKeywordType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("arg", args[0]);
-        self.getFrame().putToLocals("value", args[1]);
+        self.getFrame().getLocals().put("arg", args[0]);
+        self.getFrame().getLocals().put("value", args[1]);
     }
 
     @Override

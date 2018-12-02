@@ -23,7 +23,7 @@ public class PyJavaFunctionObject extends AbstractFunction {
     private final Method method;
 
     public PyJavaFunctionObject(Python runtime, String name, PyObject target, Method method, Map<String, Method> defaultArgumentMap) {
-        super(runtime, name, createArguments(runtime, target, method, new HashMap<>(defaultArgumentMap)));
+        super(runtime, new PyObjectObject(runtime), name, createArguments(runtime, target, method, new HashMap<>(defaultArgumentMap)));
 
         this.target = target;
         this.method = method;
@@ -74,8 +74,8 @@ public class PyJavaFunctionObject extends AbstractFunction {
             PyObject arg = new PyObjectObject(runtime);
             arg.initialize();
 
-            arg.getFrame().putToLocals("arg", runtime.str(parameter.getName()));
-            arg.getFrame().putToLocals("annotation", runtime.None());
+            arg.getFrame().getLocals().put("arg", runtime.str(parameter.getName()));
+            arg.getFrame().getLocals().put("annotation", runtime.None());
 
             Class<?> type = parameter.getType();
             if (PyObject.class.isAssignableFrom(type)) {
@@ -118,31 +118,34 @@ public class PyJavaFunctionObject extends AbstractFunction {
             throw runtime.newRaiseException("SyntaxError", "invalid syntax");
         }
 
-        arguments.getFrame().putToLocals("defaults", runtime.list(argDefaultValueList));
-        arguments.getFrame().putToLocals("kw_defaults", runtime.list(kwonlyargDefaultList));
-        arguments.getFrame().putToLocals("vararg", vararg);
-        arguments.getFrame().putToLocals("kwarg", kwarg);
-        arguments.getFrame().putToLocals("kwonlyargs", runtime.list(kwonlyargList));
-        arguments.getFrame().putToLocals("args", runtime.list(argList));
+        arguments.getFrame().getLocals().put("defaults", runtime.list(argDefaultValueList));
+        arguments.getFrame().getLocals().put("kw_defaults", runtime.list(kwonlyargDefaultList));
+        arguments.getFrame().getLocals().put("vararg", vararg);
+        arguments.getFrame().getLocals().put("kwarg", kwarg);
+        arguments.getFrame().getLocals().put("kwonlyargs", runtime.list(kwonlyargList));
+        arguments.getFrame().getLocals().put("args", runtime.list(argList));
 
         return arguments;
     }
 
     @Override
-    protected PyObject evalDefaultValue(PyObject defaultValue) {
+    protected PyObject evalDefaultValue(PyObject context, PyObject defaultValue) {
         return defaultValue;
     }
 
     @Override
     protected PyObject getattr(PyObject object, String key) {
-        return object.getFrame().getFromGlobals(key).orElseThrow(() ->
-                new CafeBabePyException(object + " key '" + key + "' is not found")
-        );
+        PyObject attr = object.getFrame().lookup(key);
+        if (attr == null) {
+            throw new CafeBabePyException(object + " key '" + key + "' is not found");
+        }
+
+        return attr;
     }
 
     @Override
-    protected PyObject callImpl() {
-        Map<String, PyObject> argumentMap = this.runtime.getCurrentContext().getFrame().getLocals();
+    protected PyObject callImpl(PyObject context) {
+        Map<String, PyObject> argumentMap = context.getFrame().getLocals();
 
         Object[] arguments = new Object[argumentMap.size()];
         Parameter[] parameters = this.method.getParameters();

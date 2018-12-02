@@ -27,7 +27,7 @@ class ImportManager {
         this.runtime = runtime;
     }
 
-    void importAsName(PyObject name, PyObject asName) {
+    void importAsName(PyObject context, PyObject name, PyObject asName) {
         PyObject importName = asName.isNone() ? name : asName;
 
         String[] moduleNames = StringUtils.splitDot(name.toJava(String.class));
@@ -39,18 +39,17 @@ class ImportManager {
             String currentModuleName = moduleNameBuilder.toString();
             PyObject module = this.runtime.module(currentModuleName).orElseGet(() -> loadModule(currentModuleName));
 
-            this.runtime.setattr(this.runtime.getCurrentContext(), importName.toJava(String.class), module);
+            this.runtime.setattr(context, importName.toJava(String.class), module);
 
             moduleNameBuilder.append(".");
         }
     }
 
-    void importFrom(PyObject moduleName, PyObject names, PyObject level) {
+    void importFrom(PyObject context, PyObject moduleName, PyObject names, PyObject level) {
         String moduleNameJava = moduleName.toJava(String.class);
         int levelJava = level.toJava(int.class);
 
-        String contextName = this.runtime.getCurrentContext().getName();
-        String fromModuleName = getImportModuleName(contextName, moduleNameJava, levelJava);
+        String fromModuleName = getImportModuleName(context.getName(), moduleNameJava, levelJava);
 
         String[] moduleSplitNames = StringUtils.splitDot(fromModuleName);
 
@@ -70,7 +69,7 @@ class ImportManager {
                 if ("*".equals(nameJava)) {
                     for (Map.Entry<String, PyObject> e : loadModule.getFrame().getLocals().entrySet()) {
                         // FIXME _*
-                        this.runtime.setattr(this.runtime.getCurrentContext(), e.getKey(), e.getValue());
+                        this.runtime.setattr(context, e.getKey(), e.getValue());
                     }
 
                 } else {
@@ -78,7 +77,7 @@ class ImportManager {
                             this.runtime.newRaiseException("builtins.ImportError", "cannot import name '" + nameJava + "'")
                     );
 
-                    this.runtime.setattr(this.runtime.getCurrentContext(), importName.toJava(String.class), target);
+                    this.runtime.setattr(context, importName.toJava(String.class), target);
                 }
             });
 
@@ -148,7 +147,7 @@ class ImportManager {
                     }
 
                     PyObject type = this.runtime.createJavaPyObject((Class<PyObject>) c);
-                    module.getFrame().putToLocals(type.getName(), type);
+                    module.getFrame().getLocals().put(type.getName(), type);
 
                     checkDuplicateTypes.add(definePyType.name());
                 }
@@ -277,16 +276,12 @@ class ImportManager {
 
         this.runtime.setitem(modules, this.runtime.str(moduleName), module);
 
-        this.runtime.pushContext(module);
         try {
-            this.runtime.eval(file, builder.toString());
+            this.runtime.eval(module, file, builder.toString());
 
         } catch (RaiseException e) {
-            this.runtime.del(modules, this.runtime.str(moduleName));
+            this.runtime.delitem(modules, this.runtime.str(moduleName));
             throw e;
-
-        } finally {
-            this.runtime.popContext();
         }
 
         return Optional.of(module);

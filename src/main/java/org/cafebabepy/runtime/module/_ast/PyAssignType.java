@@ -23,8 +23,8 @@ public class PyAssignType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("targets", args[0]);
-        self.getFrame().putToLocals("value", args[1]);
+        self.getFrame().getLocals().put("targets", args[0]);
+        self.getFrame().getLocals().put("value", args[1]);
     }
 
     @Override

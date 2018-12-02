@@ -20,7 +20,7 @@ class AbstractAST extends AbstractCafeBabePyType {
         super.initialize();
 
         List<PyObject> _fields = Arrays.stream(_fields()).map(this.runtime::str).collect(toList());
-        getFrame().putToLocals("_fields", this.runtime.tuple(_fields));
+        getFrame().getLocals().put("_fields", this.runtime.tuple(_fields));
     }
 
     String[] _fields() {

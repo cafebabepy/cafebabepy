@@ -32,7 +32,7 @@ public class PyDictKeysObject extends AbstractPyObjectObject {
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
         if (clazz == Set.class) {
-            return (T)this.keys;
+            return (T) this.keys;
         }
 
         return super.toJava(clazz);

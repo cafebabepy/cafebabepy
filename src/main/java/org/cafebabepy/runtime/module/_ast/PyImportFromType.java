@@ -23,9 +23,9 @@ public class PyImportFromType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("names", args[1]);
-        self.getFrame().putToLocals("module", args[0]);
-        self.getFrame().putToLocals("level", args[2]);
+        self.getFrame().getLocals().put("names", args[1]);
+        self.getFrame().getLocals().put("module", args[0]);
+        self.getFrame().getLocals().put("level", args[2]);
     }
 
     @Override

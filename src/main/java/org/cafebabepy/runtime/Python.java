@@ -12,7 +12,6 @@ import org.cafebabepy.runtime.object.java.*;
 import org.cafebabepy.runtime.object.literal.PyEllipsisObject;
 import org.cafebabepy.runtime.object.literal.PyNoneObject;
 import org.cafebabepy.runtime.object.literal.PyNotImplementedObject;
-import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 import org.cafebabepy.util.ReflectionUtils;
 import org.cafebabepy.util.StringUtils;
 
@@ -49,8 +48,6 @@ public final class Python {
 
     private LinkedHashMap<PyObject, PyObject> sysModules;
 
-    private ThreadLocal<Deque<PyObject>> context = ThreadLocal.withInitial(ArrayDeque::new);
-
     private PyNoneObject noneObject;
 
     private PyBoolObject trueObject;
@@ -69,35 +66,32 @@ public final class Python {
         runtime.initialize();
 
         PyObject ast = runtime.parser.parse("<string>", input);
+        PyObject mainModule = runtime.createMainModule();
 
-        runtime.pushContext(runtime.getMainModule());
-        try {
-            return runtime.evaluator.eval(ast);
+        runtime.defineModule(mainModule);
 
-        } finally {
-            runtime.popContext();
-        }
+        return runtime.evaluator.eval(mainModule, ast);
     }
 
     public static Python createRuntime() {
         return new Python();
     }
 
-    private static Optional<PyObject> lookupType(PyObject object, String name) {
+    private static PyObject lookupType(PyObject object, String name) {
         for (PyObject type : object.getTypes()) {
-            Optional<PyObject> typeObject = type.getFrame().getFromGlobals(name);
-            if (typeObject.isPresent()) {
+            PyObject typeObject = type.getFrame().lookup(name);
+            if (typeObject != null) {
                 return typeObject;
             }
         }
 
-        return Optional.empty();
+        return null;
     }
 
-    private Optional<PyObject> lookup(PyObject object, String name) {
-        Optional<PyObject> attrOpt = object.getFrame().getFromGlobals(name);
-        if (attrOpt.isPresent()) {
-            return attrOpt;
+    private PyObject lookup(PyObject object, String name) {
+        PyObject attr = object.getFrame().lookup(name);
+        if (attr != null) {
+            return attr;
         }
 
         return lookupType(object, name);
@@ -111,57 +105,22 @@ public final class Python {
         return getEvaluator().loadModule(file);
     }
 
-    public PyObject eval(String file, String input) {
+    public PyObject eval(PyObject context, String file, String input) {
         initialize();
 
         PyObject ast = this.parser.parse(file, input);
-        return this.evaluator.eval(ast);
+        return this.evaluator.eval(context, ast);
     }
 
-    public PyObject getMainModule() {
-        return module("__main__").orElseGet(() -> {
-            initializeModuleAndTypes(PyMainModule.class);
-            PyObject mainModule = moduleOrThrow("__main__");
+    public PyObject createMainModule() {
+        PyObject[] moduleRef = new PyObject[1];
+        initializeModuleAndTypes(m -> moduleRef[0] = m, PyMainModule.class);
 
-            PyObject builtinsModule = moduleOrThrow("builtins");
-            mainModule.getFrame().getLocals().putAll(builtinsModule.getFrame().getLocals());
+        PyObject module = moduleRef[0];
 
-            return mainModule;
-        });
-    }
+        module.getFrame().getLocals().put(__builtins__, moduleOrThrow("builtins"));
 
-    public synchronized PyObject getCurrentContext() {
-        return this.context.get().peekFirst();
-    }
-
-    public synchronized void pushNewContext() {
-        Deque<PyObject> stack = this.context.get();
-        PyObject first = stack.peekFirst();
-        if (first == null) {
-            throw new CafeBabePyException("parent context is not found");
-        }
-
-        stack.push(new PyLexicalScopeProxyObject(first));
-    }
-
-    public synchronized void pushContext(PyObject context) {
-        this.context.get().push(context);
-    }
-
-    public synchronized PyObject pushNewContext(PyObject context) {
-        PyObject newContext = new PyLexicalScopeProxyObject(context);
-        this.context.get().push(newContext);
-
-        return newContext;
-    }
-
-    public synchronized PyObject popContext() {
-        PyObject context = this.context.get().pollFirst();
-        if (context == null) {
-            throw new CafeBabePyException("context is not found");
-        }
-
-        return context;
+        return module;
     }
 
     private void initialize() {
@@ -181,13 +140,17 @@ public final class Python {
         this.initialize = true;
     }
 
-    @SuppressWarnings("unchecked")
     public void initializeModuleAndTypes(Class<? extends PyObject>... moduleClasses) {
+        initializeModuleAndTypes(this::defineModule, moduleClasses);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void initializeModuleAndTypes(Consumer<PyObject> moduleConsumer, Class<? extends PyObject>... moduleClasses) {
         Map<Class<? extends PyObject>, PyObject> moduleMap = new LinkedHashMap<>();
         for (Class<? extends PyObject> moduleClass : moduleClasses) {
             PyObject module = createJavaPyObject(moduleClass);
+            moduleConsumer.accept(module);
 
-            defineModule(module);
             moduleMap.put(moduleClass, module);
         }
 
@@ -195,10 +158,7 @@ public final class Python {
         for (Class<? extends PyObject> moduleClass : moduleClasses) {
             PyObject module = moduleMap.get(moduleClass);
 
-            List<PyObject> types = createTypes(moduleClass);
-            for (PyObject type : types) {
-                module.getFrame().putToLocals(type.getName(), type);
-            }
+            List<PyObject> types = defineTypes(module, moduleClass);
 
             allTypes.addAll(types);
         }
@@ -213,13 +173,13 @@ public final class Python {
     }
 
     @SuppressWarnings("unchecked")
-    private List<PyObject> createTypes(Class<? extends PyObject> module, Class<? extends PyObject>... ignores) {
+    private List<PyObject> defineTypes(PyObject module, Class<? extends PyObject> moduleClass, Class<? extends PyObject>... ignores) {
         Set<Class<?>> builtinsClasses;
         try {
-            builtinsClasses = ReflectionUtils.getClasses(module.getPackage().getName());
+            builtinsClasses = ReflectionUtils.getClasses(moduleClass.getPackage().getName());
 
         } catch (IOException e) {
-            throw new CafeBabePyException("Fail initialize package '" + module.getPackage().getName() + "'");
+            throw new CafeBabePyException("Fail initialize package '" + moduleClass.getPackage().getName() + "'");
         }
 
         List<PyObject> types = new ArrayList<>();
@@ -243,6 +203,13 @@ public final class Python {
 
             PyObject type = createJavaPyObject((Class<PyObject>) c);
             types.add(type);
+
+            if (definePyType.appear()) {
+                module.getFrame().getLocals().put(type.getName(), type);
+
+            } else {
+                module.getFrame().getNotAppearLocals().put(type.getName(), type);
+            }
 
             checkDuplicateTypes.add(definePyType.name());
         }
@@ -427,7 +394,7 @@ public final class Python {
         return dict(pymap);
     }
 
-    public PyObject dict(LinkedHashMap<PyObject, PyObject> map) {
+    public PyObject dict(Map<PyObject, PyObject> map) {
         PyDictObject object = new PyDictObject(this, map);
         object.initialize();
 
@@ -485,20 +452,26 @@ public final class Python {
 
         if (StringUtils.isEmpty(splitLastDot[0])) {
             module = moduleOrThrow("builtins");
-            Optional<PyObject> typeOpt = module.getFrame().getFromGlobals(splitLastDot[1], appear);
-            if (typeOpt.isPresent()) {
-                return typeOpt.get();
-            }
+        } else {
+            module = moduleOrThrow(splitLastDot[0]);
+        }
 
+        PyObject type;
+        if (appear) {
+            type = module.getFrame().getLocals().get(splitLastDot[1]);
+
+        } else {
+            type = module.getFrame().getNotAppearLocals().get(splitLastDot[1]);
+        }
+
+        if (type != null) {
+            return type;
+        }
+
+        if (StringUtils.isEmpty(splitLastDot[0])) {
             throw newRaiseException("builtins.NameError", "name '" + name + "' is not defined");
 
         } else {
-            module = moduleOrThrow(splitLastDot[0]);
-            Optional<PyObject> typeOpt = module.getFrame().getFromGlobals(splitLastDot[1], appear);
-            if (typeOpt.isPresent()) {
-                return typeOpt.get();
-            }
-
             throw newRaiseException("builtins.AttributeError",
                     "module '" + module.getName() + "' has no attribute '" + splitLastDot[1] + "'");
         }
@@ -518,12 +491,23 @@ public final class Python {
 
         if (StringUtils.isEmpty(splitDot[0])) {
             throw new CafeBabePyException("'" + name + "' is not type");
-
         }
 
-        return module(splitDot[0])
-                .map(PyObject::getFrame)
-                .flatMap(scope -> scope.getFromGlobals(splitDot[1], appear));
+        Optional<PyObject> moduleOpt = module(splitDot[0]);
+        if (!moduleOpt.isPresent()) {
+            return Optional.empty();
+        }
+
+        PyObject module = moduleOpt.get();
+        PyObject type;
+        if (appear) {
+            type = module.getFrame().getLocals().get(splitDot[1]);
+
+        } else {
+            type = module.getFrame().getNotAppearLocals().get(splitDot[1]);
+        }
+
+        return Optional.ofNullable(type);
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
@@ -550,9 +534,11 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        PyObject function = module.getFrame().getFromGlobals(splitLastDot[1]).orElseThrow(() ->
-                newRaiseException(
-                        "builtins.AttributeError", "module '" + module.getFullName() + "' has no attribute '" + splitLastDot[1] + "'"));
+        PyObject function = module.getFrame().getLocals().get(splitLastDot[1]);
+        if (function == null) {
+            throw newRaiseException(
+                    "builtins.AttributeError", "module '" + module.getFullName() + "' has no attribute '" + splitLastDot[1] + "'");
+        }
 
         return function.call(args);
     }
@@ -662,9 +648,9 @@ public final class Python {
     }
 
     public PyObject getattr(PyObject object, String name) {
-        Optional<PyObject> getattributeOpt = lookupType(object.getType(), __getattribute__);
-        if (getattributeOpt.isPresent()) {
-            return getattributeOpt.get().call(object, str(name));
+        PyObject getattribute = lookupType(object.getType(), __getattribute__);
+        if (getattribute != null) {
+            return getattribute.call(object, str(name));
         }
 
         // FIXME module
@@ -679,6 +665,16 @@ public final class Python {
 
         } else {
             getattr.call(str(name), value);
+        }
+    }
+
+    public void delattr(PyObject object, String name) {
+        PyObject delattr = getattr(object, __delattr__);
+        if (object.isType()) {
+            delattr.call(object, str(name));
+
+        } else {
+            delattr.call(str(name));
         }
     }
 
@@ -737,7 +733,7 @@ public final class Python {
         setattrOpt.get().call(key, value);
     }
 
-    public void del(PyObject object, PyObject key) {
+    public void delitem(PyObject object, PyObject key) {
         Optional<PyObject> delitemOpt = getattrOptional(object, __delitem__);
         if (!delitemOpt.isPresent()) {
             throw newRaiseTypeError("'" + object.getFullName() + "' object has no attribute '__delitem__'");
@@ -1008,9 +1004,8 @@ public final class Python {
 
     public Optional<PyObject> builtins_object__getattribute__(PyObject self, String key) {
         PyObject type = self.getType();
-        Optional<PyObject> attrOpt = lookup(type, key);
-        if (attrOpt.isPresent()) {
-            PyObject attr = attrOpt.get();
+        PyObject attr = lookup(type, key);
+        if (attr != null) {
             if (self != attr) {
                 if (hasattr(attr, __get__) && hasattr(attr, __set__)) {
                     if (!__get__.equals(key)) {
@@ -1020,13 +1015,12 @@ public final class Python {
             }
         }
 
-        Optional<PyObject> objectOpt = self.getFrame().getFromGlobals(key);
-        if (objectOpt.isPresent()) {
-            return objectOpt;
+        PyObject object = self.getFrame().lookup(key);
+        if (object != null) {
+            return Optional.of(object);
         }
 
-        if (attrOpt.isPresent()) {
-            PyObject attr = attrOpt.get();
+        if (attr != null) {
             if (self != attr) {
                 if (hasattr(attr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(attr, __get__).call(attr, self, type));
@@ -1041,9 +1035,8 @@ public final class Python {
 
     public Optional<PyObject> builtins_type__getattribute__(PyObject cls, String key) {
         PyObject meta = cls.getType();
-        Optional<PyObject> metaattrOpt = lookup(meta, key);
-        if (metaattrOpt.isPresent()) {
-            PyObject metaattr = metaattrOpt.get();
+        PyObject metaattr = lookup(meta, key);
+        if (metaattr != null) {
             if (cls != metaattr) {
                 if (hasattr(metaattr, __get__) && hasattr(metaattr, __set__)) {
                     if (!__get__.equals(key)) {
@@ -1053,9 +1046,8 @@ public final class Python {
             }
         }
 
-        Optional<PyObject> attrOpt = lookup(cls, key);
-        if (attrOpt.isPresent()) {
-            PyObject attr = attrOpt.get();
+        PyObject attr = lookup(cls, key);
+        if (attr != null) {
             if (cls != attr) {
                 if (hasattr(attr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(attr, __get__).call(attr, None(), cls));
@@ -1065,8 +1057,7 @@ public final class Python {
             return Optional.of(attr);
         }
 
-        if (metaattrOpt.isPresent()) {
-            PyObject metaattr = metaattrOpt.get();
+        if (metaattr != null) {
             if (cls != metaattr) {
                 if (hasattr(metaattr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));

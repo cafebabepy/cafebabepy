@@ -23,8 +23,8 @@ public class PyNameType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("id", args[0]);
-        self.getFrame().putToLocals("ctx", args[1]);
+        self.getFrame().getLocals().put("id", args[0]);
+        self.getFrame().getLocals().put("ctx", args[1]);
     }
 
     @Override

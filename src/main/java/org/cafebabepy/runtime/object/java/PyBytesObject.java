@@ -30,7 +30,7 @@ public class PyBytesObject extends AbstractPyObjectObject {
     @SuppressWarnings("unchecked")
     public <T> T toJava(Class<T> clazz) {
         if (int[].class.isAssignableFrom(clazz)) {
-            return (T)this.value;
+            return (T) this.value;
 
         }
 

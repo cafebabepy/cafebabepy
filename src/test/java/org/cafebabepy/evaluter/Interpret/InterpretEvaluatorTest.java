@@ -1807,7 +1807,7 @@ public class InterpretEvaluatorTest {
                     + "a()");
 
             Python runtime = result.getRuntime();
-            assertEquals(result.getType(), runtime.typeOrThrow("generator"));
+            assertEquals(result.getType(), runtime.typeOrThrow("generator", false));
         }
 
         @Test

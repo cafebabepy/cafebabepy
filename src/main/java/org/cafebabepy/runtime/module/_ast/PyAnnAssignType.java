@@ -23,10 +23,10 @@ public class PyAnnAssignType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("target", args[0]);
-        self.getFrame().putToLocals("annotation", args[1]);
-        self.getFrame().putToLocals("value", args[2]);
-        self.getFrame().putToLocals("simple", args[3]);
+        self.getFrame().getLocals().put("target", args[0]);
+        self.getFrame().getLocals().put("annotation", args[1]);
+        self.getFrame().getLocals().put("value", args[2]);
+        self.getFrame().getLocals().put("simple", args[3]);
     }
 
     @Override

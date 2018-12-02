@@ -24,6 +24,6 @@ public class PyTracebackType extends AbstractCafeBabePyType {
         // FIXME remove
 
         PyObject frame = this.runtime.newPyObject("frame", false);
-        getFrame().putToLocals("tb_frame", frame);
+        getFrame().getLocals().put("tb_frame", frame);
     }
 }

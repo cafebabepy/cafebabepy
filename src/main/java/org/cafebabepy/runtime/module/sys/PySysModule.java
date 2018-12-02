@@ -24,12 +24,12 @@ public class PySysModule extends AbstractCafeBabePyModule {
         super.initialize();
 
         PyDictObject modules = new PyDictObject(this.runtime, this.runtime.getSysModuleMap());
-        getFrame().putToLocals("modules", modules);
+        getFrame().getLocals().put("modules", modules);
 
         this.runtime.defineModule(this);
 
         PyObject version_info = this.runtime.newPyObject("sys.version_info", false);
-        getFrame().putToLocals("version_info", version_info);
+        getFrame().getLocals().put("version_info", version_info);
 
         String os_arch = System.getProperty("os.arch");
         String os_name = System.getProperty("os.name").replaceAll("¥s+", "-").toLowerCase();
@@ -65,11 +65,11 @@ public class PySysModule extends AbstractCafeBabePyModule {
         simpleNamespaceMap.put("name", this.runtime.str(Python.APPLICATION_NAME));
         simpleNamespaceMap.put("version", version_info);
 
-        PyObject implementation = this.runtime.newPyObject("SimpleNamespace",
+        PyObject implementation = this.runtime.newPyObject("SimpleNamespace", false,
                 new PyObject[0], simpleNamespaceMap
         );
 
-        getFrame().putToLocals("implementation", implementation);
+        getFrame().getLocals().put("implementation", implementation);
     }
 
     @DefinePyFunction(name = "exc_info")
@@ -79,6 +79,6 @@ public class PySysModule extends AbstractCafeBabePyModule {
         PyObject traceback2 = this.runtime.newPyObject("traceback", false);
         PyObject traceback3 = this.runtime.newPyObject("traceback", false);
 
-        return this.runtime.list(traceback1, traceback2, traceback3);
+        return this.runtime.tuple(traceback1, traceback2, traceback3);
     }
 }

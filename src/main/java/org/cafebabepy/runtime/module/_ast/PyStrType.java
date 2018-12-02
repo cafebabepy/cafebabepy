@@ -23,7 +23,7 @@ public class PyStrType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("s", args[0]);
+        self.getFrame().getLocals().put("s", args[0]);
     }
 
     @Override

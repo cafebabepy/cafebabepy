@@ -23,8 +23,8 @@ public class PyDictType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("keys", args[0]);
-        self.getFrame().putToLocals("values", args[1]);
+        self.getFrame().getLocals().put("keys", args[0]);
+        self.getFrame().getLocals().put("values", args[1]);
     }
 
     @Override

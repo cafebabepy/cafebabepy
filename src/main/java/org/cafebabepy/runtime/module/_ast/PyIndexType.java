@@ -23,7 +23,7 @@ public class PyIndexType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("value", args[0]);
+        self.getFrame().getLocals().put("value", args[0]);
     }
 
     @Override

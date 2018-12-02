@@ -45,6 +45,7 @@ public final class ProtocolNames {
     public static final String __len__ = "__len__";
     public static final String __get__ = "__get__";
     public static final String __set__ = "__set__";
+    public static final String __del__ = "__del__";
     public static final String __delete__ = "__delete__";
     public static final String __getitem__ = "__getitem__";
     public static final String __setitem__ = "__setitem__";
@@ -52,6 +53,7 @@ public final class ProtocolNames {
     public static final String __getattribute__ = "__getattribute__";
     public static final String __getattr__ = "__getattr__";
     public static final String __setattr__ = "__setattr__";
+    public static final String __delattr__ = "__delattr__";
     public static final String __hash__ = "__hash__";
     public static final String __contains__ = "__contains__";
     public static final String __code__ = "__code__";
@@ -63,6 +65,7 @@ public final class ProtocolNames {
     public static final String __globals__ = "__globals__";
     public static final String __reversed__ = "__reversed__";
     public static final String __prepare__ = "__prepare__";
+    public static final String __builtins__ = "__builtins__";
 
     private ProtocolNames() {
     }

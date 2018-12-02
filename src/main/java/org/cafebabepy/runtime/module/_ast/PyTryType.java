@@ -23,10 +23,10 @@ public class PyTryType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("body", args[0]);
-        self.getFrame().putToLocals("handlers", args[1]);
-        self.getFrame().putToLocals("orelse", args[2]);
-        self.getFrame().putToLocals("finalbody", args[3]);
+        self.getFrame().getLocals().put("body", args[0]);
+        self.getFrame().getLocals().put("handlers", args[1]);
+        self.getFrame().getLocals().put("orelse", args[2]);
+        self.getFrame().getLocals().put("finalbody", args[3]);
     }
 
     @Override

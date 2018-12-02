@@ -33,10 +33,12 @@ public class InteractiveConsole {
 
         printBanner();
 
-        this.runtime.pushNewContext();
         try {
             // not close
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+            PyObject mainModule = this.runtime.createMainModule();
+            this.runtime.defineModule(mainModule);
 
             StringBuilder buffer = new StringBuilder();
             while (status != Status.QUIT) {
@@ -72,7 +74,7 @@ public class InteractiveConsole {
                 PyObject result;
 
                 try {
-                    result = evaluator.eval(ast);
+                    result = evaluator.eval(mainModule, ast);
                     if (!result.isNone()) {
                         println(result.toJava(String.class));
                     }
@@ -90,9 +92,6 @@ public class InteractiveConsole {
 
         } catch (Throwable e) {
             e.printStackTrace();
-
-        } finally {
-            this.runtime.popContext();
         }
     }
 

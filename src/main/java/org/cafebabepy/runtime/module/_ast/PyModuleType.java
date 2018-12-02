@@ -23,7 +23,7 @@ public class PyModuleType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("body", args[0]);
+        self.getFrame().getLocals().put("body", args[0]);
     }
 
     @Override

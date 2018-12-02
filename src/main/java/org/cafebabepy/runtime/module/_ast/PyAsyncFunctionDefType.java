@@ -23,11 +23,11 @@ public class PyAsyncFunctionDefType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("name", args[0]);
-        self.getFrame().putToLocals("args", args[1]);
-        self.getFrame().putToLocals("body", args[2]);
-        self.getFrame().putToLocals("decorator_list", args[3]);
-        self.getFrame().putToLocals("returns", args[4]);
+        self.getFrame().getLocals().put("name", args[0]);
+        self.getFrame().getLocals().put("args", args[1]);
+        self.getFrame().getLocals().put("body", args[2]);
+        self.getFrame().getLocals().put("decorator_list", args[3]);
+        self.getFrame().getLocals().put("returns", args[4]);
     }
 
     @Override

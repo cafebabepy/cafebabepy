@@ -23,8 +23,8 @@ public class PyWIthItemType extends AbstractAST {
             return;
         }
 
-        self.getFrame().putToLocals("context_expr", args[0]);
-        self.getFrame().putToLocals("optional_vars", args[1]);
+        self.getFrame().getLocals().put("context_expr", args[0]);
+        self.getFrame().getLocals().put("optional_vars", args[1]);
     }
 
     @Override
