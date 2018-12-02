@@ -31,16 +31,16 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             PyObject dict;
 
             if (isType()) {
-                dict = new PyMappingProxyTypeObject(this.runtime, getScope().getsRaw());
+                dict = new PyMappingProxyTypeObject(this.runtime, getFrame().toPyObjectMap());
 
             } else {
-                dict = new PyDictObject(this.runtime, getScope().getsRaw());
+                dict = new PyDictObject(this.runtime, getFrame().toPyObjectMap());
             }
 
-            getScope().put(this.runtime.str(__dict__), dict);
+            getFrame().putToLocals(__dict__, dict);
         }
 
-        getScope().put(this.runtime.str(__name__), this.runtime.str(getName()));
+        getFrame().putToLocals(__name__, this.runtime.str(getName()));
     }
 
     @DefinePyFunction(name = __init__)
@@ -49,10 +49,12 @@ public final class PyObjectType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject self, PyObject key) {
-        return this.runtime.builtins_object__getattribute__(self, key).orElseGet(() -> {
+        String javaKey = key.toJava(String.class);
+
+        return this.runtime.builtins_object__getattribute__(self, javaKey).orElseGet(() -> {
             Optional<PyObject> specialVar;
             if (__name__.equals(key.toJava(String.class))) {
-                specialVar = self.getScope().get(key, false);
+                specialVar = self.getFrame().getFromNotAppearLocals(javaKey);
 
             } else {
                 specialVar = Optional.empty();
@@ -77,8 +79,10 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             );
         }
 
+        String javaName = name.toJava(String.class);
+
         if (!self.isType()) {
-            Optional<PyObject> existsValueOpt = this.runtime.lookup(self, name);
+            Optional<PyObject> existsValueOpt = lookup(self, javaName);
             if (existsValueOpt.isPresent()) {
                 PyObject existsValue = existsValueOpt.get();
                 Optional<PyObject> setOpt = this.runtime.getattrOptional(existsValue, __set__);
@@ -89,7 +93,27 @@ public final class PyObjectType extends AbstractCafeBabePyType {
             }
         }
 
-        self.getScope().put(name, value);
+        self.getFrame().putToLocals(javaName, value);
+    }
+
+    private static Optional<PyObject> lookupType(PyObject object, String name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getFrame().getFromGlobals(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<PyObject> lookup(PyObject object, String name) {
+        Optional<PyObject> attrOpt = object.getFrame().getFromGlobals(name);
+        if (attrOpt.isPresent()) {
+            return attrOpt;
+        }
+
+        return lookupType(object, name);
     }
 
     @DefinePyFunction(name = __str__)

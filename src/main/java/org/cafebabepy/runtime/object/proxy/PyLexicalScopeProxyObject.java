@@ -1,20 +1,20 @@
 package org.cafebabepy.runtime.object.proxy;
 
+import org.cafebabepy.runtime.Frame;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 
 public class PyLexicalScopeProxyObject extends PyProxyObject {
 
-    private PyObjectScope scope;
+    private Frame frame;
 
     public PyLexicalScopeProxyObject(PyObject source) {
         super(source);
 
-        this.scope = new PyObjectScope(source.getScope());
+        this.frame = new Frame(source.getFrame());
     }
 
     @Override
-    public PyObjectScope getScope() {
-        return this.scope;
+    public Frame getFrame() {
+        return this.frame;
     }
 }

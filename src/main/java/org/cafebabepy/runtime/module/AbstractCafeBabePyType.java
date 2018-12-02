@@ -85,7 +85,7 @@ public abstract class AbstractCafeBabePyType extends AbstractAbstractCafeBabePyA
         System.arraycopy(args, 0, newArgs, 1, args.length);
         newArgs[0] = this;
 
-        return this.runtime.typeOrThrow("builtins.type").getScope().get(this.runtime.str(__call__)).orElseThrow(() ->
+        return this.runtime.typeOrThrow("builtins.type").getFrame().getFromGlobals(__call__).orElseThrow(() ->
                 new CafeBabePyException("type " + __call__ + " is not foud")
         ).call(newArgs, keywords);
     }

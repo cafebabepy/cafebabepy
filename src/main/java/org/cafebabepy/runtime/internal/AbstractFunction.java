@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.internal;
 
+import org.cafebabepy.runtime.Frame;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
@@ -49,7 +49,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
             this.runtime.popContext();
         }
 
-        getScope().put(this.runtime.str(__call__), this);
+        getFrame().putToLocals(__call__, this);
     }
 
     private List<PyObject> evalDefaults(List<PyObject> defaultList) {
@@ -78,7 +78,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         PyObject context = this.runtime.pushNewContext(this.argumentsContext);
         try {
-            PyObjectScope scope = context.getScope();
+            Frame frame = context.getFrame();
 
             PyObject vararg = getattr(this.arguments, "vararg");
             PyObject kwarg = getattr(this.arguments, "kwarg");
@@ -134,11 +134,11 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
                 PyObject arg = defineArgsList.get(i);
 
                 if (i < args.length) {
-                    scope.put(arg, args[i]);
+                    frame.putToLocals(arg.toJava(String.class), args[i]);
                     assignIndex++;
 
                 } else if (i < defineArgsList.size() - keywords.size()) {
-                    scope.put(arg, this.defaultArgs.get(defaultArgumentIndex++));
+                    frame.putToLocals(arg.toJava(String.class), this.defaultArgs.get(defaultArgumentIndex++));
                     assignIndex++;
                 }
             }
@@ -153,7 +153,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
                     varargs[i] = args[assignIndex++];
                 }
 
-                scope.put(arg, this.runtime.tuple(varargs));
+                frame.putToLocals(arg.toJava(String.class), this.runtime.tuple(varargs));
             }
 
             // keyword arguments
@@ -164,12 +164,12 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
                     throw this.runtime.newRaiseTypeError(this.name + "() got an unexpected keyword argument " + keyword);
                 }
 
-                if (scope.containsKey(keyword)) {
+                if (frame.containsKeyFromLocals(keywordString)) {
                     throw this.runtime.newRaiseTypeError(this.name + "() got multiple values for argument " + keyword);
 
                 } else {
                     if (defineArgsList.contains(keyword) && !defineKwOnlyArgList.contains(keyword)) {
-                        scope.put(keyword, keywords.get(keywordString));
+                        frame.putToLocals(keywordString, keywords.get(keywordString));
                     }
                 }
             }
@@ -177,10 +177,11 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
             int kw_defaultIndex = 0;
             int kwonlyargsCount = defineKwOnlyArgList.size();
             for (PyObject kwonlyarg : defineKwOnlyArgList) {
-                PyObject kwonlyargValue = keywords.get(kwonlyarg.toJava(String.class));
+                String javaKwonlyarg = kwonlyarg.toJava(String.class);
+                PyObject kwonlyargValue = keywords.get(javaKwonlyarg);
                 if (kwonlyargValue == null) {
                     if (kw_defaultIndex < this.kw_defaults.size()) {
-                        scope.put(kwonlyarg, this.kw_defaults.get(kw_defaultIndex++));
+                        frame.putToLocals(javaKwonlyarg, this.kw_defaults.get(kw_defaultIndex++));
                         kwonlyargsCount--;
 
                     } else {
@@ -188,7 +189,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
                     }
 
                 } else {
-                    scope.put(kwonlyarg, kwonlyargValue);
+                    frame.putToLocals(javaKwonlyarg, kwonlyargValue);
                 }
             }
 
@@ -198,13 +199,13 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
 
                 for (String keywordString : keywords.keySet()) {
                     PyObject keyword = this.runtime.str(keywordString);
-                    if (!scope.containsKey(keyword)) {
+                    if (!frame.containsKeyFromLocals(keywordString)) {
                         kwargsMap.put(keyword, keywords.get(keywordString));
                     }
                 }
 
                 PyObject arg = getattr(kwarg, "arg");
-                scope.put(arg, this.runtime.dict(kwargsMap));
+                frame.putToLocals(arg.toJava(String.class), this.runtime.dict(kwargsMap));
             }
 
             return callImpl();

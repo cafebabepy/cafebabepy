@@ -23,8 +23,8 @@ public class PyArgType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("arg"), args[0]);
-        self.getScope().put(this.runtime.str("annotation"), args[1]);
+        self.getFrame().putToLocals("arg", args[0]);
+        self.getFrame().putToLocals("annotation", args[1]);
     }
 
     @Override

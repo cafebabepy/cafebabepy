@@ -29,7 +29,7 @@ public final class PySimpleNamespaceType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, LinkedHashMap<String, PyObject> kwargs) {
-        self.getScope().put(this.runtime.str("kwargs"), this.runtime.dictStringKey(kwargs), false);
+        self.getFrame().putToNotAppearLocals("kwargs", this.runtime.dictStringKey(kwargs));
     }
 
     @DefinePyFunction(name = __str__)
@@ -38,7 +38,7 @@ public final class PySimpleNamespaceType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("descriptor '__str__' requires a 'types.SimpleNamespace' object but received a '" + self.getFullName() + "'");
         }
 
-        PyObject dict = self.getScope().get(this.runtime.str("kwargs"), false).orElseGet(this.runtime::dict);
+        PyObject dict = self.getFrame().getFromNotAppearLocals("kwargs").orElseGet(this.runtime::dict);
 
         LinkedHashMap<PyObject, PyObject> items = new LinkedHashMap<>();
         this.runtime.iter(dict, key ->

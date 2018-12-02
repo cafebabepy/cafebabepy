@@ -23,9 +23,9 @@ public class PySliceType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("lower"), args[0]);
-        self.getScope().put(this.runtime.str("upper"), args[1]);
-        self.getScope().put(this.runtime.str("step"), args[2]);
+        self.getFrame().putToLocals("lower", args[0]);
+        self.getFrame().putToLocals("upper", args[1]);
+        self.getFrame().putToLocals("step", args[2]);
     }
 
     @Override

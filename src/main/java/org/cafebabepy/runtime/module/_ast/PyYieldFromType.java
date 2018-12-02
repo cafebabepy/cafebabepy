@@ -23,7 +23,7 @@ public class PyYieldFromType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("value"), args[0]);
+        self.getFrame().putToLocals("value", args[0]);
     }
 
     @Override

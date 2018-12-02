@@ -28,6 +28,6 @@ public class PyModuleTypeType extends AbstractCafeBabePyType {
             );
         }
 
-        self.getScope().put(name, value);
+        self.getFrame().putToLocals(name.toJava(String.class), value);
     }
 }

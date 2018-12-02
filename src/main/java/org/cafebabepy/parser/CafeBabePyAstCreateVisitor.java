@@ -1287,12 +1287,12 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
     private PyObject addASTStr(PyObject str1, PyObject str2) {
         String javaStr = "";
 
-        Optional<PyObject> str1Opt = str1.getScope().get(this.runtime.str("s"));
+        Optional<PyObject> str1Opt = str1.getFrame().getFromGlobals("s");
         if (str1Opt.isPresent()) {
             javaStr += str1Opt.get().toJava(String.class);
         }
 
-        Optional<PyObject> str2Opt = str2.getScope().get(this.runtime.str("s"));
+        Optional<PyObject> str2Opt = str2.getFrame().getFromGlobals("s");
         if (str2Opt.isPresent()) {
             javaStr += str2Opt.get().toJava(String.class);
         }

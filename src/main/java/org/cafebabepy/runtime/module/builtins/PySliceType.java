@@ -48,9 +48,9 @@ public class PySliceType extends AbstractCafeBabePyType {
             step = args[2];
         }
 
-        self.getScope().put(this.runtime.str("start"), start);
-        self.getScope().put(this.runtime.str("stop"), stop);
-        self.getScope().put(this.runtime.str("step"), step);
+        self.getFrame().putToLocals("start", start);
+        self.getFrame().putToLocals("stop", stop);
+        self.getFrame().putToLocals("step", step);
     }
 
     @DefinePyFunction(name = __str__)

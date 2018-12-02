@@ -83,9 +83,9 @@ public final class Python {
         return new Python();
     }
 
-    private static Optional<PyObject> lookupType(PyObject object, PyObject name) {
+    private static Optional<PyObject> lookupType(PyObject object, String name) {
         for (PyObject type : object.getTypes()) {
-            Optional<PyObject> typeObject = type.getScope().get(name);
+            Optional<PyObject> typeObject = type.getFrame().getFromGlobals(name);
             if (typeObject.isPresent()) {
                 return typeObject;
             }
@@ -94,8 +94,8 @@ public final class Python {
         return Optional.empty();
     }
 
-    public Optional<PyObject> lookup(PyObject object, PyObject name) {
-        Optional<PyObject> attrOpt = lookupScope(object, name);
+    private Optional<PyObject> lookup(PyObject object, String name) {
+        Optional<PyObject> attrOpt = object.getFrame().getFromGlobals(name);
         if (attrOpt.isPresent()) {
             return attrOpt;
         }
@@ -103,29 +103,11 @@ public final class Python {
         return lookupType(object, name);
     }
 
-    private Optional<PyObject> lookupScope(PyObject object, PyObject name) {
-        Optional<PyObjectScope> parentOpt = Optional.of(object.getScope());
-        while (parentOpt.isPresent()) {
-            PyObjectScope parent = parentOpt.get();
-            Optional<PyObject> result = parent.get(name);
-
-            if (result.isPresent()) {
-                return result;
-            }
-
-            parentOpt = parent.getParent();
-        }
-
-        return Optional.empty();
-
-    }
-
     public InterpretEvaluator getEvaluator() {
         return this.evaluator;
     }
 
     public PyObject evalModule(String file) {
-        initialize();
         return getEvaluator().loadModule(file);
     }
 
@@ -142,10 +124,7 @@ public final class Python {
             PyObject mainModule = moduleOrThrow("__main__");
 
             PyObject builtinsModule = moduleOrThrow("builtins");
-            Map<PyObject, PyObject> objectMap = builtinsModule.getScope().gets();
-            for (Map.Entry<PyObject, PyObject> e : objectMap.entrySet()) {
-                setattr(mainModule, e.getKey().toJava(String.class), e.getValue());
-            }
+            mainModule.getFrame().getLocals().putAll(builtinsModule.getFrame().getLocals());
 
             return mainModule;
         });
@@ -218,7 +197,7 @@ public final class Python {
 
             List<PyObject> types = createTypes(moduleClass);
             for (PyObject type : types) {
-                module.getScope().put(str(type.getName()), type);
+                module.getFrame().putToLocals(type.getName(), type);
             }
 
             allTypes.addAll(types);
@@ -506,7 +485,7 @@ public final class Python {
 
         if (StringUtils.isEmpty(splitLastDot[0])) {
             module = moduleOrThrow("builtins");
-            Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
+            Optional<PyObject> typeOpt = module.getFrame().getFromGlobals(splitLastDot[1], appear);
             if (typeOpt.isPresent()) {
                 return typeOpt.get();
             }
@@ -515,7 +494,7 @@ public final class Python {
 
         } else {
             module = moduleOrThrow(splitLastDot[0]);
-            Optional<PyObject> typeOpt = module.getScope().get(str(splitLastDot[1]), appear);
+            Optional<PyObject> typeOpt = module.getFrame().getFromGlobals(splitLastDot[1], appear);
             if (typeOpt.isPresent()) {
                 return typeOpt.get();
             }
@@ -543,8 +522,8 @@ public final class Python {
         }
 
         return module(splitDot[0])
-                .map(PyObject::getScope)
-                .flatMap(scope -> scope.get(str(splitDot[1]), appear));
+                .map(PyObject::getFrame)
+                .flatMap(scope -> scope.getFromGlobals(splitDot[1], appear));
     }
 
     public PyObject newPyObject(String typeName, PyObject... args) {
@@ -571,7 +550,7 @@ public final class Python {
         }
 
         PyObject module = moduleOrThrow(splitLastDot[0]);
-        PyObject function = module.getScope().get(str(splitLastDot[1])).orElseThrow(() ->
+        PyObject function = module.getFrame().getFromGlobals(splitLastDot[1]).orElseThrow(() ->
                 newRaiseException(
                         "builtins.AttributeError", "module '" + module.getFullName() + "' has no attribute '" + splitLastDot[1] + "'"));
 
@@ -683,7 +662,7 @@ public final class Python {
     }
 
     public PyObject getattr(PyObject object, String name) {
-        Optional<PyObject> getattributeOpt = lookupType(object.getType(), str(__getattribute__));
+        Optional<PyObject> getattributeOpt = lookupType(object.getType(), __getattribute__);
         if (getattributeOpt.isPresent()) {
             return getattributeOpt.get().call(object, str(name));
         }
@@ -708,10 +687,10 @@ public final class Python {
             // FIXME remove code
             if (object.getModule().getName().equals("builtins")) {
                 if (object.isType()) {
-                    return builtins_type__getattribute__(object, str(name)).isPresent();
+                    return builtins_type__getattribute__(object, name).isPresent();
 
                 } else {
-                    return builtins_object__getattribute__(object, str(name)).isPresent();
+                    return builtins_object__getattribute__(object, name).isPresent();
                 }
             }
 
@@ -1027,21 +1006,21 @@ public final class Python {
         }
     }
 
-    public Optional<PyObject> builtins_object__getattribute__(PyObject self, PyObject key) {
+    public Optional<PyObject> builtins_object__getattribute__(PyObject self, String key) {
         PyObject type = self.getType();
         Optional<PyObject> attrOpt = lookup(type, key);
         if (attrOpt.isPresent()) {
             PyObject attr = attrOpt.get();
             if (self != attr) {
                 if (hasattr(attr, __get__) && hasattr(attr, __set__)) {
-                    if (!__get__.equals(key.toJava(String.class))) {
+                    if (!__get__.equals(key)) {
                         return Optional.of(getattr(attr, __get__).call(attr, self, type));
                     }
                 }
             }
         }
 
-        Optional<PyObject> objectOpt = lookupScope(self, key);
+        Optional<PyObject> objectOpt = self.getFrame().getFromGlobals(key);
         if (objectOpt.isPresent()) {
             return objectOpt;
         }
@@ -1049,7 +1028,7 @@ public final class Python {
         if (attrOpt.isPresent()) {
             PyObject attr = attrOpt.get();
             if (self != attr) {
-                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                if (hasattr(attr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(attr, __get__).call(attr, self, type));
                 }
             }
@@ -1060,14 +1039,14 @@ public final class Python {
         return Optional.empty();
     }
 
-    public Optional<PyObject> builtins_type__getattribute__(PyObject cls, PyObject key) {
+    public Optional<PyObject> builtins_type__getattribute__(PyObject cls, String key) {
         PyObject meta = cls.getType();
         Optional<PyObject> metaattrOpt = lookup(meta, key);
         if (metaattrOpt.isPresent()) {
             PyObject metaattr = metaattrOpt.get();
             if (cls != metaattr) {
                 if (hasattr(metaattr, __get__) && hasattr(metaattr, __set__)) {
-                    if (!__get__.equals(key.toJava(String.class))) {
+                    if (!__get__.equals(key)) {
                         return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
                     }
                 }
@@ -1078,7 +1057,7 @@ public final class Python {
         if (attrOpt.isPresent()) {
             PyObject attr = attrOpt.get();
             if (cls != attr) {
-                if (hasattr(attr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                if (hasattr(attr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(attr, __get__).call(attr, None(), cls));
                 }
             }
@@ -1089,7 +1068,7 @@ public final class Python {
         if (metaattrOpt.isPresent()) {
             PyObject metaattr = metaattrOpt.get();
             if (cls != metaattr) {
-                if (hasattr(metaattr, __get__) && !__get__.equals(key.toJava(String.class))) {
+                if (hasattr(metaattr, __get__) && !__get__.equals(key)) {
                     return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
                 }
             }
@@ -1098,6 +1077,6 @@ public final class Python {
         }
 
         throw newRaiseException("builtins.AttributeError",
-                "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'");
+                "type object '" + cls.getName() + "' object has no attribute '" + key + "'");
     }
 }

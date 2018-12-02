@@ -24,12 +24,12 @@ public class PySysModule extends AbstractCafeBabePyModule {
         super.initialize();
 
         PyDictObject modules = new PyDictObject(this.runtime, this.runtime.getSysModuleMap());
-        getScope().put(this.runtime.str("modules"), modules);
+        getFrame().putToLocals("modules", modules);
 
         this.runtime.defineModule(this);
 
         PyObject version_info = this.runtime.newPyObject("sys.version_info", false);
-        getScope().put(this.runtime.str("version_info"), version_info);
+        getFrame().putToLocals("version_info", version_info);
 
         String os_arch = System.getProperty("os.arch");
         String os_name = System.getProperty("os.name").replaceAll("¥s+", "-").toLowerCase();
@@ -69,7 +69,7 @@ public class PySysModule extends AbstractCafeBabePyModule {
                 new PyObject[0], simpleNamespaceMap
         );
 
-        getScope().put(this.runtime.str("implementation"), implementation);
+        getFrame().putToLocals("implementation", implementation);
     }
 
     @DefinePyFunction(name = "exc_info")

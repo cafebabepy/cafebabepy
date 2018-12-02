@@ -23,8 +23,8 @@ public class PyGeneratorExpType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("elt"), args[0]);
-        self.getScope().put(this.runtime.str("generators"), args[1]);
+        self.getFrame().putToLocals("elt", args[0]);
+        self.getFrame().putToLocals("generators", args[1]);
     }
 
     @Override

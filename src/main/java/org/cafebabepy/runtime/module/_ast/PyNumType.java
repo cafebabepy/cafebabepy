@@ -23,7 +23,7 @@ public class PyNumType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("n"), args[0]);
+        self.getFrame().putToLocals("n", args[0]);
     }
 
     @Override

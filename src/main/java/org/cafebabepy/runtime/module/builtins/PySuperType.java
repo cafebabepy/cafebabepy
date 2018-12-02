@@ -35,7 +35,7 @@ public class PySuperType extends AbstractCafeBabePyType {
         */
 
         if (args.length == 1) {
-            self.getScope().put(this.runtime.str("_proxy_object"), args[0], false);
+            self.getFrame().putToNotAppearLocals("_proxy_object", args[0]);
         }
     }
 
@@ -49,7 +49,7 @@ public class PySuperType extends AbstractCafeBabePyType {
             );
         }
 
-        PyObject object = self.getScope().get(this.runtime.str("_proxy_object"), false).orElseThrow(() ->
+        PyObject object = self.getFrame().getFromNotAppearLocals("_proxy_object").orElseThrow(() ->
                 getRuntime().newRaiseException("builtins.AttributeError",
                         "'" + self.getFullName() + "' object has no attribute '_proxy_object'"));
 

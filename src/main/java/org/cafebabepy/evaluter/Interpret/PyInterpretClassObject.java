@@ -1,8 +1,8 @@
 package org.cafebabepy.evaluter.Interpret;
 
 import org.cafebabepy.runtime.AbstractPyObject;
+import org.cafebabepy.runtime.Frame;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class PyInterpretClassObject extends AbstractPyObject {
     private final String name;
     private final List<PyObject> bases;
     private PyObject context;
-    private volatile PyObjectScope scope;
+    private volatile Frame frame;
 
     public PyInterpretClassObject(Python runtime, String name, List<PyObject> bases) {
         super(runtime);
@@ -37,21 +37,21 @@ public class PyInterpretClassObject extends AbstractPyObject {
     }
 
     public void setContext(PyObject context) {
-        this.scope = null;
+        this.frame = null;
         this.context = context;
     }
 
     @Override
-    public PyObjectScope getScope() {
-        if (this.scope == null) {
+    public Frame getFrame() {
+        if (this.frame == null) {
             synchronized (this) {
-                if (this.scope == null) {
-                    this.scope = new PyObjectScope(this.context.getScope());
+                if (this.frame == null) {
+                    this.frame = new Frame(this.context.getFrame());
                 }
             }
         }
 
-        return this.scope;
+        return this.frame;
     }
 
     @Override

@@ -34,7 +34,7 @@ public class PyListType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("descriptor '__init__' requires a 'set' object but received a '" + self.getType().getFullName() + "'");
         }
 
-        getScope().get(this.runtime.str("___init__itarable_default_value"), false).ifPresent(v -> {
+        getFrame().getFromNotAppearLocals("___init__itarable_default_value").ifPresent(v -> {
             if (v != iterable) {
                 PyListObject object = (PyListObject) self;
                 this.runtime.iter(iterable, item -> object.getRawValues().add(item));
@@ -44,9 +44,9 @@ public class PyListType extends AbstractCafeBabePyType {
 
     @DefinePyFunctionDefaultValue(methodName = "__init__", parameterName = "iterable")
     private PyObject __init___iterable() {
-        return getScope().get(this.runtime.str("___init__itarable_default_value"), false).orElseGet(() -> {
+        return getFrame().getFromNotAppearLocals("___init__itarable_default_value").orElseGet(() -> {
             PyObject object = new PyObjectObject(this.runtime);
-            getScope().put(this.runtime.str("___init__itarable_default_value"), object, false);
+            getFrame().putToNotAppearLocals("___init__itarable_default_value", object);
 
             return object;
         });

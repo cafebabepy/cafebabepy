@@ -23,9 +23,9 @@ public class PyCompareType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("left"), args[0]);
-        self.getScope().put(this.runtime.str("ops"), args[1]);
-        self.getScope().put(this.runtime.str("comparators"), args[2]);
+        self.getFrame().putToLocals("left", args[0]);
+        self.getFrame().putToLocals("ops", args[1]);
+        self.getFrame().putToLocals("comparators", args[2]);
     }
 
     @Override

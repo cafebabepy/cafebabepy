@@ -29,7 +29,7 @@ class PyInterpretFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject callImpl() {
-        boolean async = getScope().get(this.runtime.str("_async"), false)
+        boolean async = getFrame().getFromNotAppearLocals("_async")
                 .orElseThrow(() -> new CafeBabePyException("_async is not found")).isTrue();
 
         if (async) {

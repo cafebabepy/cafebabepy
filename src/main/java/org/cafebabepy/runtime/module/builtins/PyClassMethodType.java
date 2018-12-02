@@ -21,12 +21,12 @@ public class PyClassMethodType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject f) {
-        self.getScope().put(this.runtime.str("f"), f, false);
+        self.getFrame().putToNotAppearLocals("f", f);
     }
 
     @DefinePyFunction(name = __get__)
     public PyObject __get__(PyObject self, PyObject obj, PyObject klass) {
-        PyObject f = self.getScope().get(this.runtime.str("f"), false).orElseThrow(() ->
+        PyObject f = self.getFrame().getFromNotAppearLocals("f").orElseThrow(() ->
                 this.runtime.newRaiseException("builtins.RuntimeError", "uninitialized staticmethod object")
         );
 

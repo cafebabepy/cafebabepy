@@ -23,8 +23,8 @@ public class PyAliasType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("name"), args[0]);
-        self.getScope().put(this.runtime.str("asname"), args[1]);
+        self.getFrame().putToLocals("name", args[0]);
+        self.getFrame().putToLocals("asname", args[1]);
     }
 
     @Override

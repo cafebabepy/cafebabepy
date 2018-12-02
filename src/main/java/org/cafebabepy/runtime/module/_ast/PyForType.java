@@ -23,10 +23,10 @@ public class PyForType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("target"), args[0]);
-        self.getScope().put(this.runtime.str("iter"), args[1]);
-        self.getScope().put(this.runtime.str("body"), args[2]);
-        self.getScope().put(this.runtime.str("orelse"), args[3]);
+        self.getFrame().putToLocals("target", args[0]);
+        self.getFrame().putToLocals("iter", args[1]);
+        self.getFrame().putToLocals("body", args[2]);
+        self.getFrame().putToLocals("orelse", args[3]);
     }
 
     @Override

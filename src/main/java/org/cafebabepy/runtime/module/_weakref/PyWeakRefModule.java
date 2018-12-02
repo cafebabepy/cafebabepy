@@ -17,6 +17,6 @@ public class PyWeakRefModule extends AbstractCafeBabePyModule {
 
     @Override
     public void initialize() {
-        getScope().put(this.runtime.str("ref"), this.runtime.typeOrThrow("weakref"));
+        getFrame().putToLocals("ref", this.runtime.typeOrThrow("weakref"));
     }
 }

@@ -23,8 +23,8 @@ public class PyTupleType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("elts"), args[0]);
-        self.getScope().put(this.runtime.str("ctx"), args[1]);
+        self.getFrame().putToLocals("elts", args[0]);
+        self.getFrame().putToLocals("ctx", args[1]);
     }
 
     @Override

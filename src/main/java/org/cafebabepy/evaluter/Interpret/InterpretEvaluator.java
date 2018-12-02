@@ -39,6 +39,17 @@ public class InterpretEvaluator {
         this.importManager = new ImportManager(runtime);
     }
 
+    private static Optional<PyObject> lookupType(PyObject object, String name) {
+        for (PyObject type : object.getTypes()) {
+            Optional<PyObject> typeObject = type.getFrame().getFromGlobals(name);
+            if (typeObject.isPresent()) {
+                return typeObject;
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public PyObject eval(PyObject node) {
         if (node.isNone()) {
             return node;
@@ -269,7 +280,7 @@ public class InterpretEvaluator {
 
         PyObject function = new PyInterpretFunctionObject(this.runtime, name.toJava(String.class), args, body);
         function.initialize();
-        function.getScope().put(this.runtime.str("_async"), this.runtime.bool(async));
+        function.getFrame().putToNotAppearLocals("_async", this.runtime.bool(async));
 
         List<PyObject> decorators = new ArrayList<>();
         this.runtime.iter(decorator_list, decorators::add);
@@ -486,17 +497,18 @@ public class InterpretEvaluator {
 
                 if (this.runtime.isInstance(exception, evalType)) {
                     PyObject name = this.runtime.getattr(handler, "name");
+                    String javaName = name.toJava(String.class);
 
                     PyObject exceptBody = this.runtime.getattr(handler, "body");
                     try {
                         if (!name.isNone()) {
-                            this.runtime.setattr(this.runtime.getCurrentContext(), name.toJava(String.class), exception);
+                            this.runtime.setattr(this.runtime.getCurrentContext(), javaName, exception);
                         }
                         return eval(exceptBody);
 
                     } finally {
                         if (!name.isNone()) {
-                            this.runtime.getCurrentContext().getScope().remove(name);
+                            this.runtime.getCurrentContext().getFrame().removeToLocals(javaName);
                         }
                     }
                 }
@@ -1196,7 +1208,7 @@ public class InterpretEvaluator {
 
         PyObject function = new PyInterpretFunctionObject(this.runtime, "<lambda>", args, body);
         function.initialize();
-        function.getScope().put(this.runtime.str("_async"), this.runtime.False());
+        function.getFrame().putToNotAppearLocals("_async", this.runtime.False());
 
         return function;
     }
@@ -1207,18 +1219,18 @@ public class InterpretEvaluator {
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
             PyObject id = this.runtime.getattr(node, "id");
-            String name = id.toJava(String.class);
+            String javaId = id.toJava(String.class);
 
-            Optional<PyObject> resultOpt = this.runtime.lookup(this.runtime.getCurrentContext(), id);
+            Optional<PyObject> resultOpt = lookup(this.runtime.getCurrentContext(), javaId);
             if (resultOpt.isPresent()) {
                 return resultOpt.get();
             }
 
-            if ("NotImplemented".equals(name)) {
+            if ("NotImplemented".equals(javaId)) {
                 return this.runtime.NotImplemented();
             }
 
-            throw this.runtime.newRaiseException("NameError", "name '" + name + "' is not defined");
+            throw this.runtime.newRaiseException("NameError", "name '" + javaId + "' is not defined");
 
             /*
             return this.runtime.getattrOptional(context, name).orElseThrow(() ->
@@ -1233,6 +1245,15 @@ public class InterpretEvaluator {
 
         // TODO どうする？
         return node;
+    }
+
+    private Optional<PyObject> lookup(PyObject object, String name) {
+        Optional<PyObject> attrOpt = object.getFrame().getFromGlobals(name);
+        if (attrOpt.isPresent()) {
+            return attrOpt;
+        }
+
+        return lookupType(object, name);
     }
 
     private PyObject evalNum(PyObject node) {

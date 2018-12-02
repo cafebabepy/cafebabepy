@@ -68,10 +68,9 @@ class ImportManager {
 
                 String nameJava = name.toJava(String.class);
                 if ("*".equals(nameJava)) {
-                    for (Map.Entry<PyObject, PyObject> e : loadModule.getScope().getsRaw().entrySet()) {
+                    for (Map.Entry<String, PyObject> e : loadModule.getFrame().getLocals().entrySet()) {
                         // FIXME _*
-                        String key = e.getKey().toJava(String.class);
-                        this.runtime.setattr(this.runtime.getCurrentContext(), key, e.getValue());
+                        this.runtime.setattr(this.runtime.getCurrentContext(), e.getKey(), e.getValue());
                     }
 
                 } else {
@@ -149,7 +148,7 @@ class ImportManager {
                     }
 
                     PyObject type = this.runtime.createJavaPyObject((Class<PyObject>) c);
-                    module.getScope().put(this.runtime.str(type.getName()), type);
+                    module.getFrame().putToLocals(type.getName(), type);
 
                     checkDuplicateTypes.add(definePyType.name());
                 }
@@ -298,10 +297,7 @@ class ImportManager {
         module.initialize();
 
         PyObject builtinsModule = this.runtime.moduleOrThrow("builtins");
-        Map<PyObject, PyObject> objectMap = builtinsModule.getScope().gets();
-        for (Map.Entry<PyObject, PyObject> e : objectMap.entrySet()) {
-            module.getScope().put(e.getKey(), e.getValue());
-        }
+        module.getFrame().getLocals().putAll(builtinsModule.getFrame().getLocals());
 
         return module;
     }

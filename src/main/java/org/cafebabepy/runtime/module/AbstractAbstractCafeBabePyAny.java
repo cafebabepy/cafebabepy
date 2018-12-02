@@ -87,7 +87,7 @@ abstract class AbstractAbstractCafeBabePyAny extends AbstractPyObject {
 
                 f.initialize();
 
-                getScope().put(this.runtime.str(f.getName()), f);
+                getFrame().putToLocals(f.getName(), f);
             }
 
         } finally {

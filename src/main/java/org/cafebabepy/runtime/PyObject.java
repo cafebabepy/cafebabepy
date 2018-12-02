@@ -17,7 +17,7 @@ public interface PyObject {
 
     Python getRuntime();
 
-    PyObjectScope getScope();
+    Frame getFrame();
 
     PyObject getModule();
 

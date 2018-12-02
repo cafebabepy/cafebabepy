@@ -23,8 +23,8 @@ public class PyRaiseType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("exc"), args[0]);
-        self.getScope().put(this.runtime.str("cause"), args[1]);
+        self.getFrame().putToLocals("exc", args[0]);
+        self.getFrame().putToLocals("cause", args[1]);
     }
 
     @Override

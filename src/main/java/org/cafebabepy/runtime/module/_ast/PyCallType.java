@@ -23,9 +23,9 @@ public class PyCallType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("func"), args[0]);
-        self.getScope().put(this.runtime.str("args"), args[1]);
-        self.getScope().put(this.runtime.str("keywords"), args[2]);
+        self.getFrame().putToLocals("func", args[0]);
+        self.getFrame().putToLocals("args", args[1]);
+        self.getFrame().putToLocals("keywords", args[2]);
     }
 
     @Override

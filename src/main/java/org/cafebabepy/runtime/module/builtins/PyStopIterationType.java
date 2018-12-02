@@ -21,13 +21,13 @@ public class PyStopIterationType extends AbstractCafeBabePyType {
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self, PyObject... args) {
         // FIXME super
-        self.getScope().put(this.runtime.str("args"), this.runtime.tuple(args));
+        self.getFrame().putToLocals("args", this.runtime.tuple(args));
 
         PyObject value = this.runtime.None();
         if (args.length > 0) {
             value = args[0];
         }
 
-        self.getScope().put(this.runtime.str("value"), value);
+        self.getFrame().putToLocals("value", value);
     }
 }

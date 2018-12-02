@@ -23,8 +23,8 @@ public class PyUnaryOpType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("op"), args[0]);
-        self.getScope().put(this.runtime.str("operand"), args[1]);
+        self.getFrame().putToLocals("op", args[0]);
+        self.getFrame().putToLocals("operand", args[1]);
     }
 
     @Override

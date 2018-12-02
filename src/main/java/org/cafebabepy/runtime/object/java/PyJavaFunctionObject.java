@@ -74,8 +74,8 @@ public class PyJavaFunctionObject extends AbstractFunction {
             PyObject arg = new PyObjectObject(runtime);
             arg.initialize();
 
-            arg.getScope().put(runtime.str("arg"), runtime.str(parameter.getName()));
-            arg.getScope().put(runtime.str("annotation"), runtime.None());
+            arg.getFrame().putToLocals("arg", runtime.str(parameter.getName()));
+            arg.getFrame().putToLocals("annotation", runtime.None());
 
             Class<?> type = parameter.getType();
             if (PyObject.class.isAssignableFrom(type)) {
@@ -118,12 +118,12 @@ public class PyJavaFunctionObject extends AbstractFunction {
             throw runtime.newRaiseException("SyntaxError", "invalid syntax");
         }
 
-        arguments.getScope().put(runtime.str("defaults"), runtime.list(argDefaultValueList));
-        arguments.getScope().put(runtime.str("kw_defaults"), runtime.list(kwonlyargDefaultList));
-        arguments.getScope().put(runtime.str("vararg"), vararg);
-        arguments.getScope().put(runtime.str("kwarg"), kwarg);
-        arguments.getScope().put(runtime.str("kwonlyargs"), runtime.list(kwonlyargList));
-        arguments.getScope().put(runtime.str("args"), runtime.list(argList));
+        arguments.getFrame().putToLocals("defaults", runtime.list(argDefaultValueList));
+        arguments.getFrame().putToLocals("kw_defaults", runtime.list(kwonlyargDefaultList));
+        arguments.getFrame().putToLocals("vararg", vararg);
+        arguments.getFrame().putToLocals("kwarg", kwarg);
+        arguments.getFrame().putToLocals("kwonlyargs", runtime.list(kwonlyargList));
+        arguments.getFrame().putToLocals("args", runtime.list(argList));
 
         return arguments;
     }
@@ -135,19 +135,14 @@ public class PyJavaFunctionObject extends AbstractFunction {
 
     @Override
     protected PyObject getattr(PyObject object, String key) {
-        return object.getScope().get(this.runtime.str(key)).orElseThrow(() ->
+        return object.getFrame().getFromGlobals(key).orElseThrow(() ->
                 new CafeBabePyException(object + " key '" + key + "' is not found")
         );
     }
 
     @Override
     protected PyObject callImpl() {
-        Map<PyObject, PyObject> pyArgumentMap = this.runtime.getCurrentContext().getScope().gets();
-        Map<String, PyObject> argumentMap = new LinkedHashMap<>(pyArgumentMap.size());
-
-        for (Map.Entry<PyObject, PyObject> entry : pyArgumentMap.entrySet()) {
-            argumentMap.put(entry.getKey().toJava(String.class), entry.getValue());
-        }
+        Map<String, PyObject> argumentMap = this.runtime.getCurrentContext().getFrame().getLocals();
 
         Object[] arguments = new Object[argumentMap.size()];
         Parameter[] parameters = this.method.getParameters();

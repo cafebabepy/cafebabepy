@@ -32,7 +32,7 @@ public class PySetType extends AbstractCafeBabePyType {
             throw this.runtime.newRaiseTypeError("descriptor '__init__' requires a 'set' object but received a '" + self.getType().getFullName() + "'");
         }
 
-        getScope().get(this.runtime.str("___init__itarable_default_value"), false).ifPresent(v -> {
+        getFrame().getFromNotAppearLocals("___init__itarable_default_value").ifPresent(v -> {
             if (v != iterable) {
                 PySetObject object = (PySetObject) self;
                 this.runtime.iter(iterable, item -> object.getView().add(item));
@@ -42,9 +42,9 @@ public class PySetType extends AbstractCafeBabePyType {
 
     @DefinePyFunctionDefaultValue(methodName = __init__, parameterName = "iterable")
     public PyObject __init___iterable() {
-        return getScope().get(this.runtime.str("___init__itarable_default_value"), false).orElseGet(() -> {
+        return getFrame().getFromNotAppearLocals("___init__itarable_default_value").orElseGet(() -> {
             PyObject object = new PyObjectObject(this.runtime);
-            getScope().put(this.runtime.str("___init__itarable_default_value"), object, false);
+            getFrame().putToNotAppearLocals("___init__itarable_default_value", object);
 
             return object;
         });

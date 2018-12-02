@@ -23,10 +23,10 @@ public class PyFunctionType extends AbstractCafeBabePyType {
     public void initialize() {
         super.initialize();
 
-        getScope().put(this.runtime.str(__code__), this.runtime.typeOrThrow("builtins.code", false));
+        getFrame().putToLocals(__code__, this.runtime.typeOrThrow("builtins.code", false));
 
         // FIXME stub
-        getScope().put(this.runtime.str(__globals__), this.runtime.dict());
+        getFrame().putToLocals(__globals__, this.runtime.dict());
     }
 
     @DefinePyFunction(name = __get__)

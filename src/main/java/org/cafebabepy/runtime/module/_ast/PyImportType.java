@@ -23,7 +23,7 @@ public class PyImportType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("names"), args[0]);
+        self.getFrame().putToLocals("names", args[0]);
     }
 
     @Override

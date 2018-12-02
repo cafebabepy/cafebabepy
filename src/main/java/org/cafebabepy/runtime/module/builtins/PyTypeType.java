@@ -11,10 +11,7 @@ import org.cafebabepy.runtime.object.java.PyListObject;
 import org.cafebabepy.runtime.object.java.PySetObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -38,7 +35,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         }
 
         if (this.runtime.isSubClass(self, "type")) { // class new
-            if(self == this) {
+            if (self == this) {
                 PyObject[] newArgs = new PyObject[args.length + 1];
                 newArgs[0] = self;
                 System.arraycopy(args, 0, newArgs, 1, args.length);
@@ -105,7 +102,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
             String name = null;
             List<PyObject> bases = null;
-            Map<PyObject, PyObject> dict = null;
+            Map<PyObject, PyObject> dict = Collections.emptyMap();
 
             if (kwargs.containsKey("name")) {
                 name = kwargs.get("name").toJava(String.class);
@@ -137,7 +134,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                 PyObject clazz = new PyInterpretClassObject(this.runtime, name, bases);
                 for (Map.Entry<PyObject, PyObject> e : dict.entrySet()) {
                     // valid {1: 2}
-                    clazz.getScope().put(e.getKey(), e.getValue());
+                    clazz.getFrame().putToLocals(e.getKey().toJava(String.class), e.getValue());
                 }
 
                 return clazz;
@@ -150,10 +147,12 @@ public final class PyTypeType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __getattribute__)
     public PyObject __getattribute__(PyObject cls, PyObject key) {
-        return this.runtime.builtins_type__getattribute__(cls, key).orElseGet(() -> {
+        String javaKey = key.toJava(String.class);
+
+        return this.runtime.builtins_type__getattribute__(cls, javaKey).orElseGet(() -> {
             Optional<PyObject> specialVar;
-            if (__name__.equals(key.toJava(String.class))) {
-                specialVar = cls.getScope().get(key, false);
+            if (__name__.equals(javaKey)) {
+                specialVar = cls.getFrame().getFromNotAppearLocals(javaKey);
 
             } else {
                 specialVar = Optional.empty();
@@ -164,7 +163,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
             }
 
             throw this.runtime.newRaiseException("AttributeError",
-                    "type object '" + cls.getName() + "' object has no attribute '" + key.toJava(String.class) + "'");
+                    "type object '" + cls.getName() + "' object has no attribute '" + javaKey + "'");
         });
     }
 }

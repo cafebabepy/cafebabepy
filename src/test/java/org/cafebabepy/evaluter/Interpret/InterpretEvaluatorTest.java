@@ -1328,6 +1328,20 @@ public class InterpretEvaluatorTest {
                 assertEquals(result, "cafebabepy" + System.lineSeparator());
             });
         }
+
+        @Test
+        void nestClass() throws IOException {
+            evalStdOutToResult(""
+                    + "class T:\n"
+                    + "  t = 1\n"
+                    + "  class I:\n"
+                    + "    def a(self):\n"
+                    + "      print(t)\n"
+                    + "t = T.I()\n"
+                    + "t.a()", result -> {
+                assertEquals(result, "1" + System.lineSeparator());
+            });
+        }
     }
 
     @Nested
@@ -1343,7 +1357,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void lambdaNoArgument() throws IOException {
+        void lambdaNoArgument() {
             PyObject result = Python.eval(""
                     + "a = lambda: 99 + 1\n"
                     + "a()");

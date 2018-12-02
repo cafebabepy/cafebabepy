@@ -23,7 +23,7 @@ public class PySuiteType extends AbstractAST {
             return;
         }
 
-        self.getScope().put(this.runtime.str("body"), args[0]);
+        self.getFrame().putToLocals("body", args[0]);
     }
 
     @Override

@@ -113,7 +113,7 @@ public class PyBuiltinsModule extends AbstractCafeBabePyModule {
                             "      yield tuple(result)"
             );
 
-            return object.getScope().get(this.runtime.str("zip")).map(zip -> zip.call(iterables)).orElseThrow(() ->
+            return object.getFrame().getFromGlobals("zip").map(zip -> zip.call(iterables)).orElseThrow(() ->
                     new CafeBabePyException("zip is not found")
             );
 

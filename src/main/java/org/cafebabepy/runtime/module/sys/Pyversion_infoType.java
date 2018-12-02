@@ -26,11 +26,11 @@ public final class Pyversion_infoType extends AbstractCafeBabePyType {
 
     @DefinePyFunction(name = __init__)
     public void __init__(PyObject self) {
-        self.getScope().put(this.runtime.str("major"), this.runtime.number(Python.MAJOR));
-        self.getScope().put(this.runtime.str("minor"), this.runtime.number(Python.MINOR));
-        self.getScope().put(this.runtime.str("micro"), this.runtime.number(Python.MICRO));
-        self.getScope().put(this.runtime.str("releaselevel"), this.runtime.str(Python.RELEASE_LEVEL));
-        self.getScope().put(this.runtime.str("serial"), this.runtime.number(Python.SERIAL));
+        self.getFrame().putToLocals("major", this.runtime.number(Python.MAJOR));
+        self.getFrame().putToLocals("minor", this.runtime.number(Python.MINOR));
+        self.getFrame().putToLocals("micro", this.runtime.number(Python.MICRO));
+        self.getFrame().putToLocals("releaselevel", this.runtime.str(Python.RELEASE_LEVEL));
+        self.getFrame().putToLocals("serial", this.runtime.number(Python.SERIAL));
     }
 
     @DefinePyFunction(name = __str__)

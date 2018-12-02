@@ -13,7 +13,7 @@ import static org.cafebabepy.util.ProtocolNames.*;
 public abstract class AbstractPyObject implements PyObject {
 
     protected final Python runtime;
-    private volatile PyObjectScope scope;
+    private volatile Frame frame;
     private volatile List<PyObject> types;
     private volatile boolean dict;
 
@@ -141,17 +141,18 @@ public abstract class AbstractPyObject implements PyObject {
         return this.runtime;
     }
 
+
     @Override
-    public PyObjectScope getScope() {
-        if (this.scope == null) {
+    public Frame getFrame() {
+        if (this.frame == null) {
             synchronized (this) {
-                if (this.scope == null) {
-                    this.scope = new PyObjectScope();
+                if (this.frame == null) {
+                    this.frame = new Frame();
                 }
             }
         }
 
-        return this.scope;
+        return this.frame;
     }
 
     @Override
@@ -170,7 +171,7 @@ public abstract class AbstractPyObject implements PyObject {
 
     @Override
     public final boolean isCallable() {
-        return getScope().containsKey(this.runtime.str(__call__));
+        return getFrame().containsKeyFromLocals(__call__);
     }
 
     @Override

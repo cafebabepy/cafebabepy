@@ -1,7 +1,7 @@
 package org.cafebabepy.runtime.object.proxy;
 
+import org.cafebabepy.runtime.Frame;
 import org.cafebabepy.runtime.PyObject;
-import org.cafebabepy.runtime.PyObjectScope;
 import org.cafebabepy.runtime.Python;
 
 import java.util.LinkedHashMap;
@@ -40,8 +40,8 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
-    public PyObjectScope getScope() {
-        return this.source.getScope();
+    public Frame getFrame() {
+        return this.source.getFrame();
     }
 
     @Override
