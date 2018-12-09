@@ -1806,32 +1806,38 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         }
 
         String str;
-
-        int tripleSingleIndex = rawString.indexOf("'''");
-        int tripleDoubleIndex = rawString.indexOf("\"\"\"");
-
-        int doubleIndex = rawString.indexOf("\"");
-        int singleIndex = rawString.indexOf("'");
-
         String prefix;
-        if (tripleSingleIndex >= 0) {
-            str = rawString.substring(tripleSingleIndex + 3, rawString.length() - 3);
-            prefix = rawString.substring(0, tripleSingleIndex);
 
-        } else if (tripleDoubleIndex >= 0) {
-            str = rawString.substring(tripleDoubleIndex + 3, rawString.length() - 3);
-            prefix = rawString.substring(0, tripleDoubleIndex);
+        if (rawString.startsWith("'''") || rawString.startsWith("\"\"\"")) {
+            prefix = "";
+            str = rawString.substring(3, rawString.length() - 3);
 
-        } else if (doubleIndex >= 0) {
-            str = rawString.substring(doubleIndex + 1, rawString.length() - 1);
-            prefix = rawString.substring(0, doubleIndex);
-
-        } else if (singleIndex >= 0) {
-            str = rawString.substring(singleIndex + 1, rawString.length() - 1);
-            prefix = rawString.substring(0, singleIndex);
+        } else if (rawString.startsWith("'") || rawString.startsWith("\"")) {
+            prefix = "";
+            str = rawString.substring(1, rawString.length() - 1);
 
         } else {
-            throw new CafeBabePyException("Invalid string '" + rawString + "'");
+            int tripleSingleIndex = rawString.indexOf("'''");
+            int tripleDoubleIndex = rawString.indexOf("\"\"\"");
+
+            int singleIndex = rawString.indexOf("'");
+            int doubleIndex = rawString.indexOf("\"");
+
+            int tripleMaxIndex = Integer.max(tripleSingleIndex, tripleDoubleIndex);
+            if (tripleMaxIndex != -1) {
+                str = rawString.substring(tripleMaxIndex + 1, rawString.length() - 1);
+                prefix = rawString.substring(0, tripleMaxIndex);
+
+            } else {
+                int singleMaxIndex = Integer.max(doubleIndex, singleIndex);
+                if (singleMaxIndex != -1) {
+                    str = rawString.substring(singleMaxIndex + 1, rawString.length() - 1);
+                    prefix = rawString.substring(0, singleMaxIndex);
+
+                } else {
+                    throw new CafeBabePyException("Invalid string '" + rawString + "'");
+                }
+            }
         }
 
         prefix = prefix.toLowerCase();
