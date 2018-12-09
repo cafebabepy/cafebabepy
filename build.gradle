@@ -36,7 +36,7 @@ publishing {
 }
 
 ext.versions = [
-        gradle: '4.7'
+        gradle: '4.10.3'
 ]
 
 ext.antlr = [
