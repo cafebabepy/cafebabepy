@@ -65,12 +65,11 @@ public final class Python {
         Python runtime = Python.createRuntime();
         runtime.initialize();
 
-        PyObject ast = runtime.parser.parse("<string>", input);
         PyObject mainModule = runtime.createMainModule();
 
         runtime.defineModule(mainModule);
 
-        return runtime.evaluator.eval(mainModule, ast);
+        return runtime.evalWithInitialize(mainModule, "<string>", input);
     }
 
     public static Python createRuntime() {
@@ -88,6 +87,18 @@ public final class Python {
         return null;
     }
 
+    public PyObject evalWithInitialize(PyObject context, String file, String input) {
+        // PyObject traceback = this.evaluator.loadModule("traceback");
+        // this.sysModules.put(str("traceback"), traceback);
+
+        return eval(context, file, input);
+    }
+
+    public PyObject eval(PyObject context, String file, String input) {
+        PyObject ast = this.parser.parse(file, input);
+        return this.evaluator.eval(context, ast);
+    }
+
     private PyObject lookup(PyObject object, String name) {
         PyObject attr = object.getFrame().lookup(name);
         if (attr != null) {
@@ -103,13 +114,6 @@ public final class Python {
 
     public PyObject evalModule(String file) {
         return getEvaluator().loadModule(file);
-    }
-
-    public PyObject eval(PyObject context, String file, String input) {
-        initialize();
-
-        PyObject ast = this.parser.parse(file, input);
-        return this.evaluator.eval(context, ast);
     }
 
     public PyObject createMainModule() {
