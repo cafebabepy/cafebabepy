@@ -72,8 +72,8 @@ sourceSets.test.resources.outputDir = file("$buildDir/classes")
 test.workingDir = file("$buildDir/classes")
 
 dependencies {
-    compile group: 'org.antlr', name: 'antlr4-runtime', version: '4.7'
-    antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7'
+    compile group: 'org.antlr', name: 'antlr4-runtime', version: '4.7.1'
+    antlr4 group: 'org.antlr', name: 'antlr4', version: '4.7.1'
 
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.0.2'
     testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.0.2'
