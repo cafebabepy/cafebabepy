@@ -53,10 +53,8 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         } else { // object new
             PyObject object = this.runtime.getattr(self, __new__).call(self);
 
-            PyObject[] newArgs = new PyObject[args.length];
-            newArgs[0] = object;
-            System.arraycopy(args, 1, newArgs, 1, newArgs.length - 1);
-
+            PyObject[] newArgs = new PyObject[args.length - 1];
+            System.arraycopy(args, 1, newArgs, 0, newArgs.length);
             this.runtime.getattr(object, __init__).call(newArgs, kwargs);
 
             return object;
