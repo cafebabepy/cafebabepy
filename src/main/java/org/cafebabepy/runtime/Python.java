@@ -76,7 +76,7 @@ public final class Python {
         return new Python();
     }
 
-    private static PyObject lookupType(PyObject object, String name) {
+    public static PyObject lookupType(PyObject object, String name) {
         for (PyObject type : object.getTypes()) {
             PyObject typeObject = type.getFrame().lookup(name);
             if (typeObject != null) {
