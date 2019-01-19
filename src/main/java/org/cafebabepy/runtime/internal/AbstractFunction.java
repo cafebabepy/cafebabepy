@@ -62,11 +62,6 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
 
     protected abstract PyObject evalDefaultValue(PyObject context, PyObject defaultValue);
 
-    @Override
-    public PyObject getType() {
-        return this.runtime.typeOrThrow("function", false);
-    }
-
     protected PyObject getattr(PyObject object, String key) {
         return this.runtime.getattr(object, key);
     }

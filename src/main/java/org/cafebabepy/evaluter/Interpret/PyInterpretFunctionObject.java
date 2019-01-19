@@ -94,4 +94,9 @@ class PyInterpretFunctionObject extends AbstractFunction {
             return e.value;
         }
     }
+
+    @Override
+    public PyObject getType() {
+        return this.runtime.typeOrThrow("function", false);
+    }
 }

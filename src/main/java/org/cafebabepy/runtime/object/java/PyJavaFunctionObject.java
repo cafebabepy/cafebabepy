@@ -128,6 +128,10 @@ public class PyJavaFunctionObject extends AbstractFunction {
         return arguments;
     }
 
+    public PyObject getTarget() {
+        return this.target;
+    }
+
     @Override
     protected PyObject evalDefaultValue(PyObject context, PyObject defaultValue) {
         return defaultValue;

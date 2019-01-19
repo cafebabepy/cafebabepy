@@ -260,12 +260,12 @@ public final class Python {
             return value;
         }
 
-        PyObject str = getattr(value, __str__);
         if (value.isType()) {
-            return str.call(value);
+            PyObject type = typeOrThrow("builtins.type");
+            return getattr(type, __str__).call(value);
 
         } else {
-            return str.call();
+            return getattr(value, __str__).call();
         }
     }
 

@@ -53,8 +53,10 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         } else { // object new
             PyObject object = this.runtime.getattr(self, __new__).call(self);
 
-            PyObject[] newArgs = new PyObject[args.length - 1];
-            System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+            PyObject[] newArgs = new PyObject[args.length];
+            newArgs[0] = object;
+            System.arraycopy(args, 1, newArgs, 1, newArgs.length - 1);
+
             this.runtime.getattr(object, __init__).call(newArgs, kwargs);
 
             return object;
@@ -191,5 +193,15 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         }
 
         self.getFrame().getLocals().remove(name.toJava(String.class));
+    }
+
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (!self.isType()) {
+            return this.runtime.str(self);
+        }
+
+        return this.runtime.str("<class '" + self.getFullName() + "'>");
     }
 }

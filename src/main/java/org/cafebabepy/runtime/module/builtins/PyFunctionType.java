@@ -7,8 +7,7 @@ import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
-import static org.cafebabepy.util.ProtocolNames.__code__;
-import static org.cafebabepy.util.ProtocolNames.__get__;
+import static org.cafebabepy.util.ProtocolNames.*;
 
 /**
  * Created by yotchang4s on 2017/05/13.
@@ -42,5 +41,16 @@ public class PyFunctionType extends AbstractCafeBabePyType {
 
         //return this.runtime.newPyObject("method", self, args[0]);
         return new PyMethodTypeObject(this.runtime, self, args[0]);
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (!this.equals(self.getType())) {
+            return this.runtime.str(self);
+        }
+
+        String hashCode = Integer.toHexString(System.identityHashCode(self));
+
+        return this.runtime.str("<function '" + self.getFullName() + "' at 0x" + hashCode + ">");
     }
 }

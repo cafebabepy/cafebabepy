@@ -1,15 +1,18 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.runtime.CafeBabePyException;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.java.PyJavaFunctionObject;
 import org.cafebabepy.runtime.object.java.PyMethodWrapperObject;
 
 import java.util.LinkedHashMap;
 
 import static org.cafebabepy.util.ProtocolNames.__get__;
+import static org.cafebabepy.util.ProtocolNames.__str__;
 
 /**
  * Created by yotchang4s on 2018/06/24.
@@ -43,5 +46,20 @@ public class PyWrapperDescriptorType extends AbstractCafeBabePyType {
         }
 
         return super.call(args, keywords);
+    }
+
+    @DefinePyFunction(name = __str__)
+    public PyObject __str__(PyObject self) {
+        if (!this.equals(self.getType())) {
+            return this.runtime.str(self);
+        }
+
+        if (!(self instanceof PyJavaFunctionObject)) {
+            throw new CafeBabePyException(self + " is not PyJavaFunctionObject");
+        }
+
+        PyJavaFunctionObject object = (PyJavaFunctionObject) self;
+
+        return this.runtime.str("<slot wrapper '" + self.getName() + "' of '" + object.getTarget().getFullName() + "' objects>");
     }
 }
