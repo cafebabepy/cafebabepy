@@ -234,6 +234,11 @@ public abstract class AbstractPyObject implements PyObject {
         return call(args, new LinkedHashMap<>());
     }
 
+    @Override
+    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
+        throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
+    }
+
     private List<PyObject> getC3AlgorithmTypes() {
         try {
             return getC3AlgorithmTypes(this);

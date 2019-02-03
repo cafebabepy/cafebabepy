@@ -60,14 +60,4 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     public boolean isEllipsis() {
         return false;
     }
-
-    @Override
-    public PyObject call(PyObject... args) {
-        return call(args, new LinkedHashMap<>());
-    }
-
-    @Override
-    public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        throw this.runtime.newRaiseTypeError("'" + getFullName() + "' object is not callable");
-    }
 }
