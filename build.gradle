@@ -36,7 +36,7 @@ publishing {
 }
 
 ext.versions = [
-        gradle: '4.10.3'
+        gradle: '5.1.1'
 ]
 
 ext.antlr = [
@@ -87,10 +87,6 @@ tasks.withType(JavaCompile) {
 tasks.withType(Test) {
     systemProperties = System.getProperties()
     testLogging.showStandardStreams = true
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = versions.gradle
 }
 
 task antlrOutputDir {
