@@ -44,16 +44,20 @@ public class InterpretEvaluator {
         Frame backFrame = this.frame.get();
         this.frame.set(context.getFrame());
 
-        if (backFrame != context.getFrame()) {
-            PyObject pyFrame = createPyFrame(context.getFrame());
+        List<PyObject> contexts = this.pyFrames.get();
 
-            this.pyFrames.get().add(pyFrame);
+        boolean stackFrame = backFrame != context.getFrame();
+        if (stackFrame) {
+            this.pyFrames.get().add(context);
         }
 
         try {
             return evalImpl(context, node);
 
         } finally {
+            if (stackFrame) {
+                contexts.remove(contexts.size() - 1);
+            }
             this.frame.set(backFrame);
         }
     }
@@ -273,10 +277,30 @@ public class InterpretEvaluator {
             PyObject name = this.runtime.getattr(n, "name");
             PyObject asname = this.runtime.getattr(n, "asname");
 
-            this.importManager.importAsName(context, name, asname);
+            PyObject mangleName = this.runtime.str(toMangleName(name.toJava(String.class)));
+            PyObject mangleAsName = this.runtime.None();
+            if (!asname.isNone()) {
+                mangleAsName = this.runtime.str(toMangleName(asname.toJava(String.class)));
+            }
+
+            this.importManager.importAsName(context, mangleName, mangleAsName);
         });
 
         return this.runtime.None();
+    }
+
+    private String toMangleName(String name) {
+        if (name.startsWith("__") && !name.endsWith("__")) {
+            List<PyObject> contexts = this.pyFrames.get();
+            for (int i = contexts.size() - 1; i >= 0; i--) {
+                PyObject c = contexts.get(i);
+                if (c.isType()) {
+                    return "_" + c.getName() + name;
+                }
+            }
+        }
+
+        return name;
     }
 
     private PyObject evalImportFrom(PyObject context, PyObject node) {
@@ -284,7 +308,29 @@ public class InterpretEvaluator {
         PyObject names = this.runtime.getattr(node, "names");
         PyObject level = this.runtime.getattr(node, "level");
 
-        this.importManager.importFrom(context, module, names, level);
+        String javaModule = module.toJava(String.class);
+        String javaMangleModule = toMangleName(javaModule);
+        PyObject mangleModule = this.runtime.str(javaMangleModule);
+
+        Map<PyObject, PyObject> namesMap = new LinkedHashMap<>();
+
+        this.runtime.iter(names, n -> {
+            PyObject name = this.runtime.getattr(n, "name");
+            PyObject asName = this.runtime.getattr(n, "asname");
+
+            PyObject mangleName = this.runtime.str(toMangleName(name.toJava(String.class)));
+            PyObject mangleAsName;
+            if (!asName.isNone()) {
+                mangleAsName = this.runtime.str(toMangleName(asName.toJava(String.class)));
+
+            } else {
+                mangleAsName = this.runtime.None();
+            }
+
+            namesMap.put(mangleName, mangleAsName);
+        });
+
+        this.importManager.importFrom(context, mangleModule, namesMap, level);
 
         return this.runtime.None();
     }
@@ -322,7 +368,7 @@ public class InterpretEvaluator {
             decoratorEvalValue = decoratorEvalFunction.call(decoratorEvalValue);
         }
 
-        this.runtime.setattr(context, name.toJava(String.class), decoratorEvalValue);
+        this.runtime.setattr(context, toMangleName(name.toJava(String.class)), decoratorEvalValue);
 
         return this.runtime.None();
     }
@@ -357,7 +403,18 @@ public class InterpretEvaluator {
 
         String javaName = name.toJava(String.class);
 
-        PyObject clazz = newClass(javaName, baseList, keywordsMap);
+        StringBuilder nameBuilder = new StringBuilder();
+
+        List<PyObject> contexts = this.pyFrames.get();
+        for (int i = contexts.size() - 1; i >= 0; i--) {
+            PyObject c = contexts.get(i);
+            if (c.isType()) {
+                nameBuilder.append(c.getName()).append('.');
+            }
+        }
+        nameBuilder.append(javaName);
+
+        PyObject clazz = newClass(nameBuilder.toString(), baseList, keywordsMap);
 
         // FIXME special
         if (clazz instanceof PyInterpretClassObject) {
@@ -366,7 +423,7 @@ public class InterpretEvaluator {
 
         eval(clazz, body);
 
-        this.runtime.setattr(context, javaName, clazz);
+        this.runtime.setattr(context, toMangleName(javaName), clazz);
 
         return this.runtime.None();
     }
@@ -795,10 +852,13 @@ public class InterpretEvaluator {
         return this.runtime.None();
     }
 
-    void assign(PyObject context, PyObject target, PyObject evalValue) {
+    private void assign(PyObject context, PyObject target, PyObject evalValue) {
         if (target instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            String javaId = id.toJava(String.class);
+            String javaMangleId = toMangleName(javaId);
+
+            this.runtime.setattr(context, javaMangleId, evalValue);
 
         } else {
             unpack(context, target, evalValue);
@@ -813,13 +873,13 @@ public class InterpretEvaluator {
 
         if (targetType instanceof PyNameType) {
             PyObject id = this.runtime.getattr(target, "id");
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            this.runtime.setattr(context, toMangleName(id.toJava(String.class)), evalValue);
             return;
 
         } else if (targetType instanceof PyAttributeType) {
             PyObject attr = this.runtime.getattr(target, "attr");
             PyObject attributeContext = eval(context, target);
-            this.runtime.setattr(attributeContext, attr.toJava(String.class), evalValue);
+            this.runtime.setattr(attributeContext, toMangleName(attr.toJava(String.class)), evalValue);
             return;
 
         } else if (targetType instanceof PyStarredType) {
@@ -939,7 +999,7 @@ public class InterpretEvaluator {
             PyObject id = this.runtime.getattr(target, "id");
             PyObject evalValue = eval(context, value);
 
-            this.runtime.setattr(context, id.toJava(String.class), evalValue);
+            this.runtime.setattr(context, toMangleName(id.toJava(String.class)), evalValue);
         }
 
         return this.runtime.None();
@@ -995,6 +1055,11 @@ public class InterpretEvaluator {
         });
 
         keywordsMap.putAll(doubleStarKeywordsMap);
+
+        if (argList.isEmpty() && keywordsMap.isEmpty()
+                && funcEval.equals(this.runtime.typeOrThrow("builtins.super"))) {
+            getFrame().getBack();
+        }
 
         argsArray = new PyObject[argList.size()];
         argList.toArray(argsArray);
@@ -1218,7 +1283,7 @@ public class InterpretEvaluator {
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
             PyObject id = this.runtime.getattr(node, "id");
-            String javaId = id.toJava(String.class);
+            String javaId = toMangleName(id.toJava(String.class));
 
             PyObject result = lookup(context, javaId);
             if (result != null) {
@@ -1315,7 +1380,7 @@ public class InterpretEvaluator {
 
         PyObject ctxType = ctx.getType();
         if (ctxType instanceof PyLoadType) {
-            return this.runtime.getattr(evalValue, attr.toJava(String.class));
+            return this.runtime.getattr(evalValue, toMangleName(attr.toJava(String.class)));
 
         } else if (ctxType instanceof PyStoreType) {
             return evalValue;

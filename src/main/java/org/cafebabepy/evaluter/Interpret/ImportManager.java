@@ -45,7 +45,7 @@ class ImportManager {
         }
     }
 
-    void importFrom(PyObject context, PyObject moduleName, PyObject names, PyObject level) {
+    void importFrom(PyObject context, PyObject moduleName, Map<PyObject, PyObject> names, PyObject level) {
         String moduleNameJava = moduleName.toJava(String.class);
         int levelJava = level.toJava(int.class);
 
@@ -60,9 +60,9 @@ class ImportManager {
             String currentModuleName = moduleNameBuilder.toString();
             PyObject loadModule = this.runtime.module(currentModuleName).orElseGet(() -> loadModule(currentModuleName));
 
-            this.runtime.iter(names, n -> {
-                PyObject name = this.runtime.getattr(n, "name");
-                PyObject asName = this.runtime.getattr(n, "asname");
+            for (Map.Entry<PyObject, PyObject> nameEntry : names.entrySet()) {
+                PyObject name = nameEntry.getKey();
+                PyObject asName = nameEntry.getValue();
                 PyObject importName = asName.isNone() ? name : asName;
 
                 String nameJava = name.toJava(String.class);
@@ -79,7 +79,7 @@ class ImportManager {
 
                     this.runtime.setattr(context, importName.toJava(String.class), target);
                 }
-            });
+            }
 
             moduleNameBuilder.append(".");
         }
@@ -151,6 +151,8 @@ class ImportManager {
 
                     checkDuplicateTypes.add(definePyType.name());
                 }
+
+                this.runtime.getSysModuleMap().put(this.runtime.str(moduleName), module);
 
                 return module;
             }

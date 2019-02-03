@@ -125,7 +125,7 @@ public class InterpretEvaluatorTest {
     @Nested
     class Import {
         @Test
-        void importName1() {
+        void importName() {
             PyObject result = Python.eval("" +
                     "import _ast\n" +
                     "_ast"
@@ -134,6 +134,32 @@ public class InterpretEvaluatorTest {
             Python runtime = result.getRuntime();
 
             assertEquals(result, runtime.moduleOrThrow("_ast"));
+        }
+
+        @Test
+        void importNameMangle1() {
+            PyObject result = Python.eval("" +
+                    "class A:\n" +
+                    "  import __test1\n" +
+                    "A._A__test1"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_A__test1"));
+        }
+
+        @Test
+        void importNameMangle2() {
+            PyObject result = Python.eval("" +
+                    "class A:\n" +
+                    "  import _A__test1\n" +
+                    "A._A__test1"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_A__test1"));
         }
 
         @Test
@@ -146,6 +172,45 @@ public class InterpretEvaluatorTest {
             Python runtime = result.getRuntime();
 
             assertEquals(result, runtime.moduleOrThrow("_ast"));
+        }
+
+        @Test
+        void importNameAsMangle1() {
+            PyObject result = Python.eval("" +
+                    "class A:\n" +
+                    "  import __test1 as test1\n" +
+                    "A.test1"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_A__test1"));
+        }
+
+        @Test
+        void importNameAsMangle2() {
+            PyObject result = Python.eval("" +
+                    "class A:\n" +
+                    "  import _A__test1 as test1\n" +
+                    "A.test1"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_A__test1"));
+        }
+
+        @Test
+        void importNameAsMangle3() {
+            PyObject result = Python.eval("" +
+                    "class A:\n" +
+                    "  import _A__test1 as __test1\n" +
+                    "A._A__test1"
+            );
+
+            Python runtime = result.getRuntime();
+
+            assertEquals(result, runtime.moduleOrThrow("_A__test1"));
         }
 
         @Test
@@ -235,6 +300,43 @@ public class InterpretEvaluatorTest {
                                 + "[[2], [3], [4]]" + System.lineSeparator()
                                 + "5" + System.lineSeparator()
                                 + "6" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void mangleAssign1() throws IOException {
+            evalStdOutToResult("" +
+                            "class A:\n" +
+                            "  __foo = 99\n" +
+                            "  print(__foo)\n" +
+                            "  print(_A__foo)\n" +
+                            "print(A._A__foo)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "99" + System.lineSeparator()
+                                + "99" + System.lineSeparator()
+                                + "99" + System.lineSeparator()
+                        );
+                    });
+        }
+
+        @Test
+        void mangleAssign2() throws IOException {
+            evalStdOutToResult("" +
+                            "class A:\n" +
+                            "  pass\n" +
+                            "a = A()\n" +
+                            "class B:\n" +
+                            "  a.__foo = 99\n" +
+                            "  print(a.__foo)\n" +
+                            "  print(a._B__foo)\n" +
+                            "print(a._B__foo)",
+                    result -> {
+                        assertEquals(result, ""
+                                + "99" + System.lineSeparator()
+                                + "99" + System.lineSeparator()
+                                + "99" + System.lineSeparator()
                         );
                     });
         }
@@ -1315,6 +1417,33 @@ public class InterpretEvaluatorTest {
 
             Python runtime = result.getRuntime();
             assertEquals(result.getType(), runtime.typeOrThrow("method", false));
+        }
+
+        @Test
+        void defineMangleMethodObject() throws IOException {
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  def __foo(self):\n"
+                            + "    print('foo')\n"
+                            + "a = A()\n"
+                            + "a._A__foo()\n",
+                    result -> {
+                        assertEquals(result, ""
+                                + "foo" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void defineMangleClassObject() throws IOException{
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  class __B:\n"
+                            + "    pass\n"
+                            + "print(A._A__B)\n",
+                    result -> {
+                        assertEquals(result, ""
+                                + "<class '__main__.A.__B'>" + System.lineSeparator());
+                    });
         }
 
         @Test
