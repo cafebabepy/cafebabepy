@@ -59,6 +59,7 @@ public final class Python {
     private PyNotImplementedObject notImplementedObject;
 
     private Python() {
+        initialize();
     }
 
     public static PyObject eval(String input) {
@@ -87,6 +88,15 @@ public final class Python {
         return null;
     }
 
+    public static PyObject lookup(PyObject object, String name) {
+        PyObject attr = object.getFrame().lookup(name);
+        if (attr != null) {
+            return attr;
+        }
+
+        return lookupType(object, name);
+    }
+
     public PyObject evalWithInitialize(PyObject context, String file, String input) {
         // PyObject traceback = this.evaluator.loadModule("traceback");
         // this.sysModules.put(str("traceback"), traceback);
@@ -97,15 +107,6 @@ public final class Python {
     public PyObject eval(PyObject context, String file, String input) {
         PyObject ast = this.parser.parse(file, input);
         return this.evaluator.eval(context, ast);
-    }
-
-    private PyObject lookup(PyObject object, String name) {
-        PyObject attr = object.getFrame().lookup(name);
-        if (attr != null) {
-            return attr;
-        }
-
-        return lookupType(object, name);
     }
 
     public InterpretEvaluator getEvaluator() {

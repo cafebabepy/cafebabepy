@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
+import org.cafebabepy.runtime.object.java.PyMethodWrapperObject;
 
 import java.util.List;
 import java.util.Optional;
@@ -61,10 +62,19 @@ public class PySuperType extends AbstractCafeBabePyType {
             );
         }
 
+        String javaName = name.toJava(String.class);
+
         PyObject type = self.getFrame().getNotAppearLocals().get("type");
         PyObject objectOrType = self.getFrame().getNotAppearLocals().get("objectOrType");
         if (type == null || objectOrType == null) {
             throw new CafeBabePyException("type or objectOrType is not found");
+        }
+
+        if (__get__.equals(javaName)) {
+            PyObject get = self.getType().getFrame().getLocals().get(__get__);
+            if (get != null) {
+                return get;
+            }
         }
 
         PyObject startType;
@@ -86,7 +96,7 @@ public class PySuperType extends AbstractCafeBabePyType {
 
         for (; index < types.size(); index++) {
             PyObject t = types.get(index);
-            PyObject x = t.getFrame().getLocals().get(name.toJava(String.class));
+            PyObject x = t.getFrame().getLocals().get(javaName);
             if (x != null) {
                 Optional<PyObject> xgetOpt = this.runtime.getattrOptional(x, __get__);
                 if (xgetOpt.isPresent()) {
@@ -103,7 +113,7 @@ public class PySuperType extends AbstractCafeBabePyType {
     }
 
     @DefinePyFunction(name = __get__)
-    public PyObject __get__(PyObject self, PyObject obj, Python type) {
+    public PyObject __get__(PyObject self, PyObject obj, PyObject type) {
         PyObject t = self.getFrame().getNotAppearLocals().get("type");
         PyObject oot = self.getFrame().getNotAppearLocals().get("objectOrType");
         if (oot.isNone() && !obj.isNone()) {

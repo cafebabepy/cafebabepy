@@ -1364,6 +1364,49 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
+    class Supser {
+        @Test
+        void unboundSuper() throws IOException {
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  def method(self):\n"
+                            + "    print('a')\n"
+                            + "class B(A):\n"
+                            + "  def method(self):\n"
+                            + "    print('b')\n"
+                            + "    self.__super.method()\n"
+                            + "B._B__super = super(B)\n"
+                            + "B().method()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "b" + System.lineSeparator()
+                                + "a" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void classMethodSuper() throws IOException {
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  @classmethod\n"
+                            + "  def method(cls):\n"
+                            + "    print('a')\n"
+                            + "class B(A):\n"
+                            + "  @classmethod\n"
+                            + "  def method(cls):\n"
+                            + "    print('b')\n"
+                            + "    super(B, cls).method()\n"
+                            + "B._B__super = super(B)\n"
+                            + "B().method()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "b" + System.lineSeparator()
+                                + "a" + System.lineSeparator());
+                    });
+        }
+    }
+
+    @Nested
     class Class {
         @Test
         void defineClass() {
@@ -1434,7 +1477,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void defineMangleClassObject() throws IOException{
+        void defineMangleClassObject() throws IOException {
             evalStdOutToResult(""
                             + "class A:\n"
                             + "  class __B:\n"
