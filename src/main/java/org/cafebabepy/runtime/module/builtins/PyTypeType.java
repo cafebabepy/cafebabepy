@@ -43,11 +43,11 @@ public final class PyTypeType extends AbstractCafeBabePyType {
                 newArgs[0] = self;
                 System.arraycopy(args, 0, newArgs, 1, args.length);
 
-                return Python.lookupType(self, __new__).call(newArgs, kwargs);
+                return this.runtime.lookupType(self, __new__).call(newArgs, kwargs);
 
             } else {
                 // metaclass
-                return Python.lookupType(self, __new__).call(args, kwargs);
+                return this.runtime.lookupType(self, __new__).call(args, kwargs);
             }
 
         } else { // object new
@@ -57,7 +57,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
             newArgs[0] = object;
             System.arraycopy(args, 1, newArgs, 1, newArgs.length - 1);
 
-            Python.lookupType(object, __init__).call(newArgs, kwargs);
+            this.runtime.lookupType(object, __init__).call(newArgs, kwargs);
 
             return object;
         }

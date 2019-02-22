@@ -100,7 +100,7 @@ public class PySuperType extends AbstractCafeBabePyType {
             if (x != null) {
                 Optional<PyObject> xgetOpt = this.runtime.getattrOptional(x, __get__);
                 if (xgetOpt.isPresent()) {
-                    return xgetOpt.get().call(x, objectOrType, t);
+                    return xgetOpt.get().call(objectOrType, t);
 
                 } else {
                     return x;

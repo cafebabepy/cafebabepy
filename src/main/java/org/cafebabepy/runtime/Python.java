@@ -77,9 +77,15 @@ public final class Python {
         return new Python();
     }
 
-    public static PyObject lookupType(PyObject object, String name) {
+    public PyObject lookupType(PyObject object, String name) {
         for (PyObject type : object.getTypes()) {
-            PyObject typeObject = type.getFrame().lookup(name);
+            PyObject typeObject;
+            if (this.evaluator.isNowAttributeAccess()) {
+                typeObject = type.getFrame().getLocals().get(name);
+
+            } else {
+                typeObject = type.getFrame().lookup(name);
+            }
             if (typeObject != null) {
                 return typeObject;
             }
@@ -88,8 +94,14 @@ public final class Python {
         return null;
     }
 
-    public static PyObject lookup(PyObject object, String name) {
-        PyObject attr = object.getFrame().lookup(name);
+    public PyObject lookup(PyObject object, String name) {
+        PyObject attr;
+        if (this.evaluator.isNowAttributeAccess()) {
+            attr = object.getFrame().getLocals().get(name);
+
+        } else {
+            attr = object.getFrame().lookup(name);
+        }
         if (attr != null) {
             return attr;
         }
@@ -1013,9 +1025,17 @@ public final class Python {
         if (attr != null) {
             if (self != attr) {
                 if (hasattr(attr, __get__) && hasattr(attr, __set__)) {
-                    if (!__get__.equals(key)) {
-                        return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                    PyObject result;
+                    PyObject get = getattr(attr, __get__);
+                    if (isInstance(get, "builtins.function", false)
+                            || isInstance(get, "builtins.wrapper_descriptor", false)) {
+                        result = get.call(attr, self, type);
+
+                    } else {
+                        result = get.call(self, type);
                     }
+
+                    return Optional.of(result);
                 }
             }
         }
@@ -1027,8 +1047,18 @@ public final class Python {
 
         if (attr != null) {
             if (self != attr) {
-                if (hasattr(attr, __get__) && !__get__.equals(key)) {
-                    return Optional.of(getattr(attr, __get__).call(attr, self, type));
+                if (hasattr(attr, __get__)) {
+                    PyObject result;
+                    PyObject get = getattr(attr, __get__);
+                    if (isInstance(get, "builtins.function", false)
+                            || isInstance(get, "builtins.wrapper_descriptor", false)) {
+                        result = get.call(attr, self, type);
+
+                    } else {
+                        result = get.call(self, type);
+                    }
+
+                    return Optional.of(result);
                 }
             }
 
@@ -1044,9 +1074,17 @@ public final class Python {
         if (metaattr != null) {
             if (cls != metaattr) {
                 if (hasattr(metaattr, __get__) && hasattr(metaattr, __set__)) {
-                    if (!__get__.equals(key)) {
-                        return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                    PyObject result;
+                    PyObject get = getattr(metaattr, __get__);
+                    if (isInstance(get, "builtins.function", false)
+                            || isInstance(get, "builtins.wrapper_descriptor", false)) {
+                        result = get.call(metaattr, cls, meta);
+
+                    } else {
+                        result = get.call(cls, meta);
                     }
+
+                    return Optional.of(result);
                 }
             }
         }
@@ -1054,8 +1092,18 @@ public final class Python {
         PyObject attr = lookup(cls, key);
         if (attr != null) {
             if (cls != attr) {
-                if (hasattr(attr, __get__) && !__get__.equals(key)) {
-                    return Optional.of(getattr(attr, __get__).call(attr, None(), cls));
+                if (hasattr(attr, __get__)) {
+                    PyObject result;
+                    PyObject get = getattr(attr, __get__);
+                    if (isInstance(get, "builtins.function", false)
+                            || isInstance(get, "builtins.wrapper_descriptor", false)) {
+                        result = get.call(attr, None(), cls);
+
+                    } else {
+                        result = get.call(None(), cls);
+                    }
+
+                    return Optional.of(result);
                 }
             }
 
@@ -1064,8 +1112,18 @@ public final class Python {
 
         if (metaattr != null) {
             if (cls != metaattr) {
-                if (hasattr(metaattr, __get__) && !__get__.equals(key)) {
-                    return Optional.of(getattr(metaattr, __get__).call(metaattr, cls, meta));
+                if (hasattr(metaattr, __get__)) {
+                    PyObject result;
+                    PyObject get = getattr(metaattr, __get__);
+                    if (isInstance(get, "builtins.function", false)
+                            || isInstance(get, "builtins.wrapper_descriptor", false)) {
+                        result = get.call(metaattr, cls, meta);
+
+                    } else {
+                        result = get.call(cls, meta);
+                    }
+
+                    return Optional.of(result);
                 }
             }
 

@@ -19,6 +19,8 @@ public class InterpretEvaluator {
     private ThreadLocal<Frame> frame = ThreadLocal.withInitial(() -> null);
     private ThreadLocal<List<PyObject>> pyFrames = ThreadLocal.withInitial(LinkedList::new);
 
+    private ThreadLocal<Boolean> attribute = ThreadLocal.withInitial(() -> false);
+
     /*
     public PyObject evalMainModule(PyObject node) {
         PyObject context = this.runtime.moduleOrThrow("__main__");
@@ -234,6 +236,10 @@ public class InterpretEvaluator {
 
     public Frame getFrame() {
         return this.frame.get();
+    }
+
+    public boolean isNowAttributeAccess() {
+        return this.attribute.get();
     }
 
     public PyObject loadModule(String moduleName) {
@@ -1372,22 +1378,29 @@ public class InterpretEvaluator {
     }
 
     private PyObject evalAttribute(PyObject context, PyObject node) {
-        PyObject value = this.runtime.getattr(node, "value");
-        PyObject attr = this.runtime.getattr(node, "attr");
-        PyObject ctx = this.runtime.getattr(node, "ctx");
+        this.attribute.set(true);
+        try {
+            PyObject value = this.runtime.getattr(node, "value");
+            PyObject attr = this.runtime.getattr(node, "attr");
+            PyObject ctx = this.runtime.getattr(node, "ctx");
 
-        PyObject evalValue = eval(context, value);
+            PyObject evalValue = eval(context, value);
 
-        PyObject ctxType = ctx.getType();
-        if (ctxType instanceof PyLoadType) {
-            return this.runtime.getattr(evalValue, toMangleName(attr.toJava(String.class)));
+            PyObject ctxType = ctx.getType();
+            if (ctxType instanceof PyLoadType) {
 
-        } else if (ctxType instanceof PyStoreType) {
-            return evalValue;
+                return this.runtime.getattr(evalValue, toMangleName(attr.toJava(String.class)));
+
+            } else if (ctxType instanceof PyStoreType) {
+                return evalValue;
+            }
+
+            //　TODO どうする？
+            return node;
+
+        } finally {
+            this.attribute.set(false);
         }
-
-        //　TODO どうする？
-        return node;
     }
 
     @SuppressWarnings("unchecked")
