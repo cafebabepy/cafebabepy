@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
 
@@ -27,20 +28,27 @@ public class PyFunctionType extends AbstractCafeBabePyType {
     }
 
     @DefinePyFunction(name = __get__)
-    public PyObject __get__(PyObject self, PyObject... args) {
-        if (args.length == 0) {
-            throw this.runtime.newRaiseTypeError("expected at least 1 arguments, got 0");
-
-        } else if (args.length > 2) {
-            throw this.runtime.newRaiseTypeError("expected at most 2 arguments, got " + args.length);
+    public PyObject __get__(PyObject self, PyObject obj, PyObject type) {
+        if (!this.runtime.isInstance(self, "builtins.function", false)) {
+            throw this.runtime.newRaiseTypeError(
+                    "descriptor '__get__' requires a 'function' object but received a '" + self.getFullName() + "'");
         }
 
-        if (args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
+        if (obj.isNone() && !this.runtime.isSubClass(type, "builtins.NoneType", false)) {
+            return self;
+        }
+
+        if (!this.runtime.isInstance(self, "builtins.function", false)) {
             return self;
         }
 
         //return this.runtime.newPyObject("method", self, args[0]);
-        return new PyMethodTypeObject(this.runtime, self, args[0]);
+        return new PyMethodTypeObject(this.runtime, self, obj);
+    }
+
+    @DefinePyFunctionDefaultValue(methodName = __get__, parameterName = "type")
+    public PyObject __get__type() {
+        return this.runtime.None();
     }
 
     @DefinePyFunction(name = __str__)

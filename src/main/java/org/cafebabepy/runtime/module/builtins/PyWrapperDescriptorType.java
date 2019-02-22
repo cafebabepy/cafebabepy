@@ -5,6 +5,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
+import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.java.PyJavaFunctionObject;
 import org.cafebabepy.runtime.object.java.PyMethodWrapperObject;
@@ -25,17 +26,22 @@ public class PyWrapperDescriptorType extends AbstractCafeBabePyType {
     }
 
     @DefinePyFunction(name = __get__)
-    public PyObject __get__(PyObject self, /* FIXME default argument */ PyObject... args) {
+    public PyObject __get__(PyObject self, PyObject obj, PyObject type) {
         if (!this.runtime.isInstance(self, "builtins.wrapper_descriptor", false)) {
             throw this.runtime.newRaiseTypeError(
                     "descriptor '__get__' requires a 'wrapper_descriptor' object but received a '" + self.getFullName() + "'");
         }
 
-        if (args[0].isNone() && !this.runtime.isSubClass(args[1], "builtins.NoneType", false)) {
+        if (obj.isNone() && !this.runtime.isSubClass(type, "builtins.NoneType", false)) {
             return self;
         }
 
-        return new PyMethodWrapperObject(this.runtime, self, args[0]);
+        return new PyMethodWrapperObject(this.runtime, self, obj);
+    }
+
+    @DefinePyFunctionDefaultValue(methodName = __get__, parameterName = "type")
+    public PyObject __get__type() {
+        return this.runtime.None();
     }
 
     @Override
