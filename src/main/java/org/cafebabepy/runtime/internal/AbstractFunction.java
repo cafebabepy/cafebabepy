@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.Frame;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
+import org.cafebabepy.runtime.object.PyObjectObject;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
         super(runtime);
 
         this.context = context;
-        this.argumentsContext = new PyLexicalScopeProxyObject(context); // arguments scope
+        this.argumentsContext = new PyObjectObject(this.runtime); // arguments scope
         this.name = name;
         this.arguments = arguments;
     }
@@ -69,8 +70,11 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
     @Override
     @SuppressWarnings("unchecked")
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
-        PyObject context = new PyLexicalScopeProxyObject(this.argumentsContext);
+        PyObject context = new PyLexicalScopeProxyObject(this.context);
+        Frame argumentFrame = this.argumentsContext.getFrame();
         Frame frame = context.getFrame();
+
+        frame.getLocals().putAll(argumentFrame.getLocals());
 
         PyObject vararg = getattr(this.arguments, "vararg");
         PyObject kwarg = getattr(this.arguments, "kwarg");
