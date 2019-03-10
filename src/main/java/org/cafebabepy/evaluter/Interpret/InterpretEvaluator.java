@@ -16,8 +16,7 @@ public class InterpretEvaluator {
     private Python runtime;
     private ImportManager importManager;
 
-    private ThreadLocal<Frame> frame = ThreadLocal.withInitial(() -> null);
-    private ThreadLocal<List<PyObject>> pyFrames = ThreadLocal.withInitial(LinkedList::new);
+    private ThreadLocal<List<PyObject>> contexts = ThreadLocal.withInitial(LinkedList::new);
 
     private ThreadLocal<Boolean> attribute = ThreadLocal.withInitial(() -> false);
 
@@ -43,28 +42,6 @@ public class InterpretEvaluator {
     }
 
     public PyObject eval(PyObject context, PyObject node) {
-        Frame backFrame = this.frame.get();
-        this.frame.set(context.getFrame());
-
-        List<PyObject> contexts = this.pyFrames.get();
-
-        boolean stackFrame = backFrame != context.getFrame();
-        if (stackFrame) {
-            this.pyFrames.get().add(context);
-        }
-
-        try {
-            return evalImpl(context, node);
-
-        } finally {
-            if (stackFrame) {
-                contexts.remove(contexts.size() - 1);
-            }
-            this.frame.set(backFrame);
-        }
-    }
-
-    public PyObject evalImpl(PyObject context, PyObject node) {
         if (node.isNone()) {
             return node;
 
@@ -235,7 +212,8 @@ public class InterpretEvaluator {
     }
 
     public Frame getFrame() {
-        return this.frame.get();
+        List<PyObject> contexts = this.contexts.get();
+        return contexts.get(contexts.size() - 1).getFrame();
     }
 
     public boolean isNowAttributeAccess() {
@@ -297,11 +275,16 @@ public class InterpretEvaluator {
 
     private String toMangleName(String name) {
         if (name.startsWith("__") && !name.endsWith("__")) {
-            List<PyObject> contexts = this.pyFrames.get();
+            List<PyObject> contexts = this.contexts.get();
             for (int i = contexts.size() - 1; i >= 0; i--) {
                 PyObject c = contexts.get(i);
-                if (c.isType()) {
-                    return "_" + c.getName() + name;
+                if (c.isType() || c.isFromClass()) {
+                    String className = c.getName();
+                    int index;
+                    if ((index = className.lastIndexOf('.')) != -1) {
+                        className = className.substring(index + 1);
+                    }
+                    return "_" + className + name;
                 }
             }
         }
@@ -411,7 +394,7 @@ public class InterpretEvaluator {
 
         StringBuilder nameBuilder = new StringBuilder();
 
-        List<PyObject> contexts = this.pyFrames.get();
+        List<PyObject> contexts = this.contexts.get();
         for (int i = contexts.size() - 1; i >= 0; i--) {
             PyObject c = contexts.get(i);
             if (c.isType()) {
@@ -420,18 +403,25 @@ public class InterpretEvaluator {
         }
         nameBuilder.append(javaName);
 
+        String mangleClassName = toMangleName(javaName);
+
         PyObject clazz = newClass(nameBuilder.toString(), baseList, keywordsMap);
+        contexts.add(clazz);
+        try {
+            // FIXME special
+            if (clazz instanceof PyInterpretClassObject) {
+                ((PyInterpretClassObject) clazz).setContext(context);
+            }
 
-        // FIXME special
-        if (clazz instanceof PyInterpretClassObject) {
-            ((PyInterpretClassObject) clazz).setContext(context);
+            eval(clazz, body);
+
+            this.runtime.setattr(context, mangleClassName, clazz);
+
+            return this.runtime.None();
+
+        } finally {
+            contexts.remove(contexts.size() - 1);
         }
-
-        eval(clazz, body);
-
-        this.runtime.setattr(context, toMangleName(javaName), clazz);
-
-        return this.runtime.None();
     }
 
     private PyObject newClass(String name, List<PyObject> bases, LinkedHashMap<String, PyObject> kwds) {
@@ -610,73 +600,78 @@ public class InterpretEvaluator {
         this.runtime.iter(items, itemList::add);
 
         PyObject lexicalContext = new PyLexicalScopeProxyObject(context);
-
-        List<PyObject> evalContextExprList = new ArrayList<>(itemList.size());
-
-        for (int i = 0; i < itemList.size(); i++) {
-            PyObject item = itemList.get(i);
-            PyObject contextExpr = this.runtime.getattr(item, "context_expr");
-            PyObject optionalVars = this.runtime.getattr(item, "optional_vars");
-
-            PyObject evalContextExpr = eval(context, contextExpr);
-
-            if (!this.runtime.hasattr(evalContextExpr, __exit__)) {
-                throw this.runtime.newRaiseException("AttributeError", __exit__);
-            }
-
-            if (!this.runtime.hasattr(evalContextExpr, __enter__)) {
-                throw this.runtime.newRaiseException("AttributeError", __enter__);
-            }
-
-            if (!optionalVars.isNone()) {
-                assign(lexicalContext, optionalVars, evalContextExpr);
-            }
-
-            evalContextExprList.add(evalContextExpr);
-        }
-
-        for (int i = 0; i < evalContextExprList.size(); i++) {
-            PyObject evalContextExpr = evalContextExprList.get(i);
-            PyObject enter = this.runtime.getattr(evalContextExpr, __enter__);
-
-            enter.call();
-        }
-
-        PyObject result = null;
-        RaiseException raiseException = null;
+        List<PyObject> contexts = this.contexts.get();
+        contexts.add(lexicalContext);
         try {
-            result = eval(lexicalContext, body);
+            List<PyObject> evalContextExprList = new ArrayList<>(itemList.size());
 
-        } catch (RaiseException e) {
-            raiseException = e;
+            for (int i = 0; i < itemList.size(); i++) {
+                PyObject item = itemList.get(i);
+                PyObject contextExpr = this.runtime.getattr(item, "context_expr");
+                PyObject optionalVars = this.runtime.getattr(item, "optional_vars");
 
-        } finally {
-            PyObject exception = raiseException != null ? raiseException.getException() : this.runtime.None();
+                PyObject evalContextExpr = eval(context, contextExpr);
 
-            for (int i = evalContextExprList.size() - 1; i >= 0; i--) {
-                PyObject evalContextExpr = evalContextExprList.get(i);
-                PyObject enter = this.runtime.getattr(evalContextExpr, __exit__);
-
-                PyObject exceptionValue = this.runtime.None();
-                if (!exception.isNone()) {
-                    exceptionValue = this.runtime.getattr(exception, "args");
-                    List<PyObject> argList = exceptionValue.toJava(List.class);
-                    if (argList.size() == 1) {
-                        exceptionValue = argList.get(0);
-                    }
+                if (!this.runtime.hasattr(evalContextExpr, __exit__)) {
+                    throw this.runtime.newRaiseException("AttributeError", __exit__);
                 }
 
-                enter.call(exception.getType(), exceptionValue, this.runtime.None()); // FIXME None
+                if (!this.runtime.hasattr(evalContextExpr, __enter__)) {
+                    throw this.runtime.newRaiseException("AttributeError", __enter__);
+                }
+
+                if (!optionalVars.isNone()) {
+                    assign(lexicalContext, optionalVars, evalContextExpr);
+                }
+
+                evalContextExprList.add(evalContextExpr);
             }
 
-            if (result != null) {
-                return result;
-            }
-            if (raiseException != null) {
-                throw raiseException;
+            for (int i = 0; i < evalContextExprList.size(); i++) {
+                PyObject evalContextExpr = evalContextExprList.get(i);
+                PyObject enter = this.runtime.getattr(evalContextExpr, __enter__);
+
+                enter.call();
             }
 
-            throw new CafeBabePyException("Fail evalWith");
+            PyObject result = null;
+            RaiseException raiseException = null;
+            try {
+                result = eval(lexicalContext, body);
+
+            } catch (RaiseException e) {
+                raiseException = e;
+
+            } finally {
+                PyObject exception = raiseException != null ? raiseException.getException() : this.runtime.None();
+
+                for (int i = evalContextExprList.size() - 1; i >= 0; i--) {
+                    PyObject evalContextExpr = evalContextExprList.get(i);
+                    PyObject enter = this.runtime.getattr(evalContextExpr, __exit__);
+
+                    PyObject exceptionValue = this.runtime.None();
+                    if (!exception.isNone()) {
+                        exceptionValue = this.runtime.getattr(exception, "args");
+                        List<PyObject> argList = exceptionValue.toJava(List.class);
+                        if (argList.size() == 1) {
+                            exceptionValue = argList.get(0);
+                        }
+                    }
+
+                    enter.call(exception.getType(), exceptionValue, this.runtime.None()); // FIXME None
+                }
+
+                if (result != null) {
+                    return result;
+                }
+                if (raiseException != null) {
+                    throw raiseException;
+                }
+
+                throw new CafeBabePyException("Fail evalWith");
+            }
+        } finally {
+            contexts.remove(contexts.size() - 1);
         }
     }
 
@@ -788,7 +783,14 @@ public class InterpretEvaluator {
         List<PyObject> resultList = new ArrayList<>();
 
         PyLexicalScopeProxyObject lexicalContext = new PyLexicalScopeProxyObject(context);
-        evalGenerators(lexicalContext, elt, generatorList, resultList);
+        List<PyObject> contexts = this.contexts.get();
+        contexts.add(lexicalContext);
+        try {
+            evalGenerators(lexicalContext, elt, generatorList, resultList);
+
+        } finally {
+            contexts.remove(contexts.size() - 1);
+        }
 
         return resultList;
     }
@@ -1014,7 +1016,17 @@ public class InterpretEvaluator {
     @SuppressWarnings("unchecked")
     private PyObject evalCall(PyObject context, PyObject node) {
         PyObject func = this.runtime.getattr(node, "func");
-        PyObject funcEval = eval(context, func);
+        PyObject funcEval;
+        List<PyObject> attributes;
+        if (func.getType().equals(this.runtime.typeOrThrow("_ast.Attribute"))) {
+            attributes = new ArrayList<>();
+            evalAttribute(attributes, context, func);
+            funcEval = attributes.get(attributes.size() - 1);
+
+        } else {
+            attributes = Collections.emptyList();
+            funcEval = eval(context, func);
+        }
 
         PyObject args = this.runtime.getattr(node, "args");
         PyObject keywords = this.runtime.getattr(node, "keywords");
@@ -1064,13 +1076,53 @@ public class InterpretEvaluator {
 
         if (argList.isEmpty() && keywordsMap.isEmpty()
                 && funcEval.equals(this.runtime.typeOrThrow("builtins.super"))) {
-            getFrame().getBack();
+            List<PyObject> contexts = this.contexts.get();
+
+            PyObject type = null;
+            PyFunctionObject function = null;
+            PyObject self = null;
+
+            for (int i = contexts.size() - 1; i >= 0; i--) {
+                PyObject c = contexts.get(i);
+                PyObject t = c.getType();
+                if (t.equals(this.runtime.typeOrThrow("builtins.method", false))
+                        || t.equals(this.runtime.typeOrThrow("builtins.method-wrapper", false))) {
+                    function = (PyFunctionObject) c;
+
+                } else if (function != null && c.isFromClass()) {
+                    self = c;
+                    break;
+                }
+            }
+
+            if (self == null) {
+                throw this.runtime.newRaiseException("builtins.RuntimeError", "super(): no arguments");
+
+            } else {
+                List<String> arguments = function.getArguments();
+                Map<String, PyObject> frameMap = getFrame().getLocals();
+                if (arguments.isEmpty() || frameMap.isEmpty()) {
+                    throw this.runtime.newRaiseException("builtins.RuntimeError", "super(): no arguments");
+                }
+                argList.add(self.getType());
+                argList.add(self);
+            }
         }
 
         argsArray = new PyObject[argList.size()];
         argList.toArray(argsArray);
 
-        return funcEval.call(argsArray, keywordsMap);
+
+        List<PyObject> contexts = this.contexts.get();
+        contexts.addAll(attributes);
+
+        try {
+            return funcEval.call(argsArray, keywordsMap);
+
+        } finally {
+            contexts.remove(funcEval);
+            contexts.removeAll(attributes);
+        }
     }
 
     private PyObject evalSubscript(PyObject context, PyObject node) {
@@ -1400,6 +1452,23 @@ public class InterpretEvaluator {
 
         } finally {
             this.attribute.set(false);
+        }
+    }
+
+    private void evalAttribute(List<PyObject> list, PyObject context, PyObject node) {
+        PyObject value = this.runtime.getattr(node, "value");
+        PyObject attr = this.runtime.getattr(node, "attr");
+        PyObject ctx = this.runtime.getattr(node, "ctx");
+
+        PyObject evalValue = eval(context, value);
+        list.add(evalValue);
+
+        PyObject ctxType = ctx.getType();
+        if (ctxType instanceof PyLoadType) {
+            list.add(this.runtime.getattr(evalValue, toMangleName(attr.toJava(String.class))));
+
+        } else if (ctxType instanceof PyStoreType) {
+            list.add(evalValue);
         }
     }
 

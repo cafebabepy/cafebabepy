@@ -6,7 +6,7 @@ import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
+import org.cafebabepy.runtime.object.proxy.PyMethodObject;
 
 import static org.cafebabepy.util.ProtocolNames.__init__;
 import static org.cafebabepy.util.ProtocolNames.__str__;
@@ -33,11 +33,11 @@ public class PyMethodType extends AbstractCafeBabePyType {
             return this.runtime.str(self);
         }
 
-        if (!(self instanceof PyMethodTypeObject)) {
+        if (!(self instanceof PyMethodObject)) {
             throw new CafeBabePyException(self + " is not method");
         }
 
-        PyMethodTypeObject object = (PyMethodTypeObject) self;
+        PyMethodObject object = (PyMethodObject) self;
 
         return this.runtime.str("<bound method "
                 + object.getSource().getName() + "." + object.getFunction().getFullName()

@@ -80,6 +80,11 @@ public class PyInterpretClassObject extends AbstractPyObject {
     }
 
     @Override
+    public boolean isFromClass() {
+        return false;
+    }
+
+    @Override
     public boolean isModule() {
         return false;
     }

@@ -1,27 +1,27 @@
 package org.cafebabepy.runtime.internal;
 
 import org.cafebabepy.runtime.Frame;
+import org.cafebabepy.runtime.PyFunctionObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 import org.cafebabepy.runtime.object.PyObjectObject;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
  * Created by yotchang4s on 2017/06/08.
  */
-public abstract class AbstractFunction extends AbstractPyObjectObject {
+public abstract class AbstractFunction extends AbstractPyObjectObject implements PyFunctionObject {
 
     protected final PyObject argumentsContext;
     protected final String name;
     protected final PyObject arguments;
     private final PyObject context;
+    private List<String> argumentList;
     private List<PyObject> kw_defaults;
     private List<PyObject> defaultArgs;
 
@@ -41,7 +41,6 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
 
         List<PyObject> defaultsList = getattr(this.arguments, "defaults").toJava(List.class);
         List<PyObject> kw_defaultsList = getattr(this.arguments, "kw_defaults").toJava(List.class);
-
         this.defaultArgs = evalDefaults(defaultsList);
         this.kw_defaults = evalDefaults(kw_defaultsList);
 
@@ -65,6 +64,44 @@ public abstract class AbstractFunction extends AbstractPyObjectObject {
 
     protected PyObject getattr(PyObject object, String key) {
         return this.runtime.getattr(object, key);
+    }
+
+    @Override
+    public List<String> getArguments() {
+        if (this.argumentList == null) {
+            synchronized (this) {
+                if (this.argumentList == null) {
+                    this.argumentList = new ArrayList<>();
+
+                    List<PyObject> args = getattr(this.arguments, "args").toJava(List.class);
+                    PyObject vararg = getattr(this.arguments, "vararg");
+                    PyObject kwarg = getattr(this.arguments, "kwarg");
+                    List<PyObject> kwOnlyArgs = getattr(this.arguments, "kwonlyargs").toJava(List.class);
+
+                    for (int i = 0; i < args.size(); i++) {
+                        PyObject arg = getattr(args.get(i), "arg");
+                        this.argumentList.add(arg.toJava(String.class));
+                    }
+
+                    if (!vararg.isNone()) {
+                        PyObject arg = getattr(vararg, "arg");
+                        this.argumentList.add(arg.toJava(String.class));
+                    }
+
+                    if (!kwarg.isNone()) {
+                        PyObject arg = getattr(kwarg, "arg");
+                        this.argumentList.add(arg.toJava(String.class));
+                    }
+
+                    for (int i = 0; i < kwOnlyArgs.size(); i++) {
+                        PyObject arg = getattr(kwOnlyArgs.get(i), "arg");
+                        this.argumentList.add(arg.toJava(String.class));
+                    }
+                }
+            }
+        }
+
+        return this.argumentList;
     }
 
     @Override

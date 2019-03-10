@@ -55,6 +55,11 @@ public abstract class AbstractCafeBabePyModule extends AbstractAbstractCafeBabeP
     }
 
     @Override
+    public final boolean isFromClass() {
+        return false;
+    }
+
+    @Override
     public final boolean isModule() {
         return true;
     }

@@ -1,23 +1,26 @@
 package org.cafebabepy.runtime.object.java;
 
+import org.cafebabepy.runtime.PyFunctionObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
  * Created by yotchang4s on 2018/06/24.
  */
-public class PyMethodWrapperObject extends AbstractPyObjectObject {
+public class PyMethodWrapperObject extends AbstractPyObjectObject implements PyFunctionObject {
 
     private final PyObject source;
 
-    private final PyObject function;
+    private final PyFunctionObject function;
 
-    public PyMethodWrapperObject(Python runtime, PyObject function, PyObject source) {
+    public PyMethodWrapperObject(Python runtime, PyFunctionObject function, PyObject source) {
         super(runtime);
 
         this.function = function;
@@ -32,6 +35,11 @@ public class PyMethodWrapperObject extends AbstractPyObjectObject {
 
     public PyObject getFunction() {
         return this.function;
+    }
+
+    @Override
+    public List<String> getArguments() {
+        return this.function.getArguments();
     }
 
     @Override

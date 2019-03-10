@@ -1,6 +1,7 @@
 package org.cafebabepy.runtime.module.builtins;
 
 import org.cafebabepy.runtime.CafeBabePyException;
+import org.cafebabepy.runtime.PyFunctionObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
@@ -36,7 +37,7 @@ public class PyWrapperDescriptorType extends AbstractCafeBabePyType {
             return self;
         }
 
-        return new PyMethodWrapperObject(this.runtime, self, obj);
+        return new PyMethodWrapperObject(this.runtime, (PyFunctionObject) self, obj);
     }
 
     @DefinePyFunctionDefaultValue(methodName = __get__, parameterName = "type")

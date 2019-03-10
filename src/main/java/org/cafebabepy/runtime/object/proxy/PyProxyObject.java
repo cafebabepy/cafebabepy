@@ -70,6 +70,11 @@ public class PyProxyObject implements PyObject {
     }
 
     @Override
+    public boolean isFromClass() {
+        return this.source.isFromClass();
+    }
+
+    @Override
     public boolean isModule() {
         return this.source.isModule();
     }
@@ -127,5 +132,10 @@ public class PyProxyObject implements PyObject {
     @Override
     public PyObject call(PyObject[] args, LinkedHashMap<String, PyObject> keywords) {
         return this.source.call(args, keywords);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this.source.equals(other);
     }
 }

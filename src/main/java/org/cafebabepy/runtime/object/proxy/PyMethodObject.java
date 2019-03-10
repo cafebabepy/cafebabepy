@@ -1,23 +1,26 @@
 package org.cafebabepy.runtime.object.proxy;
 
+import org.cafebabepy.runtime.PyFunctionObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.cafebabepy.util.ProtocolNames.__call__;
 
 /**
  * Created by yotchang4s on 2017/06/23.
  */
-public class PyMethodTypeObject extends AbstractPyObjectObject {
+public class PyMethodObject extends AbstractPyObjectObject implements PyFunctionObject {
 
     private final PyObject source;
 
-    private final PyObject function;
+    private final PyFunctionObject function;
 
-    public PyMethodTypeObject(Python runtime, PyObject function, PyObject source) {
+    public PyMethodObject(Python runtime, PyFunctionObject function, PyObject source) {
         super(runtime);
 
         this.function = function;
@@ -35,6 +38,11 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
     }
 
     @Override
+    public List<String> getArguments() {
+        return this.function.getArguments();
+    }
+
+    @Override
     public PyObject call(PyObject... args) {
         return call(args, new LinkedHashMap<>());
     }
@@ -46,6 +54,11 @@ public class PyMethodTypeObject extends AbstractPyObjectObject {
         newArgs[0] = this.source;
 
         return this.function.call(newArgs, keywords);
+    }
+
+    @Override
+    public boolean isFromClass() {
+        return false;
     }
 
     @Override

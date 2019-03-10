@@ -28,6 +28,8 @@ public interface PyObject {
 
     boolean isType();
 
+    boolean isFromClass();
+
     boolean isModule();
 
     boolean isCallable();

@@ -1,12 +1,13 @@
 package org.cafebabepy.runtime.module.builtins;
 
+import org.cafebabepy.runtime.PyFunctionObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyFunctionDefaultValue;
 import org.cafebabepy.runtime.module.DefinePyType;
-import org.cafebabepy.runtime.object.proxy.PyMethodTypeObject;
+import org.cafebabepy.runtime.object.proxy.PyMethodObject;
 
 import static org.cafebabepy.util.ProtocolNames.*;
 
@@ -43,7 +44,7 @@ public class PyFunctionType extends AbstractCafeBabePyType {
         }
 
         //return this.runtime.newPyObject("method", self, args[0]);
-        return new PyMethodTypeObject(this.runtime, self, obj);
+        return new PyMethodObject(this.runtime, (PyFunctionObject) self, obj);
     }
 
     @DefinePyFunctionDefaultValue(methodName = __get__, parameterName = "type")

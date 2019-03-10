@@ -4,7 +4,6 @@ import org.cafebabepy.runtime.AbstractPyObject;
 import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -39,6 +38,11 @@ public abstract class AbstractPyObjectObject extends AbstractPyObject {
     @Override
     public final boolean isType() {
         return false;
+    }
+
+    @Override
+    public boolean isFromClass() {
+        return true;
     }
 
     @Override

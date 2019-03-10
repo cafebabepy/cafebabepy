@@ -151,7 +151,7 @@ public class InterpretEvaluatorTest {
         @Test
         void importName_this() {
             PyObject result = Python.eval("" +
-                    "import collections.abc\n" +
+                    "import this\n" +
                     "this"
             );
 
@@ -1262,7 +1262,7 @@ public class InterpretEvaluatorTest {
     }
 
     @Nested
-    class Supser {
+    class Super {
         @Test
         void unboundSuper() throws IOException {
             evalStdOutToResult(""
@@ -1298,6 +1298,46 @@ public class InterpretEvaluatorTest {
                             + "B().method()"
                     , result -> {
                         assertEquals(result, ""
+                                + "b" + System.lineSeparator()
+                                + "a" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void python3Super() throws IOException{
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  def method(self):\n"
+                            + "    print('a')\n"
+                            + "class B(A):\n"
+                            + "  def method(self):\n"
+                            + "    print('b')\n"
+                            + "    super().method()\n"
+                            + "B().method()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "b" + System.lineSeparator()
+                                + "a" + System.lineSeparator());
+                    });
+        }
+
+        @Test
+        void nestedPython3Super() throws IOException{
+            evalStdOutToResult(""
+                            + "class A:\n"
+                            + "  def method(self):\n"
+                            + "    print('a')\n"
+                            + "class B(A):\n"
+                            + "  def method1(self):\n"
+                            + "    print('c')\n"
+                            + "    def method2(self):\n"
+                            + "      print('b')\n"
+                            + "      super().method()\n"
+                            + "    method2(self)\n"
+                            + "B().method1()"
+                    , result -> {
+                        assertEquals(result, ""
+                                + "c" + System.lineSeparator()
                                 + "b" + System.lineSeparator()
                                 + "a" + System.lineSeparator());
                     });
