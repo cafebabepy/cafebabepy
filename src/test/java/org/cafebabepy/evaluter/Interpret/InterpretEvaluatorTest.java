@@ -1448,11 +1448,12 @@ public class InterpretEvaluatorTest {
             evalStdOutToResult(""
                             + "class A:\n"
                             + "  class __B:\n"
-                            + "    pass\n"
-                            + "print(A._A__B)\n",
+                            + "    class __C:\n"
+                            + "      pass\n"
+                            + "print(A._A__B._B__C)\n",
                     result -> {
                         assertEquals(result, ""
-                                + "<class '__main__.A.__B'>" + System.lineSeparator());
+                                + "<class '__main__.A.__B.__C'>" + System.lineSeparator());
                     });
         }
 

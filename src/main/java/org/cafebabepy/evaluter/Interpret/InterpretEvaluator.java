@@ -3,6 +3,7 @@ package org.cafebabepy.evaluter.Interpret;
 import org.cafebabepy.runtime.*;
 import org.cafebabepy.runtime.module._ast.*;
 import org.cafebabepy.runtime.object.proxy.PyLexicalScopeProxyObject;
+import org.cafebabepy.util.StringUtils;
 
 import java.util.*;
 
@@ -282,8 +283,13 @@ public class InterpretEvaluator {
                     String className = c.getName();
                     int index;
                     if ((index = className.lastIndexOf('.')) != -1) {
+                        // Un mangling
                         className = className.substring(index + 1);
+                        if (className.startsWith("__")) {
+                            className = className.substring(2);
+                        }
                     }
+
                     return "_" + className + name;
                 }
             }
@@ -392,20 +398,19 @@ public class InterpretEvaluator {
 
         String javaName = name.toJava(String.class);
 
-        StringBuilder nameBuilder = new StringBuilder();
-
         List<PyObject> contexts = this.contexts.get();
         for (int i = contexts.size() - 1; i >= 0; i--) {
             PyObject c = contexts.get(i);
             if (c.isType()) {
-                nameBuilder.append(c.getName()).append('.');
+                javaName = c.getName() + '.' + javaName;
+                break;
             }
         }
-        nameBuilder.append(javaName);
 
-        String mangleClassName = toMangleName(javaName);
+        String[] splitDotStrs = StringUtils.splitDot(javaName);
+        String mangleJavaName = toMangleName(splitDotStrs[splitDotStrs.length - 1]);
 
-        PyObject clazz = newClass(nameBuilder.toString(), baseList, keywordsMap);
+        PyObject clazz = newClass(javaName, baseList, keywordsMap);
         contexts.add(clazz);
         try {
             // FIXME special
@@ -413,9 +418,8 @@ public class InterpretEvaluator {
                 ((PyInterpretClassObject) clazz).setContext(context);
             }
 
+            this.runtime.setattr(context, mangleJavaName, clazz);
             eval(clazz, body);
-
-            this.runtime.setattr(context, mangleClassName, clazz);
 
             return this.runtime.None();
 
