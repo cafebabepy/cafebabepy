@@ -151,7 +151,7 @@ public class InterpretEvaluatorTest {
         @Test
         void importName_this() {
             PyObject result = Python.eval("" +
-                    "import this\n" +
+                    "import types\n" +
                     "this"
             );
 

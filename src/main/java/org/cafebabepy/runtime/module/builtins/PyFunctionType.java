@@ -62,4 +62,9 @@ public class PyFunctionType extends AbstractCafeBabePyType {
 
         return this.runtime.str("<function '" + self.getFullName() + "' at 0x" + hashCode + ">");
     }
+
+    @DefinePyFunction(name = __globals__)
+    public PyObject __globals__(PyObject self) {
+        return this.runtime.None();
+    }
 }

@@ -16,12 +16,19 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by yotchang4s on 2017/05/29.
  */
 // FIXME SyntaxError
 class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
+
+    private static final Pattern TRIPLE_DOUBLE_QUOTE_PATTERN = Pattern.compile("^([^\"']*?)\"\"\"(.*?)\"\"\"$", Pattern.DOTALL);
+    private static final Pattern TRIPLE_SINGLE_QUOTE_PATTERN = Pattern.compile("^([^\"']*?)'''(.*?)'''$", Pattern.DOTALL);
+    private static final Pattern DOUBLE_QUOTE_PATTERN = Pattern.compile("^([^\"']*?)\"(.*?)\"$", Pattern.DOTALL);
+    private static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile("^([^\"']*?)'(.*?)'$", Pattern.DOTALL);
 
     private final Python runtime;
 
@@ -1808,34 +1815,32 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         String str;
         String prefix;
 
-        if (rawString.startsWith("'''") || rawString.startsWith("\"\"\"")) {
-            prefix = "";
-            str = rawString.substring(3, rawString.length() - 3);
-
-        } else if (rawString.startsWith("'") || rawString.startsWith("\"")) {
-            prefix = "";
-            str = rawString.substring(1, rawString.length() - 1);
+        Matcher tripleDoubleQuoteMatcher = TRIPLE_DOUBLE_QUOTE_PATTERN.matcher(rawString);
+        if (tripleDoubleQuoteMatcher.matches()) {
+            prefix = tripleDoubleQuoteMatcher.group(1);
+            str = tripleDoubleQuoteMatcher.group(2);
 
         } else {
-            int tripleSingleIndex = rawString.indexOf("'''");
-            int tripleDoubleIndex = rawString.indexOf("\"\"\"");
-
-            int singleIndex = rawString.indexOf("'");
-            int doubleIndex = rawString.indexOf("\"");
-
-            int tripleMaxIndex = Integer.max(tripleSingleIndex, tripleDoubleIndex);
-            if (tripleMaxIndex != -1) {
-                str = rawString.substring(tripleMaxIndex + 1, rawString.length() - 1);
-                prefix = rawString.substring(0, tripleMaxIndex);
+            Matcher tripleSingleQuoteMatcher = TRIPLE_SINGLE_QUOTE_PATTERN.matcher(rawString);
+            if (tripleSingleQuoteMatcher.matches()) {
+                prefix = tripleSingleQuoteMatcher.group(1);
+                str = tripleSingleQuoteMatcher.group(2);
 
             } else {
-                int singleMaxIndex = Integer.max(doubleIndex, singleIndex);
-                if (singleMaxIndex != -1) {
-                    str = rawString.substring(singleMaxIndex + 1, rawString.length() - 1);
-                    prefix = rawString.substring(0, singleMaxIndex);
+                Matcher doubleQuoteMatcher = DOUBLE_QUOTE_PATTERN.matcher(rawString);
+                if (doubleQuoteMatcher.matches()) {
+                    prefix = doubleQuoteMatcher.group(1);
+                    str = doubleQuoteMatcher.group(2);
 
                 } else {
-                    throw new CafeBabePyException("Invalid string '" + rawString + "'");
+                    Matcher singleQuoteMatcher = SINGLE_QUOTE_PATTERN.matcher(rawString);
+                    if (singleQuoteMatcher.matches()) {
+                        prefix = singleQuoteMatcher.group(1);
+                        str = singleQuoteMatcher.group(2);
+
+                    } else {
+                        throw new CafeBabePyException("Invalid string '" + rawString + "'");
+                    }
                 }
             }
         }
