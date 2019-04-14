@@ -447,7 +447,7 @@ public class InterpretEvaluator {
             return result.meta.call(args, result.kwds);
 
         } finally {
-            contexts.remove(result.meta);
+            contexts.remove(contexts.size() - 1);
         }
     }
 
@@ -1094,7 +1094,6 @@ public class InterpretEvaluator {
                 && funcEval.equals(this.runtime.typeOrThrow("builtins.super"))) {
             List<PyObject> contexts = this.contexts.get();
 
-            PyObject type = null;
             PyFunctionObject function = null;
             PyObject self = null;
 
@@ -1140,8 +1139,9 @@ public class InterpretEvaluator {
             return funcEval.call(argsArray, keywordsMap);
 
         } finally {
-            contexts.remove(funcEval);
-            contexts.removeAll(attributes);
+            for (int i = attributes.size() - 1; i >= 0; i--) {
+                contexts.remove(i);
+            }
         }
     }
 

@@ -88,9 +88,9 @@ public class PySuperType extends AbstractCafeBabePyType {
 
         List<PyObject> types = type.getTypes();
         int index = 0;
-        for (; index < types.size(); index++) {
-            if (types.get(index).equals(startType)) {
-                index++;
+        for (int i = 0; i < types.size(); i++) {
+            if (types.get(i).equals(startType)) {
+                index = i + 1;
                 break;
             }
         }

@@ -241,7 +241,15 @@ public abstract class AbstractFunction extends AbstractPyObjectObject implements
             frame.getLocals().put(arg.toJava(String.class), this.runtime.dict(kwargsMap));
         }
 
-        return callImpl(context);
+        List<PyObject> contexts = this.runtime.getEvaluator().getContexts();
+        try {
+            contexts.add(this);
+
+            return callImpl(context);
+
+        } finally {
+            contexts.remove(contexts.size() - 1);
+        }
     }
 
     protected abstract PyObject callImpl(PyObject context);
