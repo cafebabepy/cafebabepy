@@ -78,7 +78,8 @@ public class PySuperType extends AbstractCafeBabePyType {
         }
 
         PyObject startType;
-        if (this.runtime.isInstance(objectOrType, type)) {
+        if (this.runtime.isInstance(objectOrType, type)
+                && !this.runtime.isSubClass(type, "builtins.type")) {
             startType = objectOrType.getType();
 
         } else {

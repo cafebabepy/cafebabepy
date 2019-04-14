@@ -81,7 +81,7 @@ public class PyInterpretClassObject extends AbstractPyObject {
 
     @Override
     public boolean isFromClass() {
-        return false;
+        return true;
     }
 
     @Override

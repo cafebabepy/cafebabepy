@@ -217,6 +217,10 @@ public class InterpretEvaluator {
         return contexts.get(contexts.size() - 1).getFrame();
     }
 
+    public List<PyObject> getContexts() {
+        return this.contexts.get();
+    }
+
     public boolean isNowAttributeAccess() {
         return this.attribute.get();
     }
@@ -436,7 +440,15 @@ public class InterpretEvaluator {
         args[1] = this.runtime.tuple(bases);
         args[2] = result.ns;
 
-        return result.meta.call(args, result.kwds);
+        List<PyObject> contexts = this.contexts.get();
+        try {
+            contexts.add(result.meta);
+
+            return result.meta.call(args, result.kwds);
+
+        } finally {
+            contexts.remove(result.meta);
+        }
     }
 
     private PrepareClassReturn prepareClass(String name, List<PyObject> bases, LinkedHashMap<String, PyObject> kwds) {
@@ -1089,8 +1101,12 @@ public class InterpretEvaluator {
             for (int i = contexts.size() - 1; i >= 0; i--) {
                 PyObject c = contexts.get(i);
                 PyObject t = c.getType();
-                if (t.equals(this.runtime.typeOrThrow("builtins.method", false))
-                        || t.equals(this.runtime.typeOrThrow("builtins.method-wrapper", false))) {
+                if (t.equals(this.runtime.typeOrThrow("builtins.function", false))
+                        || t.equals(this.runtime.typeOrThrow("builtins.wrapper_descriptor", false))) {
+                    if (function != null) {
+                        continue;
+                    }
+
                     function = (PyFunctionObject) c;
 
                 } else if (function != null && c.isFromClass()) {
