@@ -13,23 +13,30 @@ import java.util.Map;
  */
 public class PyDictObject extends AbstractPyObjectObject {
 
-    private Map<PyObject, PyObject> map;
+    private LinkedHashMap<PyObject, PyObject> map;
 
     public PyDictObject(Python runtime) {
-        this(runtime, Collections.synchronizedMap(new LinkedHashMap<>()));
+        super(runtime);
+
+        this.map = new LinkedHashMap<>();
     }
 
     public PyDictObject(Python runtime, Map<PyObject, PyObject> map) {
         super(runtime);
 
-        this.map = map;
+        if (map instanceof LinkedHashMap) {
+            this.map = (LinkedHashMap<PyObject, PyObject>) map;
+
+        } else {
+            this.map = new LinkedHashMap<>(map);
+        }
     }
 
-    public Map<PyObject, PyObject> getMap() {
+    public Map<PyObject, PyObject> getValue() {
         return Collections.unmodifiableMap(this.map);
     }
 
-    public Map<PyObject, PyObject> getRawMap() {
+    public Map<PyObject, PyObject> getView() {
         return this.map;
     }
 

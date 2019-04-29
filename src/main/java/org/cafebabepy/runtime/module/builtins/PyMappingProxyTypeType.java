@@ -49,7 +49,7 @@ public class PyMappingProxyTypeType extends AbstractCafeBabePyType {
         }
 
         PyDictObject dict = (PyDictObject) self;
-        PyObject value = dict.getRawMap().get(key);
+        PyObject value = dict.getView().get(key);
         if (value == null) {
             throw this.runtime.newRaiseException("builtins.KeyError", key.toJava(String.class));
         }
@@ -68,7 +68,7 @@ public class PyMappingProxyTypeType extends AbstractCafeBabePyType {
         }
 
         PyDictObject dict = (PyDictObject) self;
-        return this.runtime.bool(dict.getRawMap().containsKey(key));
+        return this.runtime.bool(dict.getView().containsKey(key));
     }
 
     // FIXME default value
@@ -87,7 +87,7 @@ public class PyMappingProxyTypeType extends AbstractCafeBabePyType {
         }
 
         PyDictObject dict = (PyDictObject) self;
-        PyObject value = dict.getRawMap().get(key);
+        PyObject value = dict.getView().get(key);
         if (value == null) {
             if (defaultValue.length == 1) {
                 value = defaultValue[0];

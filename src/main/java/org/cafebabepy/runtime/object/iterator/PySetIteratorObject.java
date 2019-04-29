@@ -11,10 +11,6 @@ import java.util.Collection;
  */
 public class PySetIteratorObject extends AbstractPyIteratorObject {
 
-    public PySetIteratorObject(Python runtime, PySetObject set) {
-        this(runtime, set.getView());
-    }
-
     public PySetIteratorObject(Python runtime, Collection<PyObject> collection) {
         super(runtime, collection);
     }

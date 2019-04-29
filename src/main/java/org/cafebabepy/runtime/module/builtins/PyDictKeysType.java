@@ -29,8 +29,6 @@ public final class PyDictKeysType extends AbstractCafeBabePyType {
                             + "'");
         }
 
-        PyDictKeysObject object = (PyDictKeysObject) self;
-
-        return new PyDictKeyIteratorObject(this.runtime, object);
+        return new PyDictKeyIteratorObject(this.runtime, (PyDictKeysObject) self);
     }
 }

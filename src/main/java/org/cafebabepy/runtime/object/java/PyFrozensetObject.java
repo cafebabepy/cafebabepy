@@ -9,11 +9,11 @@ import java.util.*;
 /**
  * Created by yotchang4s on 2018/10/28.
  */
-public class PySetObject extends AbstractPyObjectObject {
+public class PyFrozensetObject extends AbstractPyObjectObject {
 
     private final Set<PyObject> value;
 
-    public PySetObject(Python runtime, PyObject... value) {
+    public PyFrozensetObject(Python runtime, PyObject... value) {
         super(runtime);
 
         this.value = new LinkedHashSet<>();
@@ -23,7 +23,7 @@ public class PySetObject extends AbstractPyObjectObject {
         }
     }
 
-    public PySetObject(Python runtime, Collection<PyObject> value) {
+    public PyFrozensetObject(Python runtime, Collection<PyObject> value) {
         super(runtime);
 
         this.value = new LinkedHashSet<>(value);
@@ -39,7 +39,7 @@ public class PySetObject extends AbstractPyObjectObject {
 
     @Override
     public PyObject getType() {
-        return this.runtime.typeOrThrow("builtins.set");
+        return this.runtime.typeOrThrow("builtins.frozenset");
     }
 
     @Override

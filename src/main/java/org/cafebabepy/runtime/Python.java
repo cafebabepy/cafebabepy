@@ -387,14 +387,28 @@ public final class Python {
     }
 
     public PyObject set(Collection<PyObject> value) {
-        PyObject[] array = new PyObject[value.size()];
-        value.toArray(array);
+        PyFrozensetObject object = new PyFrozensetObject(this, value);
+        object.initialize();
 
-        return set(array);
+        return object;
     }
 
     public PyObject set(PyObject... value) {
         PySetObject object = new PySetObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
+    public PyObject frozenset(Collection<PyObject> value) {
+        PyFrozensetObject object = new PyFrozensetObject(this, value);
+        object.initialize();
+
+        return object;
+    }
+
+    public PyObject frozenset(PyObject... value) {
+        PyFrozensetObject object = new PyFrozensetObject(this, value);
         object.initialize();
 
         return object;

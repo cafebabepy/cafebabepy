@@ -4,6 +4,7 @@ import org.cafebabepy.runtime.PyObject;
 import org.cafebabepy.runtime.Python;
 import org.cafebabepy.runtime.object.AbstractPyObjectObject;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -11,12 +12,17 @@ import java.util.Set;
  */
 public class PyDictKeysObject extends AbstractPyObjectObject {
 
-    private Set<PyObject> keys;
+    private LinkedHashSet<PyObject> keys;
 
     public PyDictKeysObject(Python runtime, Set<PyObject> keys) {
         super(runtime);
 
-        this.keys = keys;
+        if (keys instanceof LinkedHashSet) {
+            this.keys = (LinkedHashSet<PyObject>) keys;
+
+        } else {
+            this.keys = new LinkedHashSet<>(keys);
+        }
     }
 
     public Set<PyObject> getValue() {

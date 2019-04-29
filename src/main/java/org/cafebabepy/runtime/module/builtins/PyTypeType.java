@@ -7,6 +7,7 @@ import org.cafebabepy.runtime.module.AbstractCafeBabePyType;
 import org.cafebabepy.runtime.module.DefinePyFunction;
 import org.cafebabepy.runtime.module.DefinePyType;
 import org.cafebabepy.runtime.object.PyObjectObject;
+import org.cafebabepy.runtime.object.java.PyFrozensetObject;
 import org.cafebabepy.runtime.object.java.PyListObject;
 import org.cafebabepy.runtime.object.java.PySetObject;
 import org.cafebabepy.runtime.object.java.PyTupleObject;
@@ -91,7 +92,10 @@ public final class PyTypeType extends AbstractCafeBabePyType {
             } else if (self.getClass() == PySetType.class) {
                 instance = new PySetObject(this.runtime);
 
-            } else {
+            } else if (self.getClass() == PyFrozensetType.class) {
+                instance = new PyFrozensetObject(this.runtime);
+
+            }else {
                 instance = new PyObjectObject(this.runtime, self);
             }
 
