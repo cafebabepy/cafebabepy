@@ -95,7 +95,7 @@ public final class PyTypeType extends AbstractCafeBabePyType {
             } else if (self.getClass() == PyFrozensetType.class) {
                 instance = new PyFrozensetObject(this.runtime);
 
-            }else {
+            } else {
                 instance = new PyObjectObject(this.runtime, self);
             }
 
@@ -159,13 +159,17 @@ public final class PyTypeType extends AbstractCafeBabePyType {
         String javaKey = key.toJava(String.class);
 
         return this.runtime.builtins_type__getattribute__(cls, javaKey).orElseGet(() -> {
-            PyObject specialVar = null;
-            if (__name__.equals(javaKey)) {
-                specialVar = cls.getFrame().getNotAppearLocals().get(javaKey);
-            }
+            switch (javaKey) {
+                case __name__:
+                    PyObject name = cls.getFrame().getNotAppearLocals().get(javaKey);
+                    if (name != null) {
+                        return name;
+                    }
 
-            if (specialVar != null) {
-                return specialVar;
+                    break;
+
+                case __class__:
+                    return cls.getType();
             }
 
             throw this.runtime.newRaiseException("AttributeError",

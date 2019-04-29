@@ -52,13 +52,17 @@ public final class PyObjectType extends AbstractCafeBabePyType {
         String javaKey = key.toJava(String.class);
 
         return this.runtime.builtins_object__getattribute__(self, javaKey).orElseGet(() -> {
-            PyObject specialVar = null;
-            if (__name__.equals(key.toJava(String.class))) {
-                specialVar = self.getFrame().getNotAppearLocals().get(javaKey);
-            }
+            switch (javaKey) {
+                case __name__:
+                    PyObject name = self.getFrame().getNotAppearLocals().get(javaKey);
+                    if (name != null) {
+                        return name;
+                    }
 
-            if (specialVar != null) {
-                return specialVar;
+                    break;
+
+                case __class__:
+                    return self.getType();
             }
 
             throw this.runtime.newRaiseException("AttributeError",

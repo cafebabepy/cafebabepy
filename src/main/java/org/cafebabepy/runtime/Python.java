@@ -1144,7 +1144,6 @@ public final class Python {
             return Optional.of(metaattr);
         }
 
-        throw newRaiseException("builtins.AttributeError",
-                "type object '" + cls.getName() + "' object has no attribute '" + key + "'");
+        return Optional.empty();
     }
 }
