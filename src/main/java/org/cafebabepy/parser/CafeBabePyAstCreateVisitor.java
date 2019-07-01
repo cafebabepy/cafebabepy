@@ -93,7 +93,7 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         PyObject decoratorRef = this.runtime.newPyObject("_ast.Name", this.runtime.str(names[0]), load);
 
         for (int i = 1; i < names.length; i++) {
-            decoratorRef = this.runtime.newPyObject("_ast.Attribute", decoratorRef, this.runtime.str(names[i]), load);
+            decoratorRef = newASTObject(ctx, "_ast.Attribute", decoratorRef, this.runtime.str(names[i]), load);
         }
 
         if (ctx.arglist() != null) {
@@ -1427,13 +1427,27 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
         return this.runtime.newPyObject("_ast.Tuple", this.runtime.list(exprList), load);
     }
 
+    private PyObject newASTObject(ParserRuleContext ctx, String name, PyObject... args) {
+        PyObject ast = this.runtime.newPyObject(name, args);
+
+        if (ctx != null) {
+            PyObject lineno = this.runtime.number(ctx.getStart().getLine());
+            PyObject col_offset = this.runtime.number(ctx.getStart().getCharPositionInLine());
+
+            this.runtime.setattr(ast, "lineno", lineno);
+            this.runtime.setattr(ast, "col_offset", col_offset);
+        }
+
+        return ast;
+    }
+
     @Override
     public PyObject visitTrailer(PythonParser.TrailerContext ctx) {
         if (ctx.NAME() != null) {
             PyObject attr = this.runtime.str(ctx.NAME().getText());
             PyObject load = this.runtime.newPyObject("_ast.Load");
 
-            return this.runtime.newPyObject("_ast.Attribute", this.runtime.None(), attr, load);
+            return newASTObject(ctx, "_ast.Attribute", this.runtime.None(), attr, load);
         }
 
         String firstText = ctx.getChild(0).getText();
@@ -1453,7 +1467,6 @@ class CafeBabePyAstCreateVisitor extends PythonParserBaseVisitor<PyObject> {
             PyObject load = this.runtime.newPyObject("_ast.Load");
 
             return this.runtime.newPyObject("_ast.Subscript", this.runtime.None(), subscriptlist, load);
-
         }
 
         throw this.runtime.newRaiseException("builtins.SyntaxError", "Invalid ast");
