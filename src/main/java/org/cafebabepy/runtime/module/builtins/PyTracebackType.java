@@ -14,16 +14,7 @@ import static org.cafebabepy.util.ProtocolNames.__init__;
 @DefinePyType(name = "builtins.traceback", appear = false)
 public class PyTracebackType extends AbstractCafeBabePyType {
 
-    // FIXME stub
     public PyTracebackType(Python runtime) {
         super(runtime);
-    }
-
-    @DefinePyFunction(name = __init__)
-    public void __init__(PyObject self) {
-        // FIXME remove
-
-        PyObject frame = this.runtime.newPyObject("frame", false);
-        getFrame().getLocals().put("tb_frame", frame);
     }
 }

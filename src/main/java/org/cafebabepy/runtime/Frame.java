@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Created by yotchang4s on 2018/11/26.
@@ -176,7 +177,30 @@ public class Frame {
 
         @Override
         public Set<Entry<PyObject, PyObject>> entrySet() {
-            throw new UnsupportedOperationException("entrySet");
+            return this.map.entrySet().stream().map(e -> {
+                Python runtime = e.getValue().getRuntime();
+
+                PyObject key = runtime.str(e.getKey());
+                PyObject value = e.getValue();
+
+                return new Entry<PyObject, PyObject>() {
+                    @Override
+                    public PyObject getKey() {
+                        return key;
+                    }
+
+                    @Override
+                    public PyObject getValue() {
+                        return value;
+                    }
+
+                    @Override
+                    public PyObject setValue(PyObject value) {
+                        return put(key, value);
+                    }
+                };
+
+            }).collect(Collectors.toSet());
         }
 
         @Override

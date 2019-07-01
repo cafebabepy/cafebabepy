@@ -74,11 +74,17 @@ public class PySysModule extends AbstractCafeBabePyModule {
 
     @DefinePyFunction(name = "exc_info")
     public PyObject exc_info() {
-        // FIXME types stub
-        PyObject traceback1 = this.runtime.newPyObject("traceback", false);
-        PyObject traceback2 = this.runtime.newPyObject("traceback", false);
-        PyObject traceback3 = this.runtime.newPyObject("traceback", false);
+        PyObject exceptionClass = this.runtime.None();
+        PyObject exception = this.runtime.None();
+        PyObject traceback = this.runtime.None();
 
-        return this.runtime.tuple(traceback1, traceback2, traceback3);
+        var exceptionOpt = this.runtime.getEvaluator().getCurrentException();
+        if(exceptionOpt.isPresent()) {
+            exception = exceptionOpt.get();
+            exceptionClass = exception.getType();
+            traceback = this.runtime.getattrOptional(getModule(),"last_traceback").orElse(this.runtime.None());
+        }
+
+        return this.runtime.tuple(exceptionClass, exception, traceback);
     }
 }

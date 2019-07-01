@@ -151,7 +151,7 @@ public class InterpretEvaluatorTest {
         @Test
         void importName_this() {
             PyObject result = Python.eval("" +
-                    "import types\n" +
+                    "import this\n" +
                     "this"
             );
 
@@ -1304,7 +1304,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void python3Super() throws IOException{
+        void python3Super() throws IOException {
             evalStdOutToResult(""
                             + "class A:\n"
                             + "  def method(self):\n"
@@ -1322,7 +1322,7 @@ public class InterpretEvaluatorTest {
         }
 
         @Test
-        void nestedPython3Super() throws IOException{
+        void nestedPython3Super() throws IOException {
             evalStdOutToResult(""
                             + "class A:\n"
                             + "  def method(self):\n"

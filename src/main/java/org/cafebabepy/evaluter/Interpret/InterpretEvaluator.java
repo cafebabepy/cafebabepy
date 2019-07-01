@@ -17,9 +17,11 @@ public class InterpretEvaluator {
     private Python runtime;
     private ImportManager importManager;
 
-    private ThreadLocal<List<PyObject>> contexts = ThreadLocal.withInitial(LinkedList::new);
+    private ThreadLocal<List<PyObject>> contexts = ThreadLocal.withInitial(ArrayList::new);
+    private ThreadLocal<List<Map<String, PyObject>>> contextAttributes = ThreadLocal.withInitial(ArrayList::new);
 
     private ThreadLocal<Boolean> attribute = ThreadLocal.withInitial(() -> false);
+    private volatile PyObject currentException;
 
     /*
     public PyObject evalMainModule(PyObject node) {
@@ -229,13 +231,19 @@ public class InterpretEvaluator {
         return this.importManager.loadModule(moduleName);
     }
 
+    public Optional<PyObject> getCurrentException() {
+        return Optional.ofNullable(this.currentException);
+    }
+
     private PyObject evalModule(PyObject context, PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
+
         return eval(context, body);
     }
 
     private PyObject evalInteractive(PyObject context, PyObject node) {
         PyObject body = this.runtime.getattr(node, "body");
+
         return eval(context, body);
     }
 
